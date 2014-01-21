@@ -236,6 +236,6 @@ public class ConnectWays {
     }
 
     private static boolean isBuilding(Way w) {
-        return (w.getKeys().get("building") == null ? false : w.getKeys().get("building").equals("yes"));
+        return (w.getKeys().get("building") == null ? false : !w.getKeys().get("building").equals("no") && !w.getKeys().get("building").equals("entrance"));
     }
 }
