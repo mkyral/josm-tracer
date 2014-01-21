@@ -4,7 +4,7 @@ Changelog
 - Initial version [Jan Bilak]
 - Edit mode [Petr Dlouhy]
 - Added RUIAN as an alternative [Marian Kyral]
-
+- Allow modifying of existing building - used Tracer2 improved ConnectWays class
 ...
 
 - see SVN history

@@ -1,7 +1,20 @@
 /**
- * Tracer - plugin for JOSM
- * Jan Bilak
- * This program is free software and licensed under GPL.
+ *  Tracer - plugin for JOSM
+ *  Jan Bilak, Marian Kyral
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 package org.openstreetmap.josm.plugins.tracer;
 
@@ -40,10 +53,11 @@ class TracerActionRuian extends MapMode implements MouseListener {
     private boolean ctrl;
     private boolean alt;
     private boolean shift;
+    private String source = "cuzk:ruian";
     protected TracerServerRuian server = new TracerServerRuian();
 
     public TracerActionRuian(MapFrame mapFrame) {
-        super(tr("Tracer - RUIAN"), "tracer-ruian-sml", tr("Tracer - RUIAN."), Shortcut.registerShortcut("tools:tracerRUIAN", tr("Tool: {0}", tr("Tracer - RUIAN")), KeyEvent.VK_T, Shortcut.CTRL_SHIFT), mapFrame, getCursor());
+        super(tr("Tracer - RUIAN"), "tracer-ruian-sml", tr("Tracer - RUIAN."), Shortcut.registerShortcut("tools:tracerRUIAN", tr("Tool: {0}", tr("Tracer - RUIAN")), KeyEvent.VK_T, Shortcut.CTRL), mapFrame, getCursor());
     }
 
     @Override
@@ -100,7 +114,7 @@ class TracerActionRuian extends MapMode implements MouseListener {
 
     private void tagBuilding(Way way) {
         if(!alt) way.put("building", "yes");
-        way.put("source", "cuzk:ruian");
+          way.put("source", source);
     }
 
     private void traceSync(LatLon pos, ProgressMonitor progressMonitor) {
@@ -127,22 +141,26 @@ class TracerActionRuian extends MapMode implements MouseListener {
             }
             way.addNode(firstNode);
 
-            tagBuilding(way);
-            commands.add(new AddCommand(way));
 
-            // connect to other buildings
-            if (!ctrl) {
-                commands.add(ConnectWays.connect(way));
-                }
+            tagBuilding(way);
+            // connect to other buildings or modify existing building
+            commands.add(ConnectWays.connect(way, pos, ctrl, alt, source));
+
 
             if (!commands.isEmpty()) {
-                   Main.main.undoRedo.add(new SequenceCommand(tr("Tracer building"), commands));
+              String strCommand;
+              if (ConnectWays.s_bAddNewWay == true) {
+                strCommand = tr("Tracer(RUIAN): add a way with {0} points", coordList.size());
+              } else {
+                strCommand = tr("Tracer(RUIAN): modify way to {0} points", coordList.size());
+              }
+              Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
 
-                if (shift) {
-                    Main.main.getCurrentDataSet().addSelected(way);
-                } else {
-                    Main.main.getCurrentDataSet().setSelected(way);
-                }
+              if (shift) {
+                Main.main.getCurrentDataSet().addSelected(ConnectWays.s_oWay);
+              } else {
+                Main.main.getCurrentDataSet().setSelected(ConnectWays.s_oWay);
+              }
             } else {
                 System.out.println("Failed");
             }
