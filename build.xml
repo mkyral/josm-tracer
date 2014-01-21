@@ -5,9 +5,9 @@
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
     <property name="plugin.main.version" value="6162"/>
 
-    <property name="plugin.author" value="Jan Bilak, Petr Dlouhý"/>
+    <property name="plugin.author" value="Jan Bilak, Petr Dlouhý, Marián Kyral"/>
     <property name="plugin.class" value="org.openstreetmap.josm.plugins.tracer.TracerPlugin"/>
-    <property name="plugin.description" value="Traces buildings from Czech cadastral map. Needs TracerServer (.NET or Mono) to be running."/>
+    <property name="plugin.description" value="Traces buildings from Czech cadastral map or RUIAN. For parsing cadastral map needs TracerServer (.NET or Mono) to be running."/>
     <property name="plugin.icon" value="images/mapmode/tracer-sml.png"/>
     <property name="plugin.link" value="http://wiki.openstreetmap.org/wiki/JOSM/Plugins/Tracer"/>
 

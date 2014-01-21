@@ -13,7 +13,6 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-// import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -33,7 +32,7 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.xml.sax.SAXException;
 
-class TracerAction extends MapMode implements MouseListener {
+class TracerActionRuian extends MapMode implements MouseListener {
 
     private static final long serialVersionUID = 1L;
 
@@ -41,44 +40,11 @@ class TracerAction extends MapMode implements MouseListener {
     private boolean ctrl;
     private boolean alt;
     private boolean shift;
-    protected TracerServer server = new TracerServer();
-    protected TracerServerRuian serverRuian = new TracerServerRuian();
+    protected TracerServerRuian server = new TracerServerRuian();
 
-    public TracerAction(MapFrame mapFrame) {
-        super(tr("Tracer"), "tracer-sml", tr("Tracer."), Shortcut.registerShortcut("tools:tracer", tr("Tool: {0}", tr("Tracer")), KeyEvent.VK_T, Shortcut.DIRECT), mapFrame, getCursor());
+    public TracerActionRuian(MapFrame mapFrame) {
+        super(tr("Tracer - RUIAN"), "tracer-ruian-sml", tr("Tracer - RUIAN."), Shortcut.registerShortcut("tools:tracerRUIAN", tr("Tool: {0}", tr("Tracer - RUIAN")), KeyEvent.VK_T, Shortcut.CTRL_SHIFT), mapFrame, getCursor());
     }
-
-//     @Override
-//     public void keyPressed(KeyEvent e) {
-//       System.out.println("keyPressed: key:" + e.getKeyChar() + " code" + e.getKeyCode() + " Loc" + e.getKeyLocation()+ " ID" + KeyEvent.getKeyText(e.getKeyCode()));
-//
-//       int kCode = e.getKeyCode();
-//       int kMod = e.getModifiersEx();
-//       String kModText = e.getKeyModifiersText(kMod);
-// //       System.out.println("Modifiers: " + kModtext);
-//
-//       if (kCode == KeyEvent.VK_T && kModText == "Ctrl+Shift")
-//       {
-//         t_mode = "ruian";
-//       }
-//
-//       if (kCode == KeyEvent.VK_T && kModText == "")
-//       {
-//         t_mode = "km";
-//       }
-//
-//       System.out.println("Mode: " + t_mode);
-//     }
-//
-//     @Override
-//     public void keyReleased ( KeyEvent e ) {
-//       //System.out.println("keyReleased: key:" + e.getKeyChar() + " code" + e.getKeyCode() + " Loc" + e.getKeyLocation()+ " chra" + KeyEvent.getKeyText(e.getKeyCode()));
-//     }
-//
-//     @Override
-//     public void keyTyped ( KeyEvent e ) {
-//       //System.out.println("keyTyped: key:" + e.getKeyChar() + " code" + e.getKeyCode() + " Loc" + e.getKeyLocation()+ " ID" + KeyEvent.getKeyText(e.getKeyCode()));
-//     }
 
     @Override
     public void enterMode() {
@@ -88,7 +54,6 @@ class TracerAction extends MapMode implements MouseListener {
         super.enterMode();
         Main.map.mapView.setCursor(getCursor());
         Main.map.mapView.addMouseListener(this);
-//         Main.map.mapView.addKeyListener(this);
 
     }
 
@@ -96,11 +61,10 @@ class TracerAction extends MapMode implements MouseListener {
     public void exitMode() {
         super.exitMode();
         Main.map.mapView.removeMouseListener(this);
-//         Main.map.mapView.removeKeyListener(this);
     }
 
     private static Cursor getCursor() {
-        return ImageProvider.getCursor("crosshair", "tracer-sml");
+        return ImageProvider.getCursor("crosshair", "tracer-ruian-sml");
     }
 
     protected void traceAsync(Point clickPoint) {
@@ -124,7 +88,7 @@ class TracerAction extends MapMode implements MouseListener {
 
                 @Override
                 protected void cancel() {
-                    TracerAction.this.cancel();
+                    TracerActionRuian.this.cancel();
                 }
             };
             Thread executeTraceThread = new Thread(tracerTask);
@@ -136,7 +100,7 @@ class TracerAction extends MapMode implements MouseListener {
 
     private void tagBuilding(Way way) {
         if(!alt) way.put("building", "yes");
-        way.put("source", "cuzk:km");
+        way.put("source", "cuzk:ruian");
     }
 
     private void traceSync(LatLon pos, ProgressMonitor progressMonitor) {
@@ -146,8 +110,8 @@ class TracerAction extends MapMode implements MouseListener {
         try {
               ArrayList<LatLon> coordList = server.trace(pos);
 
-            if (coordList.size() == 0) {
-                return;
+              if (coordList.size() == 0) {
+                  return;
             }
 
             // make nodes a way

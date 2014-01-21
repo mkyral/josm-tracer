@@ -16,6 +16,7 @@ public class TracerPlugin extends Plugin {
     public TracerPlugin(PluginInformation info) {
         super(info);
         MainMenu.add(Main.main.menu.moreToolsMenu, new TracerAction(Main.map));
+        MainMenu.add(Main.main.menu.moreToolsMenu, new TracerActionRuian(Main.map));
     }
 
 }
