@@ -142,16 +142,30 @@ public class ConnectWays {
       return null;
     }
 
-    private static Way updateSourceKey(Way way, String newSource) {
-        if (way.hasKey("source")) {
-          String s = way.get("source");
+    private static Way updateKeys(Way d_way, Way s_way, String newSource) {
+        // Source key
+        if (d_way.hasKey("source")) {
+          String s = d_way.get("source");
           if ( !s.matches("(.*)"+newSource+"(.*)")) {
-            way.put("source", s + ";" + newSource);
+            d_way.put("source", s + ";" + newSource);
           }
         } else {
-          way.put("source", newSource);
+          d_way.put("source", newSource);
         }
-        return way;
+
+        // Building key
+        if (s_way.hasKey("building")) {
+          if (d_way.get("building").equals("yes")) {
+            d_way.put("building", s_way.get("building"));
+          }
+        }
+
+        // Ref:ruian key
+        if (s_way.hasKey("ref:ruian")) {
+            d_way.put("ref:ruian", s_way.get("ref:ruian"));
+        }
+
+        return d_way;
     }
 
     /**
@@ -203,9 +217,7 @@ public class ConnectWays {
               s_oNodes.remove(s_oWayOld.getNode(i));
             }
             s_oWay = tempWay;
-            String s = s_oWay.get("source");
-            System.out.println("Source key found: " + s);
-            s_oWay = updateSourceKey(s_oWay, source);
+            s_oWay = updateKeys(s_oWay, newWay, source);
         }
 
         {

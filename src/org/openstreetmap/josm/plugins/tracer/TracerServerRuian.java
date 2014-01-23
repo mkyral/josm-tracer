@@ -27,10 +27,29 @@ import org.openstreetmap.josm.data.coor.LatLon;
 
 public class TracerServerRuian {
 
-    static final String URL = "http://ruian.poloha.net/";
+//    static final String URL = "http://ruian.poloha.net/";
+    static final String URL = "http://pedro.propsychology.cz/mapa/";
+
+    private String m_object = null, m_id = null;
 
     public TracerServerRuian() {
 
+    }
+
+    /**
+     * Return traced object type
+     * @return Object type
+     */
+    public String getObjectType() {
+      return m_object;
+    }
+
+    /**
+     * Return traced object id
+     * @return Object id
+     */
+    public String getObjectId() {
+      return m_id;
     }
 
     /**
@@ -46,7 +65,10 @@ public class TracerServerRuian {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
-                sb.append(line);
+                if (sb.length() == 0)
+                  sb.append(line);
+                else
+                  sb.append("|"+line);
             }
             return sb.toString();
         } catch (Exception e) {
@@ -61,14 +83,30 @@ public class TracerServerRuian {
      */
     public ArrayList<LatLon> trace(LatLon pos) {
         try {
+            System.out.println("Request: "+ URL + "trace/" + pos.lat() + ";" + pos.lon());
             String content = callServer("trace/" + pos.lat() + ";" + pos.lon());
+            System.out.println("Reply: " + content);
             ArrayList<LatLon> nodelist = new ArrayList<LatLon>();
             String[] lines = content.split("\\|");
             for (String line : lines) {
-                String[] items = line.split(";");
-                double x = Double.parseDouble(items[0]);
-                double y = Double.parseDouble(items[1]);
-                nodelist.add(new LatLon(x, y));
+                System.out.println("Line: " + line);
+                if (line.matches("(.*);(.*)")) {
+                  String[] items = line.split(";");
+                  double x = Double.parseDouble(items[0]);
+                  double y = Double.parseDouble(items[1]);
+                  nodelist.add(new LatLon(x, y));
+                }
+                else if (line.matches("(.*)=(.*)")) {
+                  String[] items = line.split("=");
+                  String key = items[0];
+                  String value = items[1];
+                  if (key.equals("building")) {
+                    m_object = value;
+                  } else if (key.equals("ruian_id")) {
+                    m_id = value;
+                  }
+                }
+
             }
             return nodelist;
         } catch (Exception e) {

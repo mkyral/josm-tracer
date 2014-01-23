@@ -113,8 +113,17 @@ class TracerActionRuian extends MapMode implements MouseListener {
     }
 
     private void tagBuilding(Way way) {
-        if(!alt) way.put("building", "yes");
-          way.put("source", source);
+        if(!alt) {
+          if (server.getObjectType().length() > 0)
+            way.put("building", server.getObjectType());
+          else
+            way.put("building", "yes");
+        }
+
+        if (server.getObjectId().length() > 0 )
+          way.put("ref:ruian", server.getObjectId());
+
+        way.put("source", source);
     }
 
     private void traceSync(LatLon pos, ProgressMonitor progressMonitor) {

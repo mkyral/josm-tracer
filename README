@@ -24,5 +24,6 @@ TODO:
   * add RUIAN ID to building
   * add some configuration
   * maybe implement multipolygons
+  * ability to trace all building in select (visible) area
   * any further idea?
 
