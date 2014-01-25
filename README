@@ -20,9 +20,6 @@ Acknowledgements:
   This plugin uses improved ConnectWays class from Tracer2 plugin by Dirk Bruenig
 
 TODO:
-  * update building type from RUIAN
-  * add RUIAN ID to building
-  * add some configuration
   * maybe implement multipolygons
   * ability to trace all building in select (visible) area
   * any further idea?

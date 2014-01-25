@@ -27,7 +27,7 @@ import org.openstreetmap.josm.data.coor.LatLon;
 
 public class TracerServer {
 
-    static final String URL = "http://localhost:5050/";
+//     static final String URL = "http://localhost:5050/";
 
     public TracerServer() {
 
@@ -40,7 +40,7 @@ public class TracerServer {
      */
     private String callServer(String urlString) {
         try {
-            URL url = new URL(URL + urlString);
+            URL url = new URL(urlString);
             BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
 
             StringBuilder sb = new StringBuilder();
@@ -59,15 +59,20 @@ public class TracerServer {
      * @param pos Position of building.
      * @return Building border.
      */
-    public ArrayList<LatLon> trace(LatLon pos) {
+    public ArrayList<LatLon> trace(LatLon pos, String url, double adjX, double adjY) {
         try {
-            String content = callServer("trace/simple/" + pos.lat() + ";" + pos.lon());
+            String content = callServer(url + "/trace/simple/" + pos.lat() + ";" + pos.lon());
             ArrayList<LatLon> nodelist = new ArrayList<LatLon>();
             String[] lines = content.split("\\|");
             for (String line : lines) {
                 String[] items = line.split(";");
                 double x = Double.parseDouble(items[0]);
                 double y = Double.parseDouble(items[1]);
+                // Adjust point possition
+                if (adjX != 0 || adjY != 0) {
+                  x += adjX;
+                  y += adjY;
+                }
                 nodelist.add(new LatLon(x, y));
             }
             return nodelist;

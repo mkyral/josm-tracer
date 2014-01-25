@@ -41,6 +41,7 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.MapFrame;
+import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.xml.sax.SAXException;
@@ -128,10 +129,23 @@ class TracerActionRuian extends MapMode implements MouseListener {
 
     private void traceSync(LatLon pos, ProgressMonitor progressMonitor) {
         Collection<Command> commands = new LinkedList<Command>();
+        TracerPreferences pref = TracerPreferences.getInstance();
+
+        String sUrl = "http://ruian.poloha.net/";
+        double dAdjX = 0, dAdjY = 0;
+
+        if (pref.m_customRuianUrl)
+          sUrl = pref.m_customRuianUrlText;
+
+        if (pref.m_ruianAdjustPosition) {
+          dAdjX = pref.m_ruianAdjustPositionLat;
+          dAdjY = pref.m_ruianAdjustPositionLon;
+        }
+
 
         progressMonitor.beginTask(null, 3);
         try {
-              ArrayList<LatLon> coordList = server.trace(pos);
+              ArrayList<LatLon> coordList = server.trace(pos, sUrl, dAdjX, dAdjY);
 
               if (coordList.size() == 0) {
                   return;

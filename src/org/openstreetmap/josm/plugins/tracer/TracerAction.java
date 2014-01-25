@@ -42,6 +42,7 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.MapFrame;
+import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.xml.sax.SAXException;
@@ -154,10 +155,22 @@ class TracerAction extends MapMode implements MouseListener {
 
     private void traceSync(LatLon pos, ProgressMonitor progressMonitor) {
         Collection<Command> commands = new LinkedList<Command>();
+        TracerPreferences pref = TracerPreferences.getInstance();
+
+        String sUrl = "http://localhost:5050/";
+        double dAdjX = 0, dAdjY = 0;
+
+        if (pref.m_customTracerUrl)
+          sUrl = pref.m_customTracerUrlText;
+
+        if (pref.m_tracerAdjustPosition) {
+          dAdjX = pref.m_tracerAdjustPositionLat;
+          dAdjY = pref.m_tracerAdjustPositionLon;
+        }
 
         progressMonitor.beginTask(null, 3);
         try {
-              ArrayList<LatLon> coordList = server.trace(pos);
+              ArrayList<LatLon> coordList = server.trace(pos, sUrl, dAdjX, dAdjY);
 
             if (coordList.size() == 0) {
                 return;

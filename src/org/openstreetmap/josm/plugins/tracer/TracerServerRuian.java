@@ -27,10 +27,10 @@ import org.openstreetmap.josm.data.coor.LatLon;
 
 public class TracerServerRuian {
 
-//    static final String URL = "http://ruian.poloha.net/";
-    static final String URL = "http://pedro.propsychology.cz/mapa/";
+//     static final String URL = "http://ruian.poloha.net/";
+//     static final String URL = "http://pedro.propsychology.cz/mapa/";
 
-    private String m_object = null, m_id = null;
+    private String m_object = "", m_id = "";
 
     public TracerServerRuian() {
 
@@ -59,7 +59,7 @@ public class TracerServerRuian {
      */
     private String callServer(String urlString) {
         try {
-            URL url = new URL(URL + urlString);
+            URL url = new URL(urlString);
             BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
 
             StringBuilder sb = new StringBuilder();
@@ -81,10 +81,10 @@ public class TracerServerRuian {
      * @param pos Position of building.
      * @return Building border.
      */
-    public ArrayList<LatLon> trace(LatLon pos) {
+    public ArrayList<LatLon> trace(LatLon pos, String url, double adjX, double adjY) {
         try {
-            System.out.println("Request: "+ URL + "trace/" + pos.lat() + ";" + pos.lon());
-            String content = callServer("trace/" + pos.lat() + ";" + pos.lon());
+            System.out.println("Request: "+ url + "/trace/" + pos.lat() + ";" + pos.lon());
+            String content = callServer(url + "/trace/" + pos.lat() + ";" + pos.lon());
             System.out.println("Reply: " + content);
             ArrayList<LatLon> nodelist = new ArrayList<LatLon>();
             String[] lines = content.split("\\|");
@@ -94,6 +94,11 @@ public class TracerServerRuian {
                   String[] items = line.split(";");
                   double x = Double.parseDouble(items[0]);
                   double y = Double.parseDouble(items[1]);
+                  if (adjX != 0 || adjY != 0) {
+                    // Adjust point possition (-0.0000015 / -0.0000031)
+                    x += adjX;
+                    y += adjY;
+                  }
                   nodelist.add(new LatLon(x, y));
                 }
                 else if (line.matches("(.*)=(.*)")) {

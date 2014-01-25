@@ -21,8 +21,10 @@ package org.openstreetmap.josm.plugins.tracer;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.gui.MainMenu;
+import org.openstreetmap.josm.gui.preferences.PreferenceSetting;
 import org.openstreetmap.josm.plugins.Plugin;
 import org.openstreetmap.josm.plugins.PluginInformation;
+import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 
 public class TracerPlugin extends Plugin {
 
@@ -32,4 +34,8 @@ public class TracerPlugin extends Plugin {
         MainMenu.add(Main.main.menu.moreToolsMenu, new TracerActionRuian(Main.map));
     }
 
+    @Override
+    public PreferenceSetting getPreferenceSetting() {
+        return TracerPreferences.getInstance();
+    }
 }
