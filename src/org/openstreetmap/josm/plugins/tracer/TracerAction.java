@@ -203,6 +203,8 @@ class TracerAction extends MapMode implements MouseListener {
               }
               Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
 
+              TracerUtils.showNotification(strCommand, "info");
+
               if (shift) {
                 Main.main.getCurrentDataSet().addSelected(ConnectWays.s_oWay);
               } else {

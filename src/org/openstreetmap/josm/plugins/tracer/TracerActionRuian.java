@@ -41,9 +41,11 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.MapFrame;
-import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
+import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
+import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
+
 import org.xml.sax.SAXException;
 
 class TracerActionRuian extends MapMode implements MouseListener {
@@ -122,7 +124,7 @@ class TracerActionRuian extends MapMode implements MouseListener {
         }
 
         if (server.getObjectId().length() > 0 )
-          way.put("ref:ruian", server.getObjectId());
+          way.put("ref:ruian:building", server.getObjectId());
 
         way.put("source", source);
     }
@@ -148,6 +150,7 @@ class TracerActionRuian extends MapMode implements MouseListener {
               ArrayList<LatLon> coordList = server.trace(pos, sUrl, dAdjX, dAdjY);
 
               if (coordList.size() == 0) {
+                  TracerUtils.showNotification(tr("Data not available.")+ "\n(" + pos.toDisplayString() + ")", "warning");
                   return;
             }
 
@@ -167,27 +170,36 @@ class TracerActionRuian extends MapMode implements MouseListener {
 
             tagBuilding(way);
             // connect to other buildings or modify existing building
-            commands.add(ConnectWays.connect(way, pos, ctrl, alt, source));
+            Command connCmd = ConnectWays.connect(way, pos, ctrl, alt, source);
 
+            String s[] = connCmd.getDescriptionText().split(": ");
 
-            if (!commands.isEmpty()) {
-              String strCommand;
-              if (ConnectWays.s_bAddNewWay == true) {
-                strCommand = tr("Tracer(RUIAN): add a way with {0} points", coordList.size());
-              } else {
-                strCommand = tr("Tracer(RUIAN): modify way to {0} points", coordList.size());
-              }
-              Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
-
-              if (shift) {
-                Main.main.getCurrentDataSet().addSelected(ConnectWays.s_oWay);
-              } else {
-                Main.main.getCurrentDataSet().setSelected(ConnectWays.s_oWay);
-              }
+            if (s[1].equals("Nothing")) {
+              TracerUtils.showNotification(tr("Nothing changed."),"info");
             } else {
-                System.out.println("Failed");
-            }
+                commands.add(connCmd);
 
+                System.out.println("Commands: " + commands.toString());
+                if (!commands.isEmpty()) {
+                  String strCommand;
+                  if (ConnectWays.s_bAddNewWay == true) {
+                    strCommand = tr("Tracer(RUIAN): add a way with {0} points", coordList.size());
+                  } else {
+                    strCommand = tr("Tracer(RUIAN): modify way to {0} points", coordList.size());
+                  }
+                  Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
+
+                  TracerUtils.showNotification(strCommand, "info");
+
+                  if (shift) {
+                    Main.main.getCurrentDataSet().addSelected(ConnectWays.s_oWay);
+                  } else {
+                    Main.main.getCurrentDataSet().setSelected(ConnectWays.s_oWay);
+                  }
+                } else {
+                    System.out.println("Failed");
+                }
+            }
         } finally {
             progressMonitor.finishTask();
         }

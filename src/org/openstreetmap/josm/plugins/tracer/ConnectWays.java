@@ -144,14 +144,14 @@ public class ConnectWays {
 
     private static Way updateKeys(Way d_way, Way s_way, String newSource) {
         // Source key
-        if (d_way.hasKey("source")) {
-          String s = d_way.get("source");
-          if ( !s.matches("(.*)"+newSource+"(.*)")) {
-            d_way.put("source", s + ";" + newSource);
-          }
-        } else {
+//         if (d_way.hasKey("source")) {
+//           String s = d_way.get("source");
+//           if ( !s.matches("(.*)"+newSource+"(.*)")) {
+//             d_way.put("source", s + ";" + newSource);
+//           }
+//         } else {
           d_way.put("source", newSource);
-        }
+//         }
 
         // Building key
         if (s_way.hasKey("building")) {
@@ -161,8 +161,8 @@ public class ConnectWays {
         }
 
         // Ref:ruian key
-        if (s_way.hasKey("ref:ruian")) {
-            d_way.put("ref:ruian", s_way.get("ref:ruian"));
+        if (s_way.hasKey("ref:ruian:building")) {
+            d_way.put("ref:ruian:building", s_way.get("ref:ruian:building"));
         }
 
         return d_way;
@@ -192,10 +192,46 @@ public class ConnectWays {
           s_oWayOld = newWay;
           s_oWay = new Way( newWay );
         } else {
+
+            /*
+            * Compare ways
+            * Do not continue when way is traced again.
+            * Old and new ways are equal - have the same count
+            * of nodes and all nodes are on the same place
+            */
+            int o, n, nodesCount, nodesFound;
+            nodesFound = 0;
+            nodesCount = newWay.getNodesCount();
+            // 1) have the same numbers of nodes?
+            if (newWay.getNodesCount() == s_oWayOld.getNodesCount()) {
+              System.out.println("Old and New was have " + s_oWayOld.getNodesCount() + " nodes");
+              // 2) All nodes have the same coordination
+              outer: for (n = 0; n < nodesCount; n++) {
+                Node newNode = newWay.getNode(n);
+                System.out.println("New.Node(" + n + ") = " + newNode.getCoor().toDisplayString());
+                inner: for (o = 0; o < nodesCount; o++) {
+                  Node oldNode = s_oWayOld.getNode(o);
+                  System.out.println(" -> Old.Node(" + o + ") = " + oldNode.getCoor().toDisplayString());
+                  if (oldNode.getCoor().equalsEpsilon(newNode.getCoor())) {
+                    System.out.println("Nodes: New(" + n + ") and Old(" + o + ") are equal.");
+                    nodesFound += 1;
+                    continue outer;
+                  }
+                }
+              }
+
+              System.out.println("nodesCount = " + nodesCount + "; nodesFound = " + nodesFound);
+              if (nodesCount == nodesFound) {
+                System.out.println("Ways are equal!");
+                return new SequenceCommand("Nothing", null);
+              }
+            }
+
+            // Ways are different - merging
+            System.out.println("Ways are NOT equal!");
             int i;
             Way tempWay;
             s_bAddNewWay = false;
-
             //Main.main.getCurrentDataSet().setSelected(m_wayOld);
 
             tempWay = new Way(s_oWayOld);
@@ -209,8 +245,8 @@ public class ConnectWays {
             }
             //cmds.add(new ChangeCommand(m_wayOld, tempWay));
             for (i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
-              Node n = s_oWayOld.getNode(i);
-              List<Way> ways = getWaysOfNode(n);
+              Node nd = s_oWayOld.getNode(i);
+              List<Way> ways = getWaysOfNode(nd);
               if (ways.size()<=1) {
                   cmds2.add(new DeleteCommand( s_oWayOld.getNode(i) ));
               }
@@ -295,7 +331,6 @@ public class ConnectWays {
      * Merges two nodes
      * @param n1 First node
      * @param n2 Second node
-     * @param way Way containing first node
      * @return List of Commands.
      */
     private static List<Command> mergeNodes(Node n1, Node n2){
@@ -352,7 +387,7 @@ public class ConnectWays {
         Way nearestWay = null;
         int nearestNodeIndex = 0;
         for (Way ww : s_oWays) {
-          System.out.println("Way: " + ww);
+//           System.out.println("Way: " + ww);
             if (!ww.isUsable() || ww.containsNode(node) || !isSameTag(ww)) {
                 continue;
             }
