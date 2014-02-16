@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-02-13 23:54+0100\n"
+"POT-Creation-Date: 2014-02-16 20:14+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:233
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:291
 msgid "Merge objects nodes"
 msgstr ""
 
@@ -30,13 +30,13 @@ msgid "Tracer."
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:63
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:69
 #, java-format
 msgid "Tool: {0}"
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:128
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:95
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:101
 msgid "Tracing"
 msgstr ""
 
@@ -50,24 +50,28 @@ msgstr ""
 msgid "Tracer: modify way to {0} points"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:63
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:69
 msgid "Tracer - RUIAN"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:63
-msgid "Tracer - RUIAN."
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:69
+msgid "Get building geometry and some properies from RUIAN."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:153
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:172
 msgid "Data not available."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:179
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:197
+msgid "Nothing changed."
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:205
 #, java-format
 msgid "Tracer(RUIAN): add a way with {0} points"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:181
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:207
 #, java-format
 msgid "Tracer(RUIAN): modify way to {0} points"
 msgstr ""

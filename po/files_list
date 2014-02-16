@@ -1,4 +1,6 @@
+../src/org/openstreetmap/josm/plugins/tracer/Address.java
 ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java
+../src/org/openstreetmap/josm/plugins/tracer/RuianRecord.java
 ../src/org/openstreetmap/josm/plugins/tracer/StraightLine.java
 ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java
 ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java

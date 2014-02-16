@@ -25,31 +25,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import org.openstreetmap.josm.data.coor.LatLon;
 
+import org.openstreetmap.josm.plugins.tracer.RuianRecord;
+
 public class TracerServerRuian {
 
-//     static final String URL = "http://ruian.poloha.net/";
-//     static final String URL = "http://pedro.propsychology.cz/mapa/";
-
-    private String m_object = "", m_id = "";
 
     public TracerServerRuian() {
 
-    }
-
-    /**
-     * Return traced object type
-     * @return Object type
-     */
-    public String getObjectType() {
-      return m_object;
-    }
-
-    /**
-     * Return traced object id
-     * @return Object id
-     */
-    public String getObjectId() {
-      return m_id;
     }
 
     /**
@@ -68,7 +50,7 @@ public class TracerServerRuian {
                 if (sb.length() == 0)
                   sb.append(line);
                 else
-                  sb.append("|"+line);
+                  sb.append(" "+line);
             }
             return sb.toString();
         } catch (Exception e) {
@@ -81,50 +63,16 @@ public class TracerServerRuian {
      * @param pos Position of building.
      * @return Building border.
      */
-    public ArrayList<LatLon> trace(LatLon pos, String url, double adjX, double adjY) {
+    public RuianRecord trace(LatLon pos, String url) {
         try {
-            System.out.println("Request: "+ url + "/trace/" + pos.lat() + ";" + pos.lon());
-            String content = callServer(url + "/trace/" + pos.lat() + ";" + pos.lon());
+            System.out.println("Request: "+ url + "/tracer/?lat=" + pos.lat() + "&lon=" + pos.lon());
+            String content = callServer(url + "/tracer/?lat=" + pos.lat() + "&lon=" + pos.lon());
             System.out.println("Reply: " + content);
-            ArrayList<LatLon> nodelist = new ArrayList<LatLon>();
-            String[] lines = content.split("\\|");
-            for (String line : lines) {
-                System.out.println("Line: " + line);
-                if (line.matches("(.*);(.*)")) {
-                  String[] items = line.split(";");
-                  double x = Double.parseDouble(items[0]);
-                  double y = Double.parseDouble(items[1]);
-                  if (adjX != 0 || adjY != 0) {
-                    // Adjust point possition (-0.0000015 / -0.0000031)
-                    x += adjX;
-                    y += adjY;
-                  }
-                  nodelist.add(new LatLon(x, y));
-                }
-                else if (line.matches("(.*)=(.*)")) {
-                  String[] items = line.split("=");
-                  String key = items[0];
-                  String value = items[1];
-                  if (key.equals("building")) {
-                    m_object = value;
-                  } else if (key.equals("ruian_id")) {
-                    m_id = value;
-                  }
-                }
-
-            }
-            return nodelist;
+            RuianRecord ruian = new RuianRecord();
+            ruian.parseJSON(content);
+            return ruian;
         } catch (Exception e) {
-            return new ArrayList<LatLon>();
+            return new RuianRecord();
         }
     }
-
-//     /**
-//      * Log message to server.
-//      * @param message Message to log.
-//      */
-//     public void log(String message) {
-//         callServer("log/" + message);
-//     }
-
 }

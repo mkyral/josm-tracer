@@ -46,6 +46,10 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 
+import org.openstreetmap.josm.plugins.tracer.Address;
+import org.openstreetmap.josm.plugins.tracer.RuianRecord;
+
+
 import org.xml.sax.SAXException;
 
 class TracerActionRuian extends MapMode implements MouseListener {
@@ -57,10 +61,12 @@ class TracerActionRuian extends MapMode implements MouseListener {
     private boolean alt;
     private boolean shift;
     private String source = "cuzk:ruian";
+    private static RuianRecord record;
+
     protected TracerServerRuian server = new TracerServerRuian();
 
     public TracerActionRuian(MapFrame mapFrame) {
-        super(tr("Tracer - RUIAN"), "tracer-ruian-sml", tr("Tracer - RUIAN."), Shortcut.registerShortcut("tools:tracerRUIAN", tr("Tool: {0}", tr("Tracer - RUIAN")), KeyEvent.VK_T, Shortcut.CTRL), mapFrame, getCursor());
+        super(tr("Tracer - RUIAN"), "tracer-ruian-sml", tr("Get building geometry and some properies from RUIAN."), Shortcut.registerShortcut("tools:tracerRUIAN", tr("Tool: {0}", tr("Tracer - RUIAN")), KeyEvent.VK_T, Shortcut.CTRL), mapFrame, getCursor());
     }
 
     @Override
@@ -117,23 +123,36 @@ class TracerActionRuian extends MapMode implements MouseListener {
 
     private void tagBuilding(Way way) {
         if(!alt) {
-          if (server.getObjectType().length() > 0)
-            way.put("building", server.getObjectType());
+          if ( record.getBuildingTagKey().equals("building") &&
+               record.getBuildingTagValue().length() > 0)
+            way.put("building", record.getBuildingTagValue());
           else
             way.put("building", "yes");
         }
 
-        if (server.getObjectId().length() > 0 )
-          way.put("ref:ruian:building", server.getObjectId());
+        if (record.getBuildingID() > 0 )
+          way.put("ref:ruian:building", Long.toString(record.getBuildingID()));
 
-        way.put("source", source);
+        if (record.getBuildingLevels().length() > 0)
+          way.put("building:levels", record.getBuildingLevels());
+
+        if (record.getBuildingFlats().length() > 0)
+          way.put("building:flats", record.getBuildingFlats());
+
+        if (record.getBuildingFinished().length() > 0)
+          way.put("start_date", record.getBuildingFinished());
+
+        if (record.getSource().length() > 0)
+          way.put("source", record.getSource());
+        else
+          way.put("source", source);
     }
 
     private void traceSync(LatLon pos, ProgressMonitor progressMonitor) {
         Collection<Command> commands = new LinkedList<Command>();
         TracerPreferences pref = TracerPreferences.getInstance();
 
-        String sUrl = "http://ruian.poloha.net/";
+        String sUrl = "http://poloha.net/~marian/";
         double dAdjX = 0, dAdjY = 0;
 
         if (pref.m_customRuianUrl)
@@ -147,9 +166,9 @@ class TracerActionRuian extends MapMode implements MouseListener {
 
         progressMonitor.beginTask(null, 3);
         try {
-              ArrayList<LatLon> coordList = server.trace(pos, sUrl, dAdjX, dAdjY);
+              record = server.trace(pos, sUrl);
 
-              if (coordList.size() == 0) {
+              if (record.getCoorCount() == 0) {
                   TracerUtils.showNotification(tr("Data not available.")+ "\n(" + pos.toDisplayString() + ")", "warning");
                   return;
             }
@@ -157,14 +176,22 @@ class TracerActionRuian extends MapMode implements MouseListener {
             // make nodes a way
             Way way = new Way();
             Node firstNode = null;
-            for (LatLon coord : coordList) {
-                Node node = new Node(coord);
+            // record.getCoorCount() - 1 - ommit last node
+            for (int i = 0; i < record.getCoorCount() - 1; i++) {
+                Node node;
+                // Apply corrections to node coordinates
+                if (!pref.m_ruianAdjustPosition) {
+                  node = new Node(record.getCoor(i));
+                } else {
+                  node = new Node(new LatLon(record.getCoor(i).lat()+dAdjX, record.getCoor(i).lon()+dAdjY));
+                }
                 if (firstNode == null) {
                     firstNode = node;
                 }
                 commands.add(new AddCommand(node));
                 way.addNode(node);
             }
+            // Insert first node again - close the polygon.
             way.addNode(firstNode);
 
 
@@ -183,9 +210,9 @@ class TracerActionRuian extends MapMode implements MouseListener {
                 if (!commands.isEmpty()) {
                   String strCommand;
                   if (ConnectWays.s_bAddNewWay == true) {
-                    strCommand = tr("Tracer(RUIAN): add a way with {0} points", coordList.size());
+                    strCommand = tr("Tracer(RUIAN): add a way with {0} points", record.getCoorCount());
                   } else {
-                    strCommand = tr("Tracer(RUIAN): modify way to {0} points", coordList.size());
+                    strCommand = tr("Tracer(RUIAN): modify way to {0} points", record.getCoorCount());
                   }
                   Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
 

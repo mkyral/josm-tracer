@@ -160,9 +160,31 @@ public class ConnectWays {
           }
         }
 
-        // Ref:ruian key
+        // Building:levels key
+        if (s_way.hasKey("building:levels") && !d_way.hasKey("building:levels")) {
+            d_way.put("building:levels", s_way.get("building:levels"));
+        }
+
+        // Building:flats key
+        if (s_way.hasKey("building:flats") && !d_way.hasKey("building:flats")) {
+            d_way.put("building:flats", s_way.get("building:flats"));
+        }
+
+        // Start_date key
+        if (s_way.hasKey("start_date") && !d_way.hasKey("start_date")) {
+            d_way.put("start_date", s_way.get("start_date"));
+        }
+
+        // Ref:ruian:building key
         if (s_way.hasKey("ref:ruian:building")) {
             d_way.put("ref:ruian:building", s_way.get("ref:ruian:building"));
+        }
+
+        // Remove obsolete ref:ruian key
+        if (s_way.hasKey("ref:ruian:building") && d_way.hasKey("ref:ruian")) {
+            if (d_way.get("ref:ruian").equals(s_way.get("ref:ruian:building"))) {
+            d_way.remove("ref:ruian");
+            }
         }
 
         return d_way;
