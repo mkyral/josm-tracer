@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-02-16 20:14+0100\n"
-"PO-Revision-Date: 2014-02-16 20:15+0100\n"
+"POT-Creation-Date: 2014-02-17 08:16+0100\n"
+"PO-Revision-Date: 2014-02-17 08:17+0100\n"
 "Last-Translator: Marian Kyral <mkyral@email.cz>\n"
 "Language-Team: Czech <kde-i18n-doc@kde.org>\n"
 "Language: cs\n"
@@ -42,13 +42,19 @@ msgstr "Trasuji"
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:200
 #, java-format
-msgid "Tracer: add a way with {0} points"
-msgstr "Trasovač: přidána cesta tvořená {0} body"
+msgid "Tracer: add a way with {0} point"
+msgid_plural "Tracer: add a way with {0} points"
+msgstr[0] "Trasovač: přidána cesta tvořená {0} bodem"
+msgstr[1] "Trasovač: přidána cesta tvořená {0} body"
+msgstr[2] "Trasovač: přidána cesta tvořená {0} body"
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:202
 #, java-format
-msgid "Tracer: modify way to {0} points"
-msgstr "Trasovač: cesta upravena na {0} body"
+msgid "Tracer: modify way to {0} point"
+msgid_plural "Tracer: modify way to {0} points"
+msgstr[0] "Trasovač: cesta upravena na {0} bod"
+msgstr[1] "Trasovač: cesta upravena na {0} body"
+msgstr[2] "Trasovač: cesta upravena na {0} bodů"
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:69
 msgid "Tracer - RUIAN"
@@ -62,19 +68,25 @@ msgstr "Získá obrys budovy a některé její vlastnosti z RÚIAN."
 msgid "Data not available."
 msgstr "Data nejsou dostupná."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:197
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:205
 msgid "Nothing changed."
 msgstr "Beze změny."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:205
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:213
 #, java-format
-msgid "Tracer(RUIAN): add a way with {0} points"
-msgstr "Trasovač(RUIAN): přidána cesta tvořená {0} body"
+msgid "Tracer(RUIAN): add a way with {0} point"
+msgid_plural "Tracer(RUIAN): add a way with {0} points"
+msgstr[0] "Trasovač(RUIAN): přidána cesta tvořená {0} bodem"
+msgstr[1] "Trasovač(RUIAN): přidána cesta tvořená {0} body"
+msgstr[2] "Trasovač(RUIAN): přidána cesta tvořená {0} body"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:207
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:215
 #, java-format
-msgid "Tracer(RUIAN): modify way to {0} points"
-msgstr "Trasovač(RUIAN): cesta upravena na {0} body"
+msgid "Tracer(RUIAN): modify way to {0} point"
+msgid_plural "Tracer(RUIAN): modify way to {0} points"
+msgstr[0] "Trasovač(RUIAN): cesta upravena na {0} bod"
+msgstr[1] "Trasovač(RUIAN): cesta upravena na {0} body"
+msgstr[2] "Trasovač(RUIAN): cesta upravena na {0} bodů"
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerException.java:27
 msgid "An unknown error has occurred"

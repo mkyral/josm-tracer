@@ -18,7 +18,7 @@
  */
 package org.openstreetmap.josm.plugins.tracer;
 
-import static org.openstreetmap.josm.tools.I18n.tr;
+import static org.openstreetmap.josm.tools.I18n.*;
 import java.awt.Cursor;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -197,9 +197,9 @@ class TracerAction extends MapMode implements MouseListener {
             if (!commands.isEmpty()) {
               String strCommand;
               if (ConnectWays.s_bAddNewWay == true) {
-                strCommand = tr("Tracer: add a way with {0} points", coordList.size());
+                strCommand = trn("Tracer: add a way with {0} point", "Tracer: add a way with {0} points", coordList.size(), coordList.size());
               } else {
-                strCommand = tr("Tracer: modify way to {0} points", coordList.size());
+                strCommand = trn("Tracer: modify way to {0} point", "Tracer: modify way to {0} points", coordList.size(), coordList.size());
               }
               Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
 

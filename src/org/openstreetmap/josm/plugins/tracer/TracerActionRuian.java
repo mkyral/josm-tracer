@@ -18,7 +18,7 @@
  */
 package org.openstreetmap.josm.plugins.tracer;
 
-import static org.openstreetmap.josm.tools.I18n.tr;
+import static org.openstreetmap.josm.tools.I18n.*;
 import java.awt.Cursor;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -29,6 +29,7 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.lang.StringBuilder;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
@@ -62,6 +63,8 @@ class TracerActionRuian extends MapMode implements MouseListener {
     private boolean shift;
     private String source = "cuzk:ruian";
     private static RuianRecord record;
+
+    private static StringBuilder msg = new StringBuilder();
 
     protected TracerServerRuian server = new TracerServerRuian();
 
@@ -122,30 +125,48 @@ class TracerActionRuian extends MapMode implements MouseListener {
     }
 
     private void tagBuilding(Way way) {
+        msg.setLength(0);
+        msg.append(tr("\nFollowing tags added:\n"));
         if(!alt) {
           if ( record.getBuildingTagKey().equals("building") &&
-               record.getBuildingTagValue().length() > 0)
+               record.getBuildingTagValue().length() > 0) {
             way.put("building", record.getBuildingTagValue());
-          else
+            msg.append("building: " + record.getBuildingTagValue() + "\n");
+          }
+          else {
             way.put("building", "yes");
+            msg.append("building: yes\n");
+          }
         }
 
-        if (record.getBuildingID() > 0 )
+        if (record.getBuildingID() > 0 ) {
           way.put("ref:ruian:building", Long.toString(record.getBuildingID()));
+          msg.append("ref:ruian:building: " + Long.toString(record.getBuildingID()) + "\n");
+        }
 
-        if (record.getBuildingLevels().length() > 0)
+        if (record.getBuildingLevels().length() > 0) {
           way.put("building:levels", record.getBuildingLevels());
+          msg.append("building:levels: " + record.getBuildingLevels() + "\n");
+        }
 
-        if (record.getBuildingFlats().length() > 0)
+        if (record.getBuildingFlats().length() > 0) {
           way.put("building:flats", record.getBuildingFlats());
+          msg.append("building:flats: " + record.getBuildingFlats() + "\n");
+        }
 
-        if (record.getBuildingFinished().length() > 0)
+        if (record.getBuildingFinished().length() > 0) {
           way.put("start_date", record.getBuildingFinished());
+          msg.append("start_date: " + record.getBuildingFinished() + "\n");
+        }
 
-        if (record.getSource().length() > 0)
+        if (record.getSource().length() > 0) {
           way.put("source", record.getSource());
-        else
+          msg.append("source: " + record.getSource() + "\n");
+        }
+        else {
           way.put("source", source);
+          msg.append("source: " + source + "\n");
+        }
     }
 
     private void traceSync(LatLon pos, ProgressMonitor progressMonitor) {
@@ -183,7 +204,8 @@ class TracerActionRuian extends MapMode implements MouseListener {
                 if (!pref.m_ruianAdjustPosition) {
                   node = new Node(record.getCoor(i));
                 } else {
-                  node = new Node(new LatLon(record.getCoor(i).lat()+dAdjX, record.getCoor(i).lon()+dAdjY));
+                  node = new Node(new LatLon(LatLon.roundToOsmPrecisionStrict(record.getCoor(i).lat()+dAdjX),
+                                             LatLon.roundToOsmPrecisionStrict(record.getCoor(i).lon()+dAdjY)));
                 }
                 if (firstNode == null) {
                     firstNode = node;
@@ -194,7 +216,7 @@ class TracerActionRuian extends MapMode implements MouseListener {
             // Insert first node again - close the polygon.
             way.addNode(firstNode);
 
-
+            System.out.println("TracedWay: " + way.toString());
             tagBuilding(way);
             // connect to other buildings or modify existing building
             Command connCmd = ConnectWays.connect(way, pos, ctrl, alt, source);
@@ -210,9 +232,9 @@ class TracerActionRuian extends MapMode implements MouseListener {
                 if (!commands.isEmpty()) {
                   String strCommand;
                   if (ConnectWays.s_bAddNewWay == true) {
-                    strCommand = tr("Tracer(RUIAN): add a way with {0} points", record.getCoorCount());
+                    strCommand = trn("Tracer(RUIAN): add a way with {0} point", "Tracer(RUIAN): add a way with {0} points", record.getCoorCount(), record.getCoorCount()) + "\n" + msg;
                   } else {
-                    strCommand = tr("Tracer(RUIAN): modify way to {0} points", record.getCoorCount());
+                    strCommand = trn("Tracer(RUIAN): modify way to {0} point", "Tracer(RUIAN): modify way to {0} points", record.getCoorCount(), record.getCoorCount());
                   }
                   Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
 

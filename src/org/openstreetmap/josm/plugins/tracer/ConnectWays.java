@@ -46,7 +46,7 @@ import org.openstreetmap.josm.tools.Pair;
 
 public class ConnectWays {
     static double s_dMinDistance    = 0.000006;   // Minimal distance, for objects
-    static double s_dMinDistanceN2N   = 0.0000005;  // Minimal distance, when nodes are merged
+    static double s_dMinDistanceN2N   = 0.000001;  // Minimal distance, when nodes are merged
     static double s_dMinDistanceN2oW  = 0.000001;   // Minimal distance, when node is connected to other way
     static double s_dMinDistanceN2tW  = 0.000001;   // Minimal distance, when other node is connected this way
     final static double MAX_ANGLE = 30;       // Minimal angle, when other node is connected this way
@@ -55,6 +55,7 @@ public class ConnectWays {
     static Way s_oWayOld;
     static List<Way> s_oWays;
     static List<Node> s_oNodes;
+    static List<Node> connectedNodes = new LinkedList<Node>();
 
 //     static ServerParam s_oParam;
     static boolean s_bCtrl;
@@ -62,18 +63,20 @@ public class ConnectWays {
 
     static boolean s_bAddNewWay;
 
-//     private static void calcDistance()
-//     {
-//       double dTileSize = Double.parseDouble(s_oParam.getTileSize());
-//       double dResolution = Double.parseDouble(s_oParam.getResolution());
-//       double dMin = dTileSize / dResolution;
-//
-//       s_dMinDistance = dMin * 30;
-//       s_dMinDistanceN2N = dMin * 2.5;
-//       s_dMinDistanceN2oW = dMin * 5;
-//       s_dMinDistanceN2tW = dMin * 5;
-//     }
-//
+     private static void calcDistance()
+     {
+//        double dTileSize = Double.parseDouble(s_oParam.getTileSize());
+//        double dResolution = Double.parseDouble(s_oParam.getResolution());
+//        double dMin = dTileSize / dResolution;
+
+      double dMin = (double) 0.0004 / (double) 2048;
+
+       s_dMinDistance = dMin * 30;
+       s_dMinDistanceN2N = dMin * 2.5;
+       s_dMinDistanceN2oW = dMin * 5;
+       s_dMinDistanceN2tW = dMin * 5;
+     }
+
     private static void getWays(Way way) {
       BBox bbox = new BBox(way);
       bbox.addPrimitive(way,s_dMinDistance);
@@ -84,6 +87,21 @@ public class ConnectWays {
       List<Way> ways;
       ways = OsmPrimitive.getFilteredList(node.getReferrers(), Way.class);
       return ways;
+    }
+
+    private static void getConnectedNodes(Way way) {
+      if (way == null) {
+        return;
+      }
+
+      List<Way> linkedWays;
+      for (int i = 0; i < way.getNodesCount(); i++) {
+        linkedWays = getWaysOfNode(way.getNode(i));
+        if (linkedWays.size() > 1) {
+          connectedNodes.add(way.getNode(i));
+          System.out.println("Connected node: " + way.getNode(i));
+        }
+      }
     }
 
     private static void getNodes(Way way) {
@@ -207,6 +225,7 @@ public class ConnectWays {
         getWays(newWay);
 
         s_oWayOld = getOldWay(pos);
+        getConnectedNodes(s_oWayOld);
 
         if (s_oWayOld == null) {
           s_bAddNewWay = true;
@@ -226,7 +245,7 @@ public class ConnectWays {
             nodesCount = newWay.getNodesCount();
             // 1) have the same numbers of nodes?
             if (newWay.getNodesCount() == s_oWayOld.getNodesCount()) {
-              System.out.println("Old and New was have " + s_oWayOld.getNodesCount() + " nodes");
+              System.out.println("Old and New ways have " + s_oWayOld.getNodesCount() + " nodes");
               // 2) All nodes have the same coordination
               outer: for (n = 0; n < nodesCount; n++) {
                 Node newNode = newWay.getNode(n);
@@ -251,22 +270,24 @@ public class ConnectWays {
 
             // Ways are different - merging
             System.out.println("Ways are NOT equal!");
-            int i;
             Way tempWay;
             s_bAddNewWay = false;
-            //Main.main.getCurrentDataSet().setSelected(m_wayOld);
 
+            // Create a working copy of the oldWay
             tempWay = new Way(s_oWayOld);
 
-            for (i = 0; i < newWay.getNodesCount(); i++) {
+            // Add New nodes
+            for (int i = 0; i < newWay.getNodesCount(); i++) {
               tempWay.addNode(tempWay.getNodesCount(), newWay.getNode(i));
             }
-            i++;
-            for (i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
+
+            // Remove Old nodes
+            for (int i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
               tempWay.removeNode( s_oWayOld.getNode(i) );
             }
-            //cmds.add(new ChangeCommand(m_wayOld, tempWay));
-            for (i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
+
+            // Remove old nodes from list of working nodes list
+            for (int i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
               Node nd = s_oWayOld.getNode(i);
               List<Way> ways = getWaysOfNode(nd);
               if (ways.size()<=1) {
@@ -278,11 +299,11 @@ public class ConnectWays {
             s_oWay = updateKeys(s_oWay, newWay, source);
         }
 
-        {
-          cmds2.addAll(connectTo());
+        cmds2.addAll(connectTo());
 
-          cmds.add(new ChangeCommand(s_oWayOld, trySplitWayByAnyNodes(s_oWay)));
-        }
+        // Modify the way
+        cmds.add(new ChangeCommand(s_oWayOld, trySplitWayByAnyNodes(s_oWay)));
+
         cmds.addAll(cmds2);
 
 //         TracerDebug oTracerDebug = new TracerDebug();
@@ -308,15 +329,9 @@ public class ConnectWays {
             System.out.println("-------");
             System.out.println("Node: " + n);
             LatLon ll = n.getCoor();
-            //BBox bbox = new BBox(
-            //        ll.getX() - MIN_DISTANCE,
-            //        ll.getY() - MIN_DISTANCE,
-            //        ll.getX() + MIN_DISTANCE,
-            //        ll.getY() + MIN_DISTANCE);
 
-            // bude se node slucovat s jinym?
+            // Will merge with something else?
             double minDistanceSq = s_dMinDistanceN2N;
-            //List<Node> nodes = Main.main.getCurrentDataSet().searchNodes(bbox);
             Node nearestNode = null;
             for (Node nn : s_oNodes) {
               System.out.println("Node: " + nn);
@@ -324,6 +339,7 @@ public class ConnectWays {
                     continue;
                 }
                 double dist = nn.getCoor().distance(ll);
+                System.out.println("Dist: "+ dist+"; minDistanceSq: "+ minDistanceSq);
                 if (dist < minDistanceSq) {
                     minDistanceSq = dist;
                     nearestNode = nn;
@@ -332,7 +348,7 @@ public class ConnectWays {
 
             System.out.println("Nearest: " + nearestNode + " distance: " + minDistanceSq);
             if (nearestNode == null) {
-                tryConnectNodeToAnyWay(n, modifiedWays);
+                cmds.addAll(tryConnectNodeToAnyWay(n, modifiedWays));
             } else {
                 System.out.println("+add Node distance: " + minDistanceSq);
                 cmds.addAll(mergeNodes(n, nearestNode));
@@ -342,8 +358,6 @@ public class ConnectWays {
         for (Map.Entry<Way, Way> e : modifiedWays.entrySet()) {
             cmds.add(new ChangeCommand(e.getKey(), e.getValue()));
         }
-
-        //cmds.addFirst(new ChangeCommand(way, trySplitWayByAnyNodes(newWay)));
 
         List<Command> cmd = cmds;
         return cmd;
@@ -357,25 +371,46 @@ public class ConnectWays {
      */
     private static List<Command> mergeNodes(Node n1, Node n2){
         List<Command> cmds = new LinkedList<Command>();
+        Node n1x = n1;
+
         cmds.add(new MoveCommand(n2,
                  (n1.getEastNorth().getX() - n2.getEastNorth().getX())/2,
                  (n1.getEastNorth().getY() - n2.getEastNorth().getY())/2
                  ));
 
+        System.out.println("-- mergeNodes --");
+        System.out.println("-- n1: " + n1.toString() + ", n2: " + n2.toString());
+        System.out.println("-- Way: " + s_oWay.toString());
         Way newWay = new Way(s_oWay);
 
         int j = s_oWay.getNodes().indexOf(n1);
+        System.out.println("-- j: " + j);
+        System.out.println("--  ----  ----  ----  ----  ----  ----  ----  ----  --");
+
+        if (j < 0) {
+//           // Node not found, try lower precision
+//           for (int i = 0; i < s_oWay.getNodesCount(); i++) {
+//             if (s_oWay.getNode(i).getCoor().distance(n1.getCoor()) <= s_dMinDistanceN2N) {
+//               j = i;
+//               n1x = s_oWay.getNode(i);
+//               break;
+//             }
+//           }
+        return cmds;
+
+        }
+        System.out.println("-- j: " + j);
         newWay.addNode(j, n2);
         if (j == 0) {
             // first + last point
           newWay.addNode(newWay.getNodesCount(), n2);
         }
 
-        newWay.removeNode(n1);
- //       cmds.add(new ChangeCommand(m_way, newWay));
+        newWay.removeNode(n1x);
+
         s_oWay = new Way(newWay);
 
-        cmds.add(new DeleteCommand(n1));
+        cmds.add(new DeleteCommand(n1x));
         return cmds;
     }
 
@@ -390,27 +425,21 @@ public class ConnectWays {
      * @throws IndexOutOfBoundsException
      * @return List of Commands.
      */
-  private static void tryConnectNodeToAnyWay(Node node, Map<Way, Way> m)
+  private static List<Command>  tryConnectNodeToAnyWay(Node node, Map<Way, Way> m)
             throws IllegalStateException, IndexOutOfBoundsException {
 
-        //List<Command> cmds = new LinkedList<Command>();
-
         LatLon ll = node.getCoor();
-        //BBox bbox = new BBox(
-        //        ll.getX() - MIN_DISTANCE_TW,
-        //        ll.getY() - MIN_DISTANCE_TW,
-        //        ll.getX() + MIN_DISTANCE_TW,
-        //        ll.getY() + MIN_DISTANCE_TW);
+        List<Command> cmds = new LinkedList<Command>();
 
         // node nebyl slouceny s jinym
         // hledani pripadne blizke usecky, kam bod pridat
-        //List<Way> ways = Main.main.getCurrentDataSet().searchWays(bbox);
         double minDist = Double.MAX_VALUE;
         Way nearestWay = null;
         int nearestNodeIndex = 0;
         for (Way ww : s_oWays) {
 //           System.out.println("Way: " + ww);
             if (!ww.isUsable() || ww.containsNode(node) || !isSameTag(ww)) {
+//                 System.out.println("!ww.isUsable(): "+!ww.isUsable()+"; ww.containsNode(node): "+ww.containsNode(node)+"; !isSameTag(ww): "+!isSameTag(ww));
                 continue;
             }
 
@@ -434,13 +463,28 @@ public class ConnectWays {
         if (minDist < s_dMinDistanceN2oW) {
             Way newNWay = new Way(nearestWay);
 
-            newNWay.addNode(nearestNodeIndex + 1, node);
+            boolean duplicateNodeFound = false;
+            for ( int i = 0; i < newNWay.getNodesCount(); i++) {
+              if (newNWay.getNode(i).getCoor().distance(node.getCoor()) <= s_dMinDistanceN2N ) {
+                // Do not put duplicated node, merge nodes instead
+                cmds.addAll(mergeNodes(node, newNWay.getNode(i)));
+                duplicateNodeFound = true;
+              }
+            }
+
+            if (!duplicateNodeFound) {
+              newNWay.addNode(nearestNodeIndex + 1, node);
+            }
+
             System.out.println("New way:" + newNWay);
             System.out.println("+add WayOld.Node distance: " + minDist);
             m.put(nearestWay, newNWay);
             s_oWays.remove(newNWay);
             s_oWays.add(nearestWay);
+            System.out.println("Updated nearest way: " + nearestWay.toString());
+            System.out.println("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
         }
+      return cmds;
     }
 
     private static double distanceFromSegment2(LatLon c, LatLon a, LatLon b) {
@@ -557,6 +601,7 @@ public class ConnectWays {
 //           return v != null && !v.equals("no") && !v.equals("entrance");
 //         }
 //         return v != null && !v.equals("no");
+//       System.out.println(w.toString()+" |Tag: "+w.getKeys().get("building"));
       return (w.getKeys().get("building") == null ? false : !w.getKeys().get("building").equals("no") && !w.getKeys().get("building").equals("entrance"));
     }
 

@@ -115,7 +115,7 @@ public class RuianRecord {
 
       try {
         m_coor_lon = obj.getJSONObject("coordinates").getDouble("lon");
-        System.out.println("lat: " + Double.toString(m_coor_lon));
+        System.out.println("lon: " + Double.toString(m_coor_lon));
       } catch (Exception e) {
       }
 
@@ -235,7 +235,8 @@ public class RuianRecord {
           JSONArray node = arr.getJSONArray(i);
 
           try {
-            LatLon coor = new LatLon(node.getDouble(1), node.getDouble(0));
+            LatLon coor = new LatLon(LatLon.roundToOsmPrecisionStrict(node.getDouble(1)),
+                                     LatLon.roundToOsmPrecisionStrict(node.getDouble(0)));
             System.out.println("coor: " + coor.toString());
             m_geometry.add(coor);
           } catch (Exception e) {
