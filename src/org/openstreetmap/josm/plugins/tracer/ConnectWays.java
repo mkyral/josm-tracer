@@ -161,15 +161,8 @@ public class ConnectWays {
     }
 
     private static Way updateKeys(Way d_way, Way s_way, String newSource) {
-        // Source key
-//         if (d_way.hasKey("source")) {
-//           String s = d_way.get("source");
-//           if ( !s.matches("(.*)"+newSource+"(.*)")) {
-//             d_way.put("source", s + ";" + newSource);
-//           }
-//         } else {
-          d_way.put("source", newSource);
-//         }
+
+        d_way.put("source", newSource);
 
         // Building key
         if (s_way.hasKey("building")) {
@@ -196,6 +189,11 @@ public class ConnectWays {
         // Ref:ruian:building key
         if (s_way.hasKey("ref:ruian:building")) {
             d_way.put("ref:ruian:building", s_way.get("ref:ruian:building"));
+        }
+
+        // Ref:ruian:building key
+        if (s_way.hasKey("building:ruian:type")) {
+            d_way.put("building:ruian:type", s_way.get("building:ruian:type"));
         }
 
         // Remove obsolete ref:ruian key

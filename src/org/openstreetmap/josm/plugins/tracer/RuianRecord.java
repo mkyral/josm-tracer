@@ -43,7 +43,7 @@ public class RuianRecord {
     private static long     m_ruian_id;
     private static int      m_levels;
     private static int      m_flats;
-    private static String   m_usage;
+    private static String   m_usage_code;
     private static String   m_usage_key;
     private static String   m_usage_val;
     private static String   m_finished;
@@ -72,7 +72,7 @@ public class RuianRecord {
       m_ruian_id = 0;
       m_levels = 0;
       m_flats = 0;
-      m_usage = "";
+      m_usage_code = "";
       m_usage_key = "";
       m_usage_val = "";
       m_finished = "";
@@ -199,7 +199,7 @@ public class RuianRecord {
         }
 
         try {
-          m_usage = building.getString("zpusob_vyuziti");
+          m_usage_code = building.getString("zpusob_vyuziti_kod");
         } catch (Exception e) {
         }
 
@@ -372,6 +372,14 @@ public class RuianRecord {
    */
   public String getBuildingFinished() {
     return m_finished;
+  }
+
+  /**
+   *  Return RUIAN building usage code
+   *  @return RUIAN building usage code
+   */
+  public String getBuildingUsageCode() {
+    return m_usage_code;
   }
 
   /**

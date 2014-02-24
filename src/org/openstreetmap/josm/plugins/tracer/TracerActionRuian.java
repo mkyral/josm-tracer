@@ -144,6 +144,11 @@ class TracerActionRuian extends MapMode implements MouseListener {
           msg.append("ref:ruian:building: " + Long.toString(record.getBuildingID()) + "\n");
         }
 
+        if (record.getBuildingUsageCode().length() > 0) {
+          way.put("building:ruian:type", record.getBuildingUsageCode());
+          msg.append("building:ruian:type: " + record.getBuildingUsageCode() + "\n");
+        }
+
         if (record.getBuildingLevels().length() > 0) {
           way.put("building:levels", record.getBuildingLevels());
           msg.append("building:levels: " + record.getBuildingLevels() + "\n");

@@ -26,7 +26,7 @@ $query="
         am.adrp_psc psc, ul.nazev ulice, c.nazev cast_obce,
         momc.nazev mestska_cast,
         ob.nazev obec, ok.nazev okres, vu.nazev kraj,
-        a.osmtag_k, a.osmtag_v
+        s.zpusob_vyuziti_kod, a.osmtag_k, a.osmtag_v
   from rn_stavebni_objekt s
       left outer join osmtables.zpusob_vyuziti_objektu a on s.zpusob_vyuziti_kod = a.kod
       left outer join rn_adresni_misto am on am.stavobj_kod = s.kod and not am.deleted
@@ -61,7 +61,7 @@ if (pg_num_rows($result) > 0)
            "kraj" => $row["kraj"],
            "psc" => $row["psc"],
            "pocet_podlazi" => $row["pocet_podlazi"],
-           "zpusob_vyuziti" => $row["nazev"],
+           "zpusob_vyuziti_kod" => $row["zpusob_vyuziti_kod"],
            "zpusob_vyuziti_key" => $row["osmtag_k"],
            "zpusob_vyuziti_val" => $row["osmtag_v"],
            "pocet_bytu" => $row["pocet_bytu"],
