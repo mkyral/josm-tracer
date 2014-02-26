@@ -45,7 +45,7 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.tools.Pair;
 
 public class ConnectWays {
-    static double s_dMinDistance    = 0.000006;   // Minimal distance, for objects
+    static double s_dMinDistance      = 0.000006;   // Minimal distance, for objects
     static double s_dMinDistanceN2N   = 0.000001;  // Minimal distance, when nodes are merged
     static double s_dMinDistanceN2oW  = 0.000001;   // Minimal distance, when node is connected to other way
     static double s_dMinDistanceN2tW  = 0.000001;   // Minimal distance, when other node is connected this way
@@ -56,6 +56,7 @@ public class ConnectWays {
     static List<Way> s_oWays;
     static List<Node> s_oNodes;
     static List<Node> connectedNodes = new LinkedList<Node>();
+    static List<Node> deletedNodes = new LinkedList<Node>();
 
 //     static ServerParam s_oParam;
     static boolean s_bCtrl;
@@ -102,6 +103,40 @@ public class ConnectWays {
           System.out.println("Connected node: " + way.getNode(i));
         }
       }
+    }
+
+    private static  List<Command>  checkAndMergeNodes (Way way) {
+      Map<Way, Way> modifiedWays = new HashMap<Way, Way>();
+      LinkedList<Command> cmds = new LinkedList<Command>();
+      Way newWay = new Way(way);
+      System.out.println("-- checkAndMergeNodes() --");
+       System.out.println("Deleted nodes: " + deletedNodes);
+      for (int i = 0; i < way.getNodesCount() - 1; i++) {
+        Node n = way.getNode(i);
+        LatLon ll = n.getCoor();
+        BBox bbox = new BBox(
+                ll.getX() - s_dMinDistance,
+                ll.getY() - s_dMinDistance,
+                ll.getX() + s_dMinDistance,
+                ll.getY() + s_dMinDistance);
+
+        // bude se node slucovat s jinym?
+        double minDistanceSq = s_dMinDistance;
+        List<Node> nodes = Main.main.getCurrentDataSet().searchNodes(bbox);
+        for (Node nn : nodes) {
+          System.out.println("Checking node: " + nn);
+          if (!nn.isUsable() || way.containsNode(nn) || newWay.containsNode(nn) || !isInSameTag(nn) || deletedNodes.indexOf(nn) >= 0 || nn.isDeleted()) {
+              System.out.println("->continue");
+              continue;
+          }
+          double dist = nn.getCoor().distance(ll);
+          if (dist < minDistanceSq && nn.getId() == 0) {
+            System.out.println("Merge nodes: " + n.toString() + " and " + nn.toString() + ", ID: " + nn.getId());
+              cmds.addAll(mergeNodes(n, nn));
+          }
+        }
+      }
+      return cmds;
     }
 
     private static void getNodes(Way way) {
@@ -290,8 +325,10 @@ public class ConnectWays {
               List<Way> ways = getWaysOfNode(nd);
               if (ways.size()<=1) {
                   cmds2.add(new DeleteCommand( s_oWayOld.getNode(i) ));
+                  deletedNodes.add(s_oWayOld.getNode(i));
+                  s_oNodes.remove(s_oWayOld.getNode(i));
               }
-              s_oNodes.remove(s_oWayOld.getNode(i));
+//               s_oNodes.remove(s_oWayOld.getNode(i));
             }
             s_oWay = tempWay;
             s_oWay = updateKeys(s_oWay, newWay, source);
@@ -302,7 +339,10 @@ public class ConnectWays {
         // Modify the way
         cmds.add(new ChangeCommand(s_oWayOld, trySplitWayByAnyNodes(s_oWay)));
 
+        cmds2.addAll(checkAndMergeNodes(s_oWay));
+
         cmds.addAll(cmds2);
+
 
 //         TracerDebug oTracerDebug = new TracerDebug();
 //         oTracerDebug.OutputCommands(cmds);
@@ -333,12 +373,15 @@ public class ConnectWays {
             Node nearestNode = null;
             for (Node nn : s_oNodes) {
               System.out.println("Node: " + nn);
-                if (!nn.isUsable() || way.containsNode(nn) || s_oWay.containsNode(nn) || !isInSameTag(nn)) {
+                if (!nn.isUsable() || way.containsNode(nn) || s_oWay.containsNode(nn) || !isInSameTag(nn) || deletedNodes.indexOf(nn) >= 0 || nn.isDeleted()) {
+                    System.out.println("deletedNodes.indexOf(nn): " + deletedNodes.indexOf(nn));
+                    System.out.println("nn.isDeleted(): " + nn.isDeleted());
+                    System.out.println("-> Continue");
                     continue;
                 }
                 double dist = nn.getCoor().distance(ll);
                 System.out.println("Dist: "+ dist+"; minDistanceSq: "+ minDistanceSq);
-                if (dist < minDistanceSq) {
+                if (dist <= minDistanceSq) {
                     minDistanceSq = dist;
                     nearestNode = nn;
                 }
@@ -397,7 +440,6 @@ public class ConnectWays {
         return cmds;
 
         }
-        System.out.println("-- j: " + j);
         newWay.addNode(j, n2);
         if (j == 0) {
             // first + last point
@@ -409,6 +451,13 @@ public class ConnectWays {
         s_oWay = new Way(newWay);
 
         cmds.add(new DeleteCommand(n1x));
+        if (n1x.getDataSet() != null){
+          List<Way> ways = getWaysOfNode(n1x);
+          if (ways.size()<=1) {
+              deletedNodes.add(n1x);
+          }
+        }
+
         return cmds;
     }
 
@@ -541,7 +590,10 @@ public class ConnectWays {
 
             Node nearestNode = null;
             for (Node nod : s_oNodes) {
-                if (!nod.isUsable() || way.containsNode(nod) || !isInSameTag(nod)) {
+                if (!nod.isUsable() || way.containsNode(nod) || !isInSameTag(nod) || deletedNodes.indexOf(nod) >= 0 || nod.isDeleted()) {
+                    System.out.println("deletedNodes.indexOf(nod): " + deletedNodes.indexOf(nod));
+                    System.out.println("nod.isDeleted(): " + nod.isDeleted());
+                    System.out.println("->continue");
                     continue;
                 }
                 LatLon nn = nod.getCoor();
