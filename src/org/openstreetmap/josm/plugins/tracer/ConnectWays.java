@@ -44,19 +44,20 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 // import org.openstreetmap.josm.plugins.tracer2.preferences.ServerParam;
 import org.openstreetmap.josm.tools.Pair;
 
+import org.openstreetmap.josm.plugins.tracer.TracerDebug;
 public class ConnectWays {
     static double s_dMinDistance      = 0.000006;   // Minimal distance, for objects
     static double s_dMinDistanceN2N   = 0.000001;  // Minimal distance, when nodes are merged
     static double s_dMinDistanceN2oW  = 0.000001;   // Minimal distance, when node is connected to other way
     static double s_dMinDistanceN2tW  = 0.000001;   // Minimal distance, when other node is connected this way
-    final static double MAX_ANGLE = 30;       // Minimal angle, when other node is connected this way
 
-    static Way s_oWay;
-    static Way s_oWayOld;
-    static List<Way> s_oWays;
-    static List<Node> s_oNodes;
-    static List<Node> connectedNodes = new LinkedList<Node>();
-    static List<Node> deletedNodes = new LinkedList<Node>();
+    static Way s_oWay; // New or updated way
+    static Way s_oWayOld; // The original way
+    static List<Way>  s_oWays; // List of all ways we will work with
+    static List<Node> s_oNodes; // List of all nodes we will work with
+    static List<Node> connectedNodes; // List of nodes that are also connected other way
+
+    static List<Node> s_overlapNodes; // List of nodes inside other ways (overlaped ways)
 
 //     static ServerParam s_oParam;
     static boolean s_bCtrl;
@@ -64,95 +65,132 @@ public class ConnectWays {
 
     static boolean s_bAddNewWay;
 
-     private static void calcDistance()
-     {
+    /**
+     *  Print debug messages
+     *  @param msg mesage
+     */
+    private static void debugMsg(String msg) {
+      System.out.println(msg);
+    }
+
+    /**
+     *  Calculate minimal distances
+     */
+    private static void calcDistance()
+    {
 //        double dTileSize = Double.parseDouble(s_oParam.getTileSize());
 //        double dResolution = Double.parseDouble(s_oParam.getResolution());
 //        double dMin = dTileSize / dResolution;
 
-      double dMin = (double) 0.0004 / (double) 2048;
+    double dMin = (double) 0.0004 / (double) 2048;
 
-       s_dMinDistance = dMin * 30;
-       s_dMinDistanceN2N = dMin * 2.5;
-       s_dMinDistanceN2oW = dMin * 5;
-       s_dMinDistanceN2tW = dMin * 5;
-     }
-
-    private static void getWays(Way way) {
-      BBox bbox = new BBox(way);
-      bbox.addPrimitive(way,s_dMinDistance);
-        s_oWays = Main.main.getCurrentDataSet().searchWays(bbox);
+      s_dMinDistance = dMin * 30;
+      s_dMinDistanceN2N = dMin * 2.5;
+      s_dMinDistanceN2oW = dMin * 5;
+      s_dMinDistanceN2tW = dMin * 5;
     }
 
+    /**
+     *  Get ways close to the way
+     *  @param way Way
+     */
+    private static void getWays(Way way) {
+      debugMsg("-- getWays() --");
+      s_oWays = new LinkedList<Way>();
+      BBox bbox = new BBox(way);
+      bbox.addPrimitive(way,s_dMinDistance);
+
+      for (Way w : Main.main.getCurrentDataSet().searchWays(bbox)) {
+        if (w.isUsable()) {
+          s_oWays.add(w);
+        }
+      }
+    }
+
+    /**
+     *  Get nodes close to the way
+     *  @param way Way
+     */
+    private static void getNodes(Way way) {
+      debugMsg("-- getNodes() --");
+
+      s_oNodes = new LinkedList<Node>();
+      BBox bbox = new BBox(way);
+      bbox.addPrimitive(way,s_dMinDistance);
+
+      for (Node nd : Main.main.getCurrentDataSet().searchNodes(bbox)) {
+        if (nd.isUsable()) {
+          s_oNodes.add(nd);
+        }
+      }
+    }
+
+    /**
+     *  Get ways connected to the Node
+     *  @param node Node
+     *  @return connected ways
+     */
     private static List<Way> getWaysOfNode(Node node) {
-      List<Way> ways;
-      ways = OsmPrimitive.getFilteredList(node.getReferrers(), Way.class);
+      debugMsg("-- getWaysOfNode() --");
+      debugMsg("   param: Node = " + node);
+
+      List<Way> ways = new LinkedList<Way>();
+
+      if (node.getDataSet() == null) {
+        return ways;
+      }
+
+      for (Way way : s_oWays) {
+        if (way.isUsable() && way.containsNode(node)) {
+          debugMsg("    Use way:" + way);
+          ways.add(way);
+        }
+      }
+      debugMsg("<< end of getWaysOfNode()");
       return ways;
     }
 
+    /**
+     *  Get list of nodes shared with another way (connected node)
+     *  @param way Way
+     */
     private static void getConnectedNodes(Way way) {
+      debugMsg("-- getConnectedNodes() --");
       if (way == null) {
         return;
       }
 
-      List<Way> linkedWays;
+      connectedNodes = new LinkedList<Node>();
+
       for (int i = 0; i < way.getNodesCount(); i++) {
-        linkedWays = getWaysOfNode(way.getNode(i));
-        if (linkedWays.size() > 1) {
+        if (getWaysOfNode(way.getNode(i)).size() > 1) {
           connectedNodes.add(way.getNode(i));
-          System.out.println("Connected node: " + way.getNode(i));
+          debugMsg("   Connected node: " + way.getNode(i));
         }
       }
     }
 
-    private static  List<Command>  checkAndMergeNodes (Way way) {
-      Map<Way, Way> modifiedWays = new HashMap<Way, Way>();
-      LinkedList<Command> cmds = new LinkedList<Command>();
-      Way newWay = new Way(way);
-      System.out.println("-- checkAndMergeNodes() --");
-       System.out.println("Deleted nodes: " + deletedNodes);
-      for (int i = 0; i < way.getNodesCount() - 1; i++) {
-        Node n = way.getNode(i);
-        LatLon ll = n.getCoor();
-        BBox bbox = new BBox(
-                ll.getX() - s_dMinDistance,
-                ll.getY() - s_dMinDistance,
-                ll.getX() + s_dMinDistance,
-                ll.getY() + s_dMinDistance);
-
-        // bude se node slucovat s jinym?
-        double minDistanceSq = s_dMinDistance;
-        List<Node> nodes = Main.main.getCurrentDataSet().searchNodes(bbox);
-        for (Node nn : nodes) {
-          System.out.println("Checking node: " + nn);
-          if (!nn.isUsable() || way.containsNode(nn) || newWay.containsNode(nn) || !isInSameTag(nn) || deletedNodes.indexOf(nn) >= 0 || nn.isDeleted()) {
-              System.out.println("->continue");
-              continue;
-          }
-          double dist = nn.getCoor().distance(ll);
-          if (dist < minDistanceSq && nn.getId() == 0) {
-            System.out.println("Merge nodes: " + n.toString() + " and " + nn.toString() + ", ID: " + nn.getId());
-              cmds.addAll(mergeNodes(n, nn));
-          }
-        }
-      }
-      return cmds;
-    }
-
-    private static void getNodes(Way way) {
-      BBox bbox = new BBox(way);
-      bbox.addPrimitive(way,s_dMinDistance);
-      s_oNodes = Main.main.getCurrentDataSet().searchNodes(bbox);
-    }
-
+    /**
+     *  Calculate angle
+     *  @param oP1 Position
+     *  @param n   Node
+     *  @return deltaAlpha
+     */
     private static double calcAlpha(LatLon oP1, Node n) {
+      debugMsg("-- calcAlpha() --");
       LatLon oP2 = n.getCoor();
 
       double dAlpha = Math.atan((oP2.getY() - oP1.getY()) / (oP2.getX() - oP1.getX())) * 180 / Math.PI + (oP1.getX() > oP2.getX() ? 180 : 0);
       return checkAlpha(dAlpha);
     }
 
+    /**
+     *  Check angle
+     *  @param dAlpha delta Alpha
+     *  @return deltaAlpha
+     */
     private static Double checkAlpha(Double dAlpha) {
+      debugMsg("-- checkAlpha() --");
         if (dAlpha > 180) {
             return dAlpha - 360;
         }
@@ -162,7 +200,14 @@ public class ConnectWays {
         return dAlpha;
     }
 
+    /**
+     *  Check whether point is inside the way
+     *  @param pos position
+     *  @param way way
+     *  @return Return True when all way nodes are around the position (sum of angles to all way nodes is 360 deg)
+     */
     private static boolean isNodeInsideWay(LatLon pos, Way way) {
+      debugMsg("-- isNodeInsideWay() --");
       List<Node> listNode = way.getNodes();
 
       double dAlpha;
@@ -179,7 +224,13 @@ public class ConnectWays {
       return dSumAlpha > 359 && dSumAlpha < 361;
     }
 
+    /**
+     *  Get already existing way
+     *  @param pos position
+     *  @return way
+     */
     private static Way getOldWay(LatLon pos) {
+      debugMsg("-- getOldWay() --");
       int i;
 
       for (i = 0; i < s_oWays.size(); i++) {
@@ -195,7 +246,201 @@ public class ConnectWays {
       return null;
     }
 
+    /**
+     *  Check whether ways are overlaped
+     *    (some node of one way is inside other way)
+     *  @param w1 first way
+     *  @param w1 second way
+     *  @return True when ways are overlaped
+     */
+    private static Boolean waysAreOverlaped(Way w1, Way w2) {
+
+      debugMsg("-- waysAreOverlaped() --");
+      s_overlapNodes = new LinkedList<Node>();
+      for (int i; i < w1.getNodesCount() - 1; i++) {
+        Node n = way.getNode(i);
+        if (isNodeInsideWay(n.getCoor(), w2)) {
+          s_overlapNodes.add(n);
+        }
+
+      for (int i; i < w2.getNodesCount() - 1; i++) {
+        Node n = way.getNode(i);
+        if (isNodeInsideWay(n.getCoor(), w1)) {
+          s_overlapNodes.add(n);
+        }
+
+      if (s_overlapNodes.size() == 0 ) {
+        return false;
+      }
+
+      return true;
+    }
+
+
+    /**
+     * Correct overlaping of ways
+     *  @param way overlaped way
+     * @return List of Commands.
+     */
+    private static  List<Command> correctOverlaping(Way way) {
+
+      debugMsg("-- correctOverlaping() --");
+      debugMsg("Overlaped way" + way);
+
+      List<Command> cmds = new LinkedList<Command>();
+
+      private static final int LEFT = 1;
+      private static final int RIGHT = 2;
+      private static final int UP = 3;
+      private static final int DOWN = 4;
+
+      Way myWay = new Way(s_oWays);
+      Way otherWay = new Way(way);
+
+      LatLon myCenterPoint = myWay.getBBox().center();
+      LatLon otherCenterPoint = otherWay.getBBox().center();
+
+      for (Node n : s_overlapNodes) {
+        Node myNode = new(n);
+        int myNodeIndex = s_oWays.indexOf(myNode);
+        if (myNodeIndex >= 0) {
+          // My node is inside another way
+          //  1) Find segment of other way that is between my node and my way center
+          //  2) Move nodes of such way segment to my border
+          //  3) Split my border and include these nodes to my way
+
+          debugMsg("    myNode inside otherWay: " + myNode);
+
+          // Define line between my Center point and my Node
+          StraightLine myLine = new StraightLine(
+              new Point2D.Double(myCenterPoint.getX(), myCenterPoint.getY()),
+              new Point2D.Double(myNode.getCoor().getX(), myNode.getCoor().getY()));
+
+          // Test each segment of otherWay whether it intersect myLine
+          // It means that it overlaps myWay and needs to be fixed
+          for (Pair<Node, Node> np : otherWay.getNodePairs(false)) {
+            Node owFirstNode = new Node(np.a);
+            Node owLastNode = new Node(np.b);
+
+            debugMsg("    Testing way segment: " + owFirstNode + " and " + owLastNode);
+            StraightLine otherWaySegment = new StraightLine(
+                new Point2D.Double(owFirstNode.getCoor().getX(), owFirstNode.getCoor().getY()),
+                new Point2D.Double(nowLastNode.getCoor().getX(), nowLastNode.getCoor().getY()));
+
+            Point2D.Double iPoint = myLine.GetIntersectionPoint(otherWaySegment);
+            if (iPoint.getX().isNaN() || iPoint.getY().isNaN()) {
+              // Not an intersection
+              debugMsg("    No intersecion");
+              continue;
+            }
+
+            debugMsg("    Intersection found at: " + iPoint);
+
+            // Prepare data
+            // Get left and right node for my node
+            Node leftNode = getNode( (myNodeIndex - 1) < 0 ? s_oWay.getNodesCount() : (myNodeIndex - 1) );
+            Node rightNode = getNode( (myNodeIndex + 1) > s_oWay.getNodesCount() ? 0 : (myNodeIndex + 1) );
+
+            debugMsg("    Left  node: " + leftNode);
+            debugMsg("    Right node: " + rightNode);
+
+            StraightLine leftSegment = new StraightLine(
+                new Point2D.Double(leftNode.getCoor().getX(), LeftNode.getCoor().getY()),
+                new Point2D.Double(myNode.getCoor().getX(), myNode.getCoor().getY()));
+
+            StraightLine rightSegment = new StraightLine(
+                new Point2D.Double(myNode.getCoor().getX(), myNode.getCoor().getY()),
+                new Point2D.Double(leftNode.getCoor().getX(), LeftNode.getCoor().getY()));
+
+            // Get direction where nodes will be moved
+            int moveTo;
+            double distanceX, distanceY
+
+            distanceX = otherCenterPoint.getX() - iPoint.getX();
+            distanceY = otherCenterPoint.getY() - iPoint.getY();
+
+            if (distanceX > 0 && abs(distanceX) < abs(distanceY)) {
+              moveTo = RIGHT;
+            } else if (distanceX < 0 && abs(distanceX) < abs(distanceY)) {
+              moveTo = LEFT;
+            } else if (distanceY > 0 && abs(distanceX) > abs(distanceY)) {
+              moveTo = UP;
+            } else if (distanceY < 0 && abs(distanceX) > abs(distanceY)) {
+              moveTo = DOWN;
+            }
+
+          }
+
+        } else {
+          // other node is inside my way
+          //
+        }
+
+      }
+
+      return cmds;
+    }
+
+    /**
+     * Merges two nodes
+     * @param myNode Node to merge
+     * @param otherNode Node that will replace myNode
+     * @return List of Commands.
+     */
+    private static List<Command> mergeNodes(Node myNode, Node otherNode){
+        debugMsg("-- mergeNodes() --");
+
+        List<Command> cmds = new LinkedList<Command>();
+
+        debugMsg("   myNode: " + myNode + ", otherNode: " + otherNode);
+        debugMsg("   myWay: " + s_oWay);
+
+        Way tmpWay = new Way(s_oWay);
+        // myNode is not part of myWay? Should not happen
+        int j = s_oWay.getNodes().indexOf(myNode);
+        if (j < 0) {
+          return cmds;
+        }
+
+        // move otherNode to position of myNode
+        cmds.add(new MoveCommand(otherNode,
+                  (myNode.getEastNorth().getX() - otherNode.getEastNorth().getX()),
+                  (myNode.getEastNorth().getY() - otherNode.getEastNorth().getY())
+                  ));
+
+        s_oWay.addNode(j, otherNode);
+        if (j == 0) {
+            // first + last point
+          s_oWay.addNode(s_oWay.getNodesCount(), otherNode);
+        }
+
+        s_oWay.removeNode(myNode);
+
+        cmds.add(new ChangeCommand(tmpWay, s_oWay));
+
+        s_oWays.remove(tmpWay);
+        s_oWays.add(s_oWay);
+
+        if (getWaysOfNode(myNode).size() == 0) {
+            debugMsg("    Delete node: " + myNode);
+            cmds.add(new DeleteCommand(myNode));
+            s_oNodes.remove(myNode);
+        }
+
+        debugMsg("   updated myWay: " + s_oWay);
+        return cmds;
+    }
+
+    /**
+     * Copy keys from old to new way
+     * @param d_way Destination way
+     * @param s_way Source way
+     * @param newSource value for source key
+     * @param otherNode Node that will replace myNode
+     * @return destination way
+     */
     private static Way updateKeys(Way d_way, Way s_way, String newSource) {
+      debugMsg("-- updateKeys() --");
 
         d_way.put("source", newSource);
 
@@ -241,12 +486,15 @@ public class ConnectWays {
         return d_way;
     }
 
+// -----------------------------------------------------------------------------------------------------
     /**
      * Try connect way to other buildings.
      * @param way Way to connect.
      * @return Commands.
      */
     public static Command connect(Way newWay, LatLon pos, boolean ctrl, boolean alt, String source) {
+        debugMsg("-- connect() --");
+
         LinkedList<Command> cmds = new LinkedList<Command>();
         LinkedList<Command> cmds2 = new LinkedList<Command>();
 
@@ -258,7 +506,7 @@ public class ConnectWays {
         getWays(newWay);
 
         s_oWayOld = getOldWay(pos);
-        getConnectedNodes(s_oWayOld);
+//         getConnectedNodes(s_oWayOld);
 
         if (s_oWayOld == null) {
           s_bAddNewWay = true;
@@ -266,7 +514,7 @@ public class ConnectWays {
           s_oWayOld = newWay;
           s_oWay = new Way( newWay );
         } else {
-
+            s_bAddNewWay = false;
             /*
             * Compare ways
             * Do not continue when way is traced again.
@@ -278,40 +526,41 @@ public class ConnectWays {
             nodesCount = newWay.getNodesCount();
             // 1) have the same numbers of nodes?
             if (newWay.getNodesCount() == s_oWayOld.getNodesCount()) {
-              System.out.println("Old and New ways have " + s_oWayOld.getNodesCount() + " nodes");
+              debugMsg("   Old and New ways have " + s_oWayOld.getNodesCount() + " nodes");
               // 2) All nodes have the same coordination
               outer: for (n = 0; n < nodesCount; n++) {
                 Node newNode = newWay.getNode(n);
-                System.out.println("New.Node(" + n + ") = " + newNode.getCoor().toDisplayString());
+                debugMsg("    New.Node(" + n + ") = " + newNode.getCoor().toDisplayString());
                 inner: for (o = 0; o < nodesCount; o++) {
                   Node oldNode = s_oWayOld.getNode(o);
-                  System.out.println(" -> Old.Node(" + o + ") = " + oldNode.getCoor().toDisplayString());
+                  debugMsg("     -> Old.Node(" + o + ") = " + oldNode.getCoor().toDisplayString());
                   if (oldNode.getCoor().equalsEpsilon(newNode.getCoor())) {
-                    System.out.println("Nodes: New(" + n + ") and Old(" + o + ") are equal.");
+                    debugMsg("     Nodes: New(" + n + ") and Old(" + o + ") are equal.");
                     nodesFound += 1;
                     continue outer;
                   }
                 }
               }
 
-              System.out.println("nodesCount = " + nodesCount + "; nodesFound = " + nodesFound);
+              debugMsg("   nodesCount = " + nodesCount + "; nodesFound = " + nodesFound);
               if (nodesCount == nodesFound) {
-                System.out.println("Ways are equal!");
+                debugMsg("   Ways are equal!");
                 return new SequenceCommand("Nothing", null);
               }
             }
 
             // Ways are different - merging
-            System.out.println("Ways are NOT equal!");
-            Way tempWay;
-            s_bAddNewWay = false;
+            debugMsg("   Ways are NOT equal!");
+            debugMsg("   -------------------");
 
             // Create a working copy of the oldWay
-            tempWay = new Way(s_oWayOld);
+            Way tempWay = new Way(s_oWayOld);
+            debugMsg("s_oWayOld: " + s_oWayOld);
 
             // Add New nodes
             for (int i = 0; i < newWay.getNodesCount(); i++) {
               tempWay.addNode(tempWay.getNodesCount(), newWay.getNode(i));
+              s_oNodes.add(newWay.getNode(i));
             }
 
             // Remove Old nodes
@@ -323,31 +572,54 @@ public class ConnectWays {
             for (int i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
               Node nd = s_oWayOld.getNode(i);
               List<Way> ways = getWaysOfNode(nd);
-              if (ways.size()<=1) {
-                  cmds2.add(new DeleteCommand( s_oWayOld.getNode(i) ));
-                  deletedNodes.add(s_oWayOld.getNode(i));
-                  s_oNodes.remove(s_oWayOld.getNode(i));
+              if (ways.size() == 0) {
+                  debugMsg("    Delete node: " + nd);
+                  cmds2.add(new DeleteCommand(nd));
+                  s_oNodes.remove(nd);
               }
-//               s_oNodes.remove(s_oWayOld.getNode(i));
+
             }
             s_oWay = tempWay;
             s_oWay = updateKeys(s_oWay, newWay, source);
+            s_oWays.remove(s_oWayOld);
+            s_oWays.add(s_oWay);
+            debugMsg("updatedWay: " + s_oWay);
         }
 
-        cmds2.addAll(connectTo());
+        cmds.add(new ChangeCommand(s_oWayOld, s_oWay));
 
         // Modify the way
-        cmds.add(new ChangeCommand(s_oWayOld, trySplitWayByAnyNodes(s_oWay)));
+        debugMsg("");
+        debugMsg("-----------------------------------------");
+        cmds.addAll(removeFullyCoveredWays());
 
-        cmds2.addAll(checkAndMergeNodes(s_oWay));
+        debugMsg("");
+        debugMsg("-----------------------------------------");
+        cmds.addAll(connectTo());
+
+        debugMsg("");
+        debugMsg("-----------------------------------------");
+        cmds.addAll(fixOverlapedWays());
+
+        debugMsg("");
+        debugMsg("-----------------------------------------");
+//          cmds.add(new ChangeCommand(s_oWayOld, trySplitWayByAnyNodes(s_oWay)));
 
         cmds.addAll(cmds2);
 
 
-//         TracerDebug oTracerDebug = new TracerDebug();
-//         oTracerDebug.OutputCommands(cmds);
+        TracerDebug oTracerDebug = new TracerDebug();
+        debugMsg("  List of ways: ");
+        for (Way w : s_oWays) {
+          debugMsg(new TracerDebug().FormatPrimitive(w.toString()));
+          for(Map.Entry<String, String> entry : w.getKeys().entrySet()) {
+            debugMsg(entry.getKey() + " = " + entry.getValue());
+          }
+        }
+        debugMsg("-----------------------------------------");
+        oTracerDebug.OutputCommands(cmds);
 
-        Command cmd = new SequenceCommand(tr("Merge objects nodes"), cmds);
+         Command cmd = new SequenceCommand(tr("Merge objects nodes"), cmds);
 
         return cmd;
     }
@@ -359,39 +631,40 @@ public class ConnectWays {
      * @return Commands.
      */
     public static List<Command> connectTo() {
+        debugMsg("-- connectTo() --");
+
         Map<Way, Way> modifiedWays = new HashMap<Way, Way>();
         LinkedList<Command> cmds = new LinkedList<Command>();
+
         Way way = new Way(s_oWay);
+
         for (int i = 0; i < way.getNodesCount() - 1; i++) {
             Node n = way.getNode(i);
-            System.out.println("-------");
-            System.out.println("Node: " + n);
+            debugMsg("   Node: " + n);
             LatLon ll = n.getCoor();
 
             // Will merge with something else?
             double minDistanceSq = s_dMinDistanceN2N;
             Node nearestNode = null;
-            for (Node nn : s_oNodes) {
-              System.out.println("Node: " + nn);
-                if (!nn.isUsable() || way.containsNode(nn) || s_oWay.containsNode(nn) || !isInSameTag(nn) || deletedNodes.indexOf(nn) >= 0 || nn.isDeleted()) {
-                    System.out.println("deletedNodes.indexOf(nn): " + deletedNodes.indexOf(nn));
-                    System.out.println("nn.isDeleted(): " + nn.isDeleted());
-                    System.out.println("-> Continue");
+            for (Node nn : new LinkedList<Node>(s_oNodes)) {
+              debugMsg("    Node: " + nn);
+                if (!nn.isUsable() || way.containsNode(nn) || s_oWay.containsNode(nn) || !isInSameTag(nn)) {
+                    debugMsg("    -> Continue");
                     continue;
                 }
                 double dist = nn.getCoor().distance(ll);
-                System.out.println("Dist: "+ dist+"; minDistanceSq: "+ minDistanceSq);
+                debugMsg("    Dist: "+ dist+"; minDistanceSq: "+ minDistanceSq);
                 if (dist <= minDistanceSq) {
                     minDistanceSq = dist;
                     nearestNode = nn;
                 }
             }
 
-            System.out.println("Nearest: " + nearestNode + " distance: " + minDistanceSq);
+            debugMsg("   Nearest: " + nearestNode + " distance: " + minDistanceSq);
             if (nearestNode == null) {
-                cmds.addAll(tryConnectNodeToAnyWay(n, modifiedWays));
+//                  cmds.addAll(tryConnectNodeToAnyWay(n, modifiedWays));
             } else {
-                System.out.println("+add Node distance: " + minDistanceSq);
+                debugMsg("+add Node distance: " + minDistanceSq);
                 cmds.addAll(mergeNodes(n, nearestNode));
             }
         }
@@ -405,75 +678,78 @@ public class ConnectWays {
     }
 
     /**
-     * Merges two nodes
-     * @param n1 First node
-     * @param n2 Second node
-     * @return List of Commands.
+     *  Check all nodes of the given way and merge them with close nodes
+     *  @param way
+     *  @return List of commands
      */
-    private static List<Command> mergeNodes(Node n1, Node n2){
-        List<Command> cmds = new LinkedList<Command>();
-        Node n1x = n1;
+    private static  List<Command>  fixOverlapedWays () {
+      debugMsg("-- fixOverlapedWays() --");
 
-        cmds.add(new MoveCommand(n2,
-                 (n1.getEastNorth().getX() - n2.getEastNorth().getX())/2,
-                 (n1.getEastNorth().getY() - n2.getEastNorth().getY())/2
-                 ));
+      LinkedList<Command> cmds = new LinkedList<Command>();
 
-        System.out.println("-- mergeNodes --");
-        System.out.println("-- n1: " + n1.toString() + ", n2: " + n2.toString());
-        System.out.println("-- Way: " + s_oWay.toString());
-        Way newWay = new Way(s_oWay);
-
-        int j = s_oWay.getNodes().indexOf(n1);
-        System.out.println("-- j: " + j);
-        System.out.println("--  ----  ----  ----  ----  ----  ----  ----  ----  --");
-
-        if (j < 0) {
-//           // Node not found, try lower precision
-//           for (int i = 0; i < s_oWay.getNodesCount(); i++) {
-//             if (s_oWay.getNode(i).getCoor().distance(n1.getCoor()) <= s_dMinDistanceN2N) {
-//               j = i;
-//               n1x = s_oWay.getNode(i);
-//               break;
-//             }
-//           }
-        return cmds;
-
+      for (Way w : new LinkedList<Way>(s_oWays)) {
+        if (waysAreOverlaped(s_oWay, w) {
+          cmds.addAll(correctOverlaping(w));
         }
-        newWay.addNode(j, n2);
-        if (j == 0) {
-            // first + last point
-          newWay.addNode(newWay.getNodesCount(), n2);
-        }
+      }
 
-        newWay.removeNode(n1x);
-
-        s_oWay = new Way(newWay);
-
-        cmds.add(new DeleteCommand(n1x));
-        if (n1x.getDataSet() != null){
-          List<Way> ways = getWaysOfNode(n1x);
-          if (ways.size()<=1) {
-              deletedNodes.add(n1x);
-          }
-        }
-
-        return cmds;
+      return cmds;
     }
 
     /**
-     * Try connect node "node" to way of other building.
+     *  Check whether there is a building fully covered by traced building
+     *  @return List of commands
+     */
+    private static  List<Command> removeFullyCoveredWays() {
+      debugMsg("-- removeFullyCoveredWays() --");
+
+      LinkedList<Command> cmds = new LinkedList<Command>();
+      List<Way> tmpWaysList = new LinkedList<Way> (s_oWays);
+
+      for (Way w : tmpWaysList) {
+        if (!w.isUsable() || !isSameTag(w) || w.equals(s_oWay)) {
+          continue;
+        }
+
+        Way tmpWay = new Way(w);
+        if (isNodeInsideWay(w.getBBox().getCenter(), s_oWay)) {
+          debugMsg("   Delete way: " + w);
+          cmds.add(new DeleteCommand( w ));
+          s_oWays.remove(w);
+          // Remove old nodes from list of working nodes list
+          for (int i = 0; i < tmpWay.getNodesCount() - 1; i++) {
+            Node nd = tmpWay.getNode(i);
+            if (!nd.isUsable()) {
+              continue;
+            }
+
+            if ( getWaysOfNode(nd).size() == 0) {
+                debugMsg("    Delete node: " + nd);
+                cmds.add(new DeleteCommand(nd));
+                s_oNodes.remove(nd);
+            }
+          }
+        }
+      }
+      return cmds;
+    }
+
+    /**
+     * Try connect node "node" to ways of other buildings.
      *
      * Zkusi zjistit, zda node neni tak blizko nejake usecky existujici budovy,
      * ze by mel byt zacnenen do teto usecky. Pokud ano, provede to.
      *
      * @param node Node to connect.
+     * @param m map of ways.
      * @throws IllegalStateException
      * @throws IndexOutOfBoundsException
      * @return List of Commands.
      */
   private static List<Command>  tryConnectNodeToAnyWay(Node node, Map<Way, Way> m)
             throws IllegalStateException, IndexOutOfBoundsException {
+
+        debugMsg("-- tryConnectNodeToAnyWay() --");
 
         LatLon ll = node.getCoor();
         List<Command> cmds = new LinkedList<Command>();
@@ -484,9 +760,7 @@ public class ConnectWays {
         Way nearestWay = null;
         int nearestNodeIndex = 0;
         for (Way ww : s_oWays) {
-//           System.out.println("Way: " + ww);
             if (!ww.isUsable() || ww.containsNode(node) || !isSameTag(ww)) {
-//                 System.out.println("!ww.isUsable(): "+!ww.isUsable()+"; ww.containsNode(node): "+ww.containsNode(node)+"; !isSameTag(ww): "+!isSameTag(ww));
                 continue;
             }
 
@@ -497,7 +771,7 @@ public class ConnectWays {
             for (Pair<Node, Node> np : ww.getNodePairs(false)) {
                 //double dist1 = TracerGeometry.distanceFromSegment(ll, np.a.getCoor(), np.b.getCoor());
                 double dist = distanceFromSegment2(ll, np.a.getCoor(), np.b.getCoor());
-                //System.out.println(" distance: " + dist1 + "  " + dist);
+                //debugMsg(" distance: " + dist1 + "  " + dist);
 
                 if (dist < minDist) {
                     minDist = dist;
@@ -506,7 +780,7 @@ public class ConnectWays {
                 }
             }
         }
-        System.out.println("Nearest way: " + nearestWay + " distance: " + minDist);
+        debugMsg("   Nearest way: " + nearestWay + " distance: " + minDist);
         if (minDist < s_dMinDistanceN2oW) {
             Way newNWay = new Way(nearestWay);
 
@@ -523,18 +797,20 @@ public class ConnectWays {
               newNWay.addNode(nearestNodeIndex + 1, node);
             }
 
-            System.out.println("New way:" + newNWay);
-            System.out.println("+add WayOld.Node distance: " + minDist);
+            debugMsg("   New way:" + newNWay);
+            debugMsg("   +add WayOld.Node distance: " + minDist);
             m.put(nearestWay, newNWay);
             s_oWays.remove(newNWay);
             s_oWays.add(nearestWay);
-            System.out.println("Updated nearest way: " + nearestWay.toString());
-            System.out.println("=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
+            debugMsg("   Updated nearest way: " + nearestWay);
+            debugMsg("   =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
         }
       return cmds;
     }
 
     private static double distanceFromSegment2(LatLon c, LatLon a, LatLon b) {
+      debugMsg("-- distanceFromSegment2() --");
+
       double x;
       double y;
 
@@ -572,53 +848,45 @@ public class ConnectWays {
     private static Way trySplitWayByAnyNodes(Way way)
             throws IndexOutOfBoundsException, IllegalStateException {
 
+        debugMsg("-- trySplitWayByAnyNodes() --");
         // projdi kazdou novou usecku a zjisti, zda by nemela vest pres existujici body
         int i = 0;
         while (i < way.getNodesCount()) {
             // usecka n1, n2
             LatLon n1 = way.getNodes().get(i).getCoor();
             LatLon n2 = way.getNodes().get((i + 1) % way.getNodesCount()).getCoor();
-            System.out.println(way.getNodes().get(i) + "-----" + way.getNodes().get((i + 1) % way.getNodesCount()));
+            debugMsg(way.getNodes().get(i) + "-----" + way.getNodes().get((i + 1) % way.getNodesCount()));
             double minDistanceSq = Double.MAX_VALUE;
-//            double maxAngle = MAX_ANGLE;
-            //List<Node> nodes = Main.main.getCurrentDataSet().searchNodes(new BBox(
-            //    Math.min(n1.getX(), n2.getX()) - minDistanceSq,
-            //    Math.min(n1.getY(), n2.getY()) - minDistanceSq,
-            //    Math.max(n1.getX(), n2.getX()) + minDistanceSq,
-            //    Math.max(n1.getY(), n2.getY()) + minDistanceSq
-            //));
+
 
             Node nearestNode = null;
             for (Node nod : s_oNodes) {
-                if (!nod.isUsable() || way.containsNode(nod) || !isInSameTag(nod) || deletedNodes.indexOf(nod) >= 0 || nod.isDeleted()) {
-                    System.out.println("deletedNodes.indexOf(nod): " + deletedNodes.indexOf(nod));
-                    System.out.println("nod.isDeleted(): " + nod.isDeleted());
-                    System.out.println("->continue");
+                if (!nod.isUsable() || way.containsNode(nod) || !isInSameTag(nod)) {
                     continue;
                 }
                 LatLon nn = nod.getCoor();
                 //double dist = TracerGeometry.distanceFromSegment(nn, n1, n2);
                 double dist = distanceFromSegment2(nn, n1, n2);
 //                double angle = TracerGeometry.angleOfLines(n1, nn, nn, n2);
-                //System.out.println("Angle: " + angle + " distance: " + dist + " Node: " + nod);
+                //debugMsg("Angle: " + angle + " distance: " + dist + " Node: " + nod);
                 if (!n1.equalsEpsilon(nn) && !n2.equalsEpsilon(nn) && dist < minDistanceSq){ // && Math.abs(angle) < maxAngle) {
                   minDistanceSq = dist;
 //                  maxAngle = angle;
                     nearestNode = nod;
                 }
             }
-            System.out.println("Nearest_: " + nearestNode + " distance: " + minDistanceSq);
+            debugMsg("   Nearest: " + nearestNode + " distance: " + minDistanceSq);
             if (nearestNode == null || minDistanceSq >= s_dMinDistanceN2tW) {
                 // tato usecka se nerozdeli
                 i++;
-                System.out.println("");
+                debugMsg("");
                 continue;
             } else {
                 // rozdeleni usecky
                 way.addNode(i + 1, nearestNode);
                 i++;
-                System.out.println("+add Way.Node distance: " + minDistanceSq);
-                System.out.println("");
+                debugMsg("   +add Way.Node distance: " + minDistanceSq);
+                debugMsg("");
                 //i++;
                 continue; // i nezvetsuji, treba bude treba rozdelit usecku znovu
             }
@@ -626,7 +894,13 @@ public class ConnectWays {
         return way;
     }
 
+    /**
+     * Determines if the specified node is a part of a building.
+     * @param n The node to be tested
+     * @return True if building key is set and different from no,entrance
+     */
     private static boolean isInSameTag(Node n) {
+        debugMsg("-- isInSameTag() --");
         for (OsmPrimitive op : n.getReferrers()) {
             if (op instanceof Way) {
                 if (isSameTag((Way) op)) {
@@ -643,15 +917,7 @@ public class ConnectWays {
      * @return True if building key is set and different from no,entrance
      */
     protected static final boolean isSameTag(Way w) {
-//         String v = p.get(s_oParam.getTag());
-//         if (s_bCtrl || s_oParam.getTag().equals("")) {
-//           return  v == null || v.equals("no");
-//         }
-//         if (s_oParam.getTag().equals("building")) {
-//           return v != null && !v.equals("no") && !v.equals("entrance");
-//         }
-//         return v != null && !v.equals("no");
-//       System.out.println(w.toString()+" |Tag: "+w.getKeys().get("building"));
+      debugMsg("-- isSameTag() --");
       return (w.getKeys().get("building") == null ? false : !w.getKeys().get("building").equals("no") && !w.getKeys().get("building").equals("entrance"));
     }
 

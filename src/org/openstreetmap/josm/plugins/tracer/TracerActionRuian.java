@@ -189,7 +189,11 @@ class TracerActionRuian extends MapMode implements MouseListener {
           dAdjY = pref.m_ruianAdjustPositionLon;
         }
 
-
+        System.out.println("");
+        System.out.println("-----------------");
+        System.out.println("----- Trace -----");
+        System.out.println("-----------------");
+        System.out.println("");
         progressMonitor.beginTask(null, 3);
         try {
               record = server.trace(pos, sUrl);
@@ -233,7 +237,6 @@ class TracerActionRuian extends MapMode implements MouseListener {
             } else {
                 commands.add(connCmd);
 
-                System.out.println("Commands: " + commands.toString());
                 if (!commands.isEmpty()) {
                   String strCommand;
                   if (ConnectWays.s_bAddNewWay == true) {
