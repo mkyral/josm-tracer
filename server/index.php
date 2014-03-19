@@ -39,7 +39,7 @@ $query="
   where st_contains(s.hranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
   and not s.deleted
   limit 1;
-";
+  ";
 $result = pg_query($CONNECT,$query);
 
 if (pg_num_rows($result) > 0)
@@ -49,53 +49,53 @@ if (pg_num_rows($result) > 0)
 
   $data["stavebni_objekt"] =
     array( "ruian_id" => $row["kod"],
-           "cislo_domovni" => $row["cisla_domovni"],
-           "cislo_domovni_typ" => $row["cislo_typ"],
-           "cislo_orientacni" => $row["cislo_orientacni"],
-           "adresni_misto_kod" => $row["adresni_misto_kod"],
-           "ulice" => $row["ulice"],
-           "cast_obce" => $row["cast_obce"],
-           "mestska_cast" => $row["mestska_cast"],
-           "obec" => $row["obec"],
-           "okres" => $row["okres"],
-           "kraj" => $row["kraj"],
-           "psc" => $row["psc"],
-           "pocet_podlazi" => $row["pocet_podlazi"],
-           "zpusob_vyuziti_kod" => $row["zpusob_vyuziti_kod"],
-           "zpusob_vyuziti_key" => $row["osmtag_k"],
-           "zpusob_vyuziti_val" => $row["osmtag_v"],
-           "pocet_bytu" => $row["pocet_bytu"],
-           "dokonceni" => $row["dokonceni"],
-           "plati_od" => $row["plati_od"]
-           );
-} else
-    $data["stavebni_objekt"] = array();
+            "cislo_domovni" => $row["cisla_domovni"],
+            "cislo_domovni_typ" => $row["cislo_typ"],
+            "cislo_orientacni" => $row["cislo_orientacni"],
+            "adresni_misto_kod" => $row["adresni_misto_kod"],
+            "ulice" => $row["ulice"],
+            "cast_obce" => $row["cast_obce"],
+            "mestska_cast" => $row["mestska_cast"],
+            "obec" => $row["obec"],
+            "okres" => $row["okres"],
+            "kraj" => $row["kraj"],
+            "psc" => $row["psc"],
+            "pocet_podlazi" => $row["pocet_podlazi"],
+            "zpusob_vyuziti_kod" => $row["zpusob_vyuziti_kod"],
+            "zpusob_vyuziti_key" => $row["osmtag_k"],
+            "zpusob_vyuziti_val" => $row["osmtag_v"],
+            "pocet_bytu" => $row["pocet_bytu"],
+            "dokonceni" => $row["dokonceni"],
+            "plati_od" => $row["plati_od"]
+            );
 
+  // -----------------
+  // Building geometry
+  $query="
+    select st_asgeojson(st_transform(local_simplify_polygon(xhranice),4326)) as geom
+    from
+      (select kod,(st_dump(hranice)).geom as xhranice
+      from rn_stavebni_objekt
+      where st_contains(hranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
+        and not deleted) as foo
+    where st_contains(xhranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
+    limit 1
+  ";
+  $result = pg_query($CONNECT,$query);
 
-// Building geometry
-$query="
-  select st_asgeojson(st_transform(local_simplify_polygon(xhranice),4326)) as geom
-  from
-    (select kod,(st_dump(hranice)).geom as xhranice
-     from rn_stavebni_objekt
-     where st_contains(hranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
-       and not deleted) as foo
-  where st_contains(xhranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
-  limit 1
-";
-$result = pg_query($CONNECT,$query);
+  if (pg_num_rows($result) > 0)
+  {
+    $geom = pg_result($result,0,"geom");
+    $geometry=json_decode($geom,true);
+    $data["geometry"] = $geometry['coordinates'][0];
+  }
+  else
+  {
+    $data["geometry"] = array();
+  }
 
-if (pg_num_rows($result) > 0)
-{
-  $geom = pg_result($result,0,"geom");
-  $geometry=json_decode($geom,true);
-  $data["geometry"] = $geometry['coordinates'][0];
-} else
-  $data["geometry"] = array();
-
-// Addresses
-if (count($data) > 0)
-{
+  // -----------------
+  // Addresses
   $query="
     select am.kod,
           am.cislo_domovni,
@@ -107,7 +107,6 @@ if (count($data) > 0)
     and not am.deleted
     order by st_distance( (st_transform(am.definicni_bod,4326))::geography,
                           (st_setsrid(st_makepoint(".$lon.",".$lat."),4326))::geography)
-  ;
   ";
 
   $result=pg_query($CONNECT,$query);
@@ -125,15 +124,17 @@ if (count($data) > 0)
                         "ulice" => $row["ulice"]));
     }
       $data["adresni_mista"] = $am;
-  } else
+  }
+  else
   {
   //   echo "error: $error\n";
     $data["adresni_mista"] = array();
   }
-}
-else
+
+} else
 {
-//   echo "error: $error\n";
+  $data["stavebni_objekt"] = array();
+  $data["geometry"] = array();
   $data["adresni_mista"] = array();
 }
 

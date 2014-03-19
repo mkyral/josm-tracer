@@ -233,20 +233,25 @@ class TracerActionRuian extends MapMode implements MouseListener {
             String s[] = connCmd.getDescriptionText().split(": ");
 
             if (s[1].equals("Nothing")) {
-              TracerUtils.showNotification(tr("Nothing changed."),"info");
+              TracerUtils.showNotification(tr("Nothing changed."), "info");
+              if (shift) {
+                Main.main.getCurrentDataSet().addSelected(ConnectWays.s_oWay);
+              } else {
+                Main.main.getCurrentDataSet().setSelected(ConnectWays.s_oWay);
+              }
             } else {
                 commands.add(connCmd);
 
                 if (!commands.isEmpty()) {
                   String strCommand;
                   if (ConnectWays.s_bAddNewWay == true) {
-                    strCommand = trn("Tracer(RUIAN): add a way with {0} point", "Tracer(RUIAN): add a way with {0} points", record.getCoorCount(), record.getCoorCount()) + "\n" + msg;
+                    strCommand = trn("Tracer(RUIAN): add a way with {0} point", "Tracer(RUIAN): add a way with {0} points", ConnectWays.s_oWay.getRealNodesCount(), ConnectWays.s_oWay.getRealNodesCount()) + "\n" + msg;
                   } else {
-                    strCommand = trn("Tracer(RUIAN): modify way to {0} point", "Tracer(RUIAN): modify way to {0} points", record.getCoorCount(), record.getCoorCount());
+                    strCommand = trn("Tracer(RUIAN): modify way to {0} point", "Tracer(RUIAN): modify way to {0} points", ConnectWays.s_oWay.getRealNodesCount(), ConnectWays.s_oWay.getRealNodesCount());
                   }
                   Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
 
-                  TracerUtils.showNotification(strCommand, "info");
+//                   TracerUtils.showNotification(strCommand, "info");
 
                   if (shift) {
                     Main.main.getCurrentDataSet().addSelected(ConnectWays.s_oWay);
