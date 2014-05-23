@@ -26,7 +26,6 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-// import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -62,37 +61,6 @@ class TracerAction extends MapMode implements MouseListener {
         super(tr("Tracer"), "tracer-sml", tr("Tracer."), Shortcut.registerShortcut("tools:tracer", tr("Tool: {0}", tr("Tracer")), KeyEvent.VK_T, Shortcut.DIRECT), mapFrame, getCursor());
     }
 
-//     @Override
-//     public void keyPressed(KeyEvent e) {
-//       System.out.println("keyPressed: key:" + e.getKeyChar() + " code" + e.getKeyCode() + " Loc" + e.getKeyLocation()+ " ID" + KeyEvent.getKeyText(e.getKeyCode()));
-//
-//       int kCode = e.getKeyCode();
-//       int kMod = e.getModifiersEx();
-//       String kModText = e.getKeyModifiersText(kMod);
-// //       System.out.println("Modifiers: " + kModtext);
-//
-//       if (kCode == KeyEvent.VK_T && kModText == "Ctrl+Shift")
-//       {
-//         t_mode = "ruian";
-//       }
-//
-//       if (kCode == KeyEvent.VK_T && kModText == "")
-//       {
-//         t_mode = "km";
-//       }
-//
-//       System.out.println("Mode: " + t_mode);
-//     }
-//
-//     @Override
-//     public void keyReleased ( KeyEvent e ) {
-//       //System.out.println("keyReleased: key:" + e.getKeyChar() + " code" + e.getKeyCode() + " Loc" + e.getKeyLocation()+ " chra" + KeyEvent.getKeyText(e.getKeyCode()));
-//     }
-//
-//     @Override
-//     public void keyTyped ( KeyEvent e ) {
-//       //System.out.println("keyTyped: key:" + e.getKeyChar() + " code" + e.getKeyCode() + " Loc" + e.getKeyLocation()+ " ID" + KeyEvent.getKeyText(e.getKeyCode()));
-//     }
 
     @Override
     public void enterMode() {

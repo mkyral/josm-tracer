@@ -69,7 +69,7 @@ class TracerActionRuian extends MapMode implements MouseListener {
     protected TracerServerRuian server = new TracerServerRuian();
 
     public TracerActionRuian(MapFrame mapFrame) {
-        super(tr("Tracer - RUIAN"), "tracer-ruian-sml", tr("Get building geometry and some properies from RUIAN."), Shortcut.registerShortcut("tools:tracerRUIAN", tr("Tool: {0}", tr("Tracer - RUIAN")), KeyEvent.VK_T, Shortcut.CTRL), mapFrame, getCursor());
+        super(tr("Tracer - RUIAN"), "tracer-ruian-sml", tr("Get building geometry and some properies from RUIAN."), Shortcut.registerShortcut("tools:tracerRUIAN", tr("Tool: {0}", tr("Tracer - RUIAN")), KeyEvent.VK_T, Shortcut.CTRL_SHIFT), mapFrame, getCursor());
     }
 
     @Override

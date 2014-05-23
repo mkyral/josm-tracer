@@ -392,7 +392,12 @@ public class ConnectWays {
      * @return Distance between points
      */
     private static double distance(LatLon x, LatLon y) {
-      return Math.abs(Math.sqrt( (y.getX() - x.getX()) * (y.getX() - x.getX()) + (y.getY() - x.getY()) * (y.getY() - x.getY()) ) );
+      debugMsg("    distance()");
+      if (x != null && y != null) {
+        debugMsg("x: " + x + " / y: " +y);
+        return Math.abs(Math.sqrt( (y.getX() - x.getX()) * (y.getX() - x.getX()) + (y.getY() - x.getY()) * (y.getY() - x.getY()) ) );
+      }
+      return 999999;
     }
 
     /**
