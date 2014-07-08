@@ -49,8 +49,8 @@ import org.openstreetmap.josm.plugins.tracer.TracerDebug;
 public class ConnectWays {
 
     static double s_dDoubleDiff       = 0.0000001; // Maximal difference for double comparison
-    static double s_dMinDistance      = 0.000006;  // Minimal distance, for objects
-    static double s_dMinDistanceN2N   = 0.000001;  // Minimal distance, when nodes are merged
+    static double s_dMinDistance      = 0.0000005; // Minimal distance, for objects
+    static double s_dMinDistanceN2N   = 0.0000005;  // Minimal distance, when nodes are merged
     static double s_dMinDistanceN2oW  = 0.000001;  // Minimal distance, when node is connected to other way
     static double s_dMinDistanceN2tW  = 0.000001;  // Minimal distance, when other node is connected this way
 
@@ -58,7 +58,7 @@ public class ConnectWays {
     static Way s_oWayOld; // The original way
     static List<Way>  s_oWays; // List of all ways we will work with
     static List<Node> s_oNodes; // List of all nodes we will work with
-    static List<Node> connectedNodes; // List of nodes that are also connected other way
+    static List<Node> sharedNodes; // List of nodes that are part of more ways
 
     static List<Way>  secondaryWays; // List of ways connected to connected ways (and are not myWay)
     static List<Node> secondarydNodes; // List of nodes of ways connected to connected ways ;-)
@@ -225,17 +225,17 @@ public class ConnectWays {
      *  Get list of nodes shared with another way (connected node)
      *  @param way Way
      */
-    private static void getConnectedNodes(Way way) {
-      debugMsg("-- getConnectedNodes() --");
+    private static void getSharedNodes(Way way) {
+      debugMsg("-- getSharedNodes() --");
       if (way == null) {
         return;
       }
 
-      connectedNodes = new LinkedList<Node>();
+      sharedNodes = new LinkedList<Node>();
 
       for (int i = 0; i < way.getNodesCount(); i++) {
         if (getWaysOfNode(way.getNode(i)).size() > 1) {
-          connectedNodes.add(way.getNode(i));
+          sharedNodes.add(way.getNode(i));
           debugMsg("   Connected node: " + way.getNode(i));
         }
       }
@@ -409,8 +409,24 @@ public class ConnectWays {
      */
     private static boolean pointIsOnLine(LatLon p, LatLon x, LatLon y) {
 
-      // Distance xy should equal to sum of distance xp and distance yp
-      if (Math.abs((distance (x, y) - (distance (x, p) + distance (y, p)))) > s_dMinDistanceN2N) {
+      // Distance xy should equal to sum of distance xp and yp
+      if (Math.abs((distance (x, y) - (distance (x, p) + distance (y, p)))) > s_dMinDistance) {
+        return false;
+      }
+      return true;
+    }
+
+    /**
+     * Check whether point is close to the line
+     * @param p Point
+     * @param x First point of line
+     * @param y Second point of line
+     * @return True when point is on line
+     */
+    private static boolean pointIsCloseToLine(LatLon p, LatLon x, LatLon y) {
+
+      // Distance xy should be close to the sum of distance xp and yp
+      if (Math.abs((distance (x, y) - (distance (x, p) + distance (y, p)))) > s_dMinDistanceN2oW) {
         return false;
       }
       return true;
@@ -805,7 +821,7 @@ public class ConnectWays {
 
 
         s_oWayOld = getOldWay(pos);
-//         getConnectedNodes(s_oWayOld);
+//         getSharedNodes(s_oWayOld);
 
         if (s_oWayOld == null) {
           s_bAddNewWay = true;
@@ -919,20 +935,6 @@ public class ConnectWays {
           cmds.add(new SequenceCommand(tr("Remove spare nodes"), xcmds));
         }
 
-//         debugMsg("");
-//         debugMsg("-----------------------------------------");
-//         xcmds = new LinkedList<Command>(connectTo());
-//         if (xcmds.size() > 0) {
-//           cmds.add(new SequenceCommand(tr("Connect to other ways"), xcmds));
-//         }
-
-//         debugMsg("");
-//         debugMsg("-----------------------------------------");
-//         xcmds = new LinkedList<Command>();
-//         xcmds.add(new ChangeCommand(s_oWayOld, trySplitWayByAnyNodes(s_oWay)));
-//         if (xcmds.size() > 0) {
-//           cmds.add(new SequenceCommand(tr("Connect close nodes"), xcmds));
-//         }
 
 //         listWays();
         debugMsg("-----------------------------------------");
@@ -1020,6 +1022,13 @@ public class ConnectWays {
           Node myNode = tmpWay.getNode(i);
           if (deletedNodes.indexOf(myNode) < 0 && otherNode.getCoor().distance(myNode.getCoor()) <= s_dMinDistanceN2N) {
             debugMsg(    "Replace node: " + myNode + " by node: " + otherNode );
+//             Node bckNode = new Node(otherNode);
+            cmds.add(new MoveCommand(otherNode,
+                      (myNode.getEastNorth().getX() - otherNode.getEastNorth().getX()),
+                      (myNode.getEastNorth().getY() - otherNode.getEastNorth().getY())
+                      ));
+            otherNode.setCoor(myNode.getCoor());
+//             replaceNodeInList(bckNode, otherNode);
             int myNodeIndex = s_oWay.getNodes().indexOf(myNode);
             debugMsg(    "Node index: " + myNodeIndex);
             if (myNodeIndex >= 0) {
@@ -1133,7 +1142,9 @@ public class ConnectWays {
                 Node prevNode = w.getNode(i == 0 ? w.getRealNodesCount() -1 : i - 1);
                 Node nextNode = w.getNode(i == w.getNodesCount() ? 1 : i + 1);
 
-                if (pointIsOnLine(middleNode.getCoor(), prevNode.getCoor(), nextNode.getCoor())) {
+                if (distance(prevNode.getCoor(), middleNode.getCoor()) > 0.00002 &&
+                    distance(middleNode.getCoor(), nextNode.getCoor()) > 0.00002 &&
+                    pointIsOnLine(middleNode.getCoor(), prevNode.getCoor(), nextNode.getCoor())) {
                   debugMsg("    Delete Spare node: " + middleNode);
                   wayChanged = true;
                   w.removeNode(middleNode);
