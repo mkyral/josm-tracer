@@ -410,7 +410,7 @@ public class ConnectWays {
     private static boolean pointIsOnLine(LatLon p, LatLon x, LatLon y) {
 
       // Distance xy should equal to sum of distance xp and yp
-      if (Math.abs((distance (x, y) - (distance (x, p) + distance (y, p)))) > s_dMinDistance) {
+      if (Math.abs((distance (x, y) - (distance (x, p) + distance (y, p)))) > s_dDoubleDiff) {
         return false;
       }
       return true;
@@ -527,7 +527,7 @@ public class ConnectWays {
           debugMsg("    overlapWaySegment: " + overlapWaySegment);
           debugMsg("                       " + overlapWaySegment.getFirstNode() + ", " + overlapWaySegment.getSecondNode());
 
-          if (pointIsOnLine(iNode.getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
+          if (pointIsCloseToLine(iNode.getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
             debugMsg("    Intersection node: " + iNode);
 
             Node existingNode = getNodeOnPosition(iNode.getCoor());
@@ -553,14 +553,14 @@ public class ConnectWays {
               }
             }
           } else {
-            if (pointIsOnLine(overlapWaySegment.getFirstNode().getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
+            if (pointIsCloseToLine(overlapWaySegment.getFirstNode().getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
               debugMsg("    Intersection node: " + overlapWaySegment.getFirstNode());
               // Add intersection to both ways
               if (intNodes.indexOf(overlapWaySegment.getFirstNode()) == -1) {
                 intNodes.add(overlapWaySegment.getFirstNode());
               }
             }
-            if (pointIsOnLine(overlapWaySegment.getSecondNode().getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
+            if (pointIsCloseToLine(overlapWaySegment.getSecondNode().getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
               debugMsg("    Intersection node: " + overlapWaySegment.getSecondNode());
               // Add intersection to both ways
               if (intNodes.indexOf(overlapWaySegment.getSecondNode()) == -1) {
@@ -582,7 +582,7 @@ public class ConnectWays {
         } else {
           tmpWay = new Way(myWay);
           for (int i = 0; i < tmpWay.getNodesCount()-1; i++) {
-            if (pointIsOnLine(intNode.getCoor(), tmpWay.getNode(i).getCoor(), tmpWay.getNode(i+1).getCoor())) {
+            if (pointIsCloseToLine(intNode.getCoor(), tmpWay.getNode(i).getCoor(), tmpWay.getNode(i+1).getCoor())) {
               debugMsg("    --myWay: ");
               debugMsg("      Add node       : "+ intNode);
               debugMsg("        between nodes: (" + i + ")" + tmpWay.getNode(i));
@@ -599,7 +599,7 @@ public class ConnectWays {
         } else {
           tmpWay = new Way(overlapWay);
           for (int i = 0; i < tmpWay.getNodesCount()-1; i++) {
-            if (pointIsOnLine(intNode.getCoor(), tmpWay.getNode(i).getCoor(), tmpWay.getNode(i+1).getCoor())) {
+            if (pointIsCloseToLine(intNode.getCoor(), tmpWay.getNode(i).getCoor(), tmpWay.getNode(i+1).getCoor())) {
               debugMsg("    --overlapWay: ");
               debugMsg("      Add node       : "+ intNode);
               debugMsg("        between nodes: (" + i + ")" + tmpWay.getNode(i));
@@ -984,7 +984,6 @@ public class ConnectWays {
 
             debugMsg("   Nearest: " + nearestNode + " distance: " + minDistanceSq);
             if (nearestNode == null) {
-//                  cmds.addAll(tryConnectNodeToAnyWay(n, modifiedWays));
             } else {
                 debugMsg("+add Node distance: " + minDistanceSq);
                 cmds.addAll(mergeNodes(n, nearestNode));
@@ -1022,13 +1021,11 @@ public class ConnectWays {
           Node myNode = tmpWay.getNode(i);
           if (deletedNodes.indexOf(myNode) < 0 && otherNode.getCoor().distance(myNode.getCoor()) <= s_dMinDistanceN2N) {
             debugMsg(    "Replace node: " + myNode + " by node: " + otherNode );
-//             Node bckNode = new Node(otherNode);
             cmds.add(new MoveCommand(otherNode,
                       (myNode.getEastNorth().getX() - otherNode.getEastNorth().getX()),
                       (myNode.getEastNorth().getY() - otherNode.getEastNorth().getY())
                       ));
             otherNode.setCoor(myNode.getCoor());
-//             replaceNodeInList(bckNode, otherNode);
             int myNodeIndex = s_oWay.getNodes().indexOf(myNode);
             debugMsg(    "Node index: " + myNodeIndex);
             if (myNodeIndex >= 0) {
@@ -1142,8 +1139,8 @@ public class ConnectWays {
                 Node prevNode = w.getNode(i == 0 ? w.getRealNodesCount() -1 : i - 1);
                 Node nextNode = w.getNode(i == w.getNodesCount() ? 1 : i + 1);
 
-                if (distance(prevNode.getCoor(), middleNode.getCoor()) > 0.00002 &&
-                    distance(middleNode.getCoor(), nextNode.getCoor()) > 0.00002 &&
+                if (/*distance(prevNode.getCoor(), middleNode.getCoor()) > 0.00002 &&
+                    distance(middleNode.getCoor(), nextNode.getCoor()) > 0.00002 &&*/
                     pointIsOnLine(middleNode.getCoor(), prevNode.getCoor(), nextNode.getCoor())) {
                   debugMsg("    Delete Spare node: " + middleNode);
                   wayChanged = true;
@@ -1171,165 +1168,6 @@ public class ConnectWays {
       }
 
       return cmds;
-    }
-
-    /**
-     * Try connect node "node" to ways of other buildings.
-     *
-     * Zkusi zjistit, zda node neni tak blizko nejake usecky existujici budovy,
-     * ze by mel byt zacnenen do teto usecky. Pokud ano, provede to.
-     *
-     * @param node Node to connect.
-     * @param m map of ways.
-     * @throws IllegalStateException
-     * @throws IndexOutOfBoundsException
-     * @return List of Commands.
-     */
-  private static List<Command>  tryConnectNodeToAnyWay(Node node, Map<Way, Way> m)
-            throws IllegalStateException, IndexOutOfBoundsException {
-
-        debugMsg("-- tryConnectNodeToAnyWay() --");
-
-        LatLon ll = node.getCoor();
-        List<Command> cmds = new LinkedList<Command>();
-
-        // node nebyl slouceny s jinym
-        // hledani pripadne blizke usecky, kam bod pridat
-        double minDist = Double.MAX_VALUE;
-        Way nearestWay = null;
-        int nearestNodeIndex = 0;
-        for (Way ww : s_oWays) {
-            if (!ww.isUsable() || ww.containsNode(node) || !isSameTag(ww)) {
-                continue;
-            }
-
-            if (m.get(ww) != null) {
-                ww = m.get(ww);
-            }
-
-            for (Pair<Node, Node> np : ww.getNodePairs(false)) {
-                //double dist1 = TracerGeometry.distanceFromSegment(ll, np.a.getCoor(), np.b.getCoor());
-                double dist = distanceFromSegment2(ll, np.a.getCoor(), np.b.getCoor());
-                //debugMsg(" distance: " + dist1 + "  " + dist);
-
-                if (dist < minDist) {
-                    minDist = dist;
-                    nearestWay = ww;
-                    nearestNodeIndex = ww.getNodes().indexOf(np.a);
-                }
-            }
-        }
-        debugMsg("   Nearest way: " + nearestWay + " distance: " + minDist);
-        if (minDist < s_dMinDistanceN2oW) {
-            Way newNWay = new Way(nearestWay);
-
-            boolean duplicateNodeFound = false;
-            for ( int i = 0; i < newNWay.getNodesCount(); i++) {
-              if (newNWay.getNode(i).getCoor().distance(node.getCoor()) <= s_dMinDistanceN2N ) {
-                // Do not put duplicated node, merge nodes instead
-                cmds.addAll(mergeNodes(node, newNWay.getNode(i)));
-                duplicateNodeFound = true;
-              }
-            }
-
-            if (!duplicateNodeFound) {
-              newNWay.addNode(nearestNodeIndex + 1, node);
-            }
-
-            debugMsg("   New way:" + newNWay);
-            debugMsg("   +add WayOld.Node distance: " + minDist);
-            m.put(nearestWay, newNWay);
-            replaceWayInList(newNWay, nearestWay);
-            debugMsg("   Updated nearest way: " + nearestWay);
-            debugMsg("   =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
-        }
-      return cmds;
-    }
-
-    private static double distanceFromSegment2(LatLon c, LatLon a, LatLon b) {
-      debugMsg("-- distanceFromSegment2() --");
-
-      double x;
-      double y;
-
-        StraightLine oStraightLine1 = new StraightLine(
-            new Point2D.Double(a.getX(),a.getY()),
-            new Point2D.Double(b.getX(),b.getY()));
-        StraightLine oStraightLine2 = new StraightLine(
-            new Point2D.Double(c.getX(),c.getY()),
-            new Point2D.Double(c.getX() + (a.getY()-b.getY()),c.getY() - (a.getX()-b.getX())));
-        Point2D.Double oPoint = oStraightLine1.GetIntersectionPoint(oStraightLine2);
-
-        if ((oPoint.x > a.getX() && oPoint.x > b.getX()) || (oPoint.x < a.getX() && oPoint.x < b.getX()) ||
-            (oPoint.y > a.getY() && oPoint.y > b.getY()) || (oPoint.y < a.getY() && oPoint.y < b.getY())) {
-          return 100000;
-        }
-
-        x=c.getX()-oPoint.getX();
-        y=c.getY()-oPoint.getY();
-
-        return Math.sqrt((x*x)+(y*y));
-    }
-
-    /**
-     * Try split way by any existing building nodes.
-     *
-     * Zkusi zjistit zda nejake usecka z way by nemela prochazet nejakym existujicim bodem,
-     * ktery je ji velmi blizko. Pokud ano, tak puvodni usecku rozdeli na dve tak, aby
-     * prochazela takovym bodem.
-     *
-     * @param way Way to split.
-     * @throws IndexOutOfBoundsException
-     * @throws IllegalStateException
-     * @return Modified way
-     */
-    private static Way trySplitWayByAnyNodes(Way way)
-            throws IndexOutOfBoundsException, IllegalStateException {
-
-        debugMsg("-- trySplitWayByAnyNodes() --");
-        // projdi kazdou novou usecku a zjisti, zda by nemela vest pres existujici body
-        int i = 0;
-        while (i < way.getNodesCount()) {
-            // usecka n1, n2
-            LatLon n1 = way.getNodes().get(i).getCoor();
-            LatLon n2 = way.getNodes().get((i + 1) % way.getNodesCount()).getCoor();
-            debugMsg(way.getNodes().get(i) + "-----" + way.getNodes().get((i + 1) % way.getNodesCount()));
-            double minDistanceSq = Double.MAX_VALUE;
-
-
-            Node nearestNode = null;
-            for (Node nod : s_oNodes) {
-                if (!nod.isUsable() || way.containsNode(nod) || !isInSameTag(nod)) {
-                    continue;
-                }
-                LatLon nn = nod.getCoor();
-                //double dist = TracerGeometry.distanceFromSegment(nn, n1, n2);
-                double dist = distanceFromSegment2(nn, n1, n2);
-//                double angle = TracerGeometry.angleOfLines(n1, nn, nn, n2);
-                //debugMsg("Angle: " + angle + " distance: " + dist + " Node: " + nod);
-                if (!n1.equalsEpsilon(nn) && !n2.equalsEpsilon(nn) && dist < minDistanceSq){ // && Math.abs(angle) < maxAngle) {
-                  minDistanceSq = dist;
-//                  maxAngle = angle;
-                    nearestNode = nod;
-                }
-            }
-            debugMsg("   Nearest: " + nearestNode + " distance: " + minDistanceSq);
-            if (nearestNode == null || minDistanceSq >= s_dMinDistanceN2tW) {
-                // tato usecka se nerozdeli
-                i++;
-                debugMsg("");
-                continue;
-            } else {
-                // rozdeleni usecky
-                way.addNode(i + 1, nearestNode);
-                i++;
-                debugMsg("   +add Way.Node distance: " + minDistanceSq);
-                debugMsg("");
-                //i++;
-                continue; // i nezvetsuji, treba bude treba rozdelit usecku znovu
-            }
-        }
-        return way;
     }
 
     /**
