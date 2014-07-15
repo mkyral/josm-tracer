@@ -30,6 +30,7 @@ import java.util.*;
 import java.lang.StringBuilder;
 
 import org.openstreetmap.josm.plugins.tracer.Address;
+import org.openstreetmap.josm.plugins.tracer.TracerUtils.*;
 
 /**
  * The Tracer RUIAN record class
@@ -371,7 +372,7 @@ public class RuianRecord {
    *  @return Date of finish
    */
   public String getBuildingFinished() {
-    return m_finished;
+    return TracerUtils.convertDate(m_finished);
   }
 
   /**

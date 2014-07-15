@@ -68,4 +68,24 @@ public abstract class TracerUtils {
       return r;
     }
 
+    /**
+     * Convert date from Czech to OSM format
+     * @param ruianDate Date in RUIAN (Czech) format DD.MM.YYYY
+     * @return String with date converted to OSM data format YYYY-MM-DD
+     */
+    public static String convertDate (String ruianDate) {
+      String r = new String();
+      String[] parts = ruianDate.split("\\.");
+      try {
+        int day =   Integer.parseInt(parts[0]);
+        int month = Integer.parseInt(parts[1]);
+        int year =  Integer.parseInt(parts[2]);
+        r = new Integer(year).toString() + "-" + String.format("%02d", month) + "-" + String.format("%02d", day);
+      } catch (Exception e) {
+      }
+
+      return r;
+    }
+
+
 }
