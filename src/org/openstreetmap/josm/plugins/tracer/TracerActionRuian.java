@@ -178,7 +178,7 @@ class TracerActionRuian extends MapMode implements MouseListener {
         Collection<Command> commands = new LinkedList<Command>();
         TracerPreferences pref = TracerPreferences.getInstance();
 
-        String sUrl = "http://poloha.net/~marian/";
+        String sUrl = "http://josm.poloha.net/tracer/";
         double dAdjX = 0, dAdjY = 0;
 
         if (pref.m_customRuianUrl)
