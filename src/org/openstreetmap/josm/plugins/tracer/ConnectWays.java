@@ -52,7 +52,7 @@ public class ConnectWays {
     static double s_dMinDistance      = 0.0000005; // Minimal distance, for objects
     static double s_dMinDistanceN2N   = 0.0000005;  // Minimal distance, when nodes are merged
     static double s_dMinDistanceN2oW  = 0.000001;  // Minimal distance, when node is connected to other way
-    static double s_dMinDistanceN2tW  = 0.000001;  // Minimal distance, when other node is connected this way
+    static double s_dMaxDistanceN2W  = 0.0005;  // Maximal distance to search ways in the near neighbourhood
 
     static Way s_oWay; // New or updated way
     static Way s_oWayOld; // The original way
@@ -139,7 +139,7 @@ public class ConnectWays {
       s_dMinDistance = dMin * 30;
       s_dMinDistanceN2N = dMin * 2.5;
       s_dMinDistanceN2oW = dMin * 5;
-      s_dMinDistanceN2tW = dMin * 5;
+      s_dMaxDistanceN2W = dMin * 5;
     }
 
     /**
@@ -150,7 +150,7 @@ public class ConnectWays {
       debugMsg("-- getWays() --");
       s_oWays = new LinkedList<Way>();
       BBox bbox = new BBox(way);
-      bbox.addPrimitive(way,s_dMinDistance);
+      bbox.addPrimitive(way,s_dMaxDistanceN2W);
 
       for (Way w : Main.main.getCurrentDataSet().searchWays(bbox)) {
         if (w.isUsable()) {
