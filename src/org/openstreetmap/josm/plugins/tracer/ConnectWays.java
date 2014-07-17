@@ -190,7 +190,7 @@ public class ConnectWays {
       bbox.addPrimitive(way,s_dMinDistance);
 
       for (Node nd : Main.main.getCurrentDataSet().searchNodes(bbox)) {
-        if (nd.isUsable()) {
+        if (nd.isUsable() && ! nd.isOutsideDownloadArea()) {
           s_oNodes.add(nd);
         }
       }
