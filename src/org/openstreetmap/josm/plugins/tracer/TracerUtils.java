@@ -24,6 +24,16 @@ import java.text.DecimalFormatSymbols;
 import javax.swing.JOptionPane;
 
 import org.openstreetmap.josm.gui.Notification;
+import org.openstreetmap.josm.data.coor.LatLon;
+
+import com.vividsolutions.jts.geom.*;
+import org.geotools.geometry.jts.JTS;
+import org.geotools.referencing.CRS;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 
 
 public abstract class TracerUtils {
@@ -87,5 +97,4 @@ public abstract class TracerUtils {
       return r;
     }
 
-
-}
+ }
