@@ -235,9 +235,9 @@ class TracerActionRuian extends MapMode implements MouseListener {
             if (s[1].equals("Nothing")) {
               TracerUtils.showNotification(tr("Nothing changed."), "info");
               if (shift) {
-                Main.main.getCurrentDataSet().addSelected(ConnectWays.s_oWay);
+                Main.main.getCurrentDataSet().addSelected(ConnectWays.getWay());
               } else {
-                Main.main.getCurrentDataSet().setSelected(ConnectWays.s_oWay);
+                Main.main.getCurrentDataSet().setSelected(ConnectWays.getWay());
               }
             } else {
                 commands.add(connCmd);
@@ -245,18 +245,18 @@ class TracerActionRuian extends MapMode implements MouseListener {
                 if (!commands.isEmpty()) {
                   String strCommand;
                   if (ConnectWays.s_bAddNewWay == true) {
-                    strCommand = trn("Tracer(RUIAN): add a way with {0} point", "Tracer(RUIAN): add a way with {0} points", ConnectWays.s_oWay.getRealNodesCount(), ConnectWays.s_oWay.getRealNodesCount()) + "\n" + msg;
+                    strCommand = trn("Tracer(RUIAN): add a way with {0} point", "Tracer(RUIAN): add a way with {0} points", ConnectWays.getWay().getRealNodesCount(), ConnectWays.getWay().getRealNodesCount()) + "\n" + msg;
                   } else {
-                    strCommand = trn("Tracer(RUIAN): modify way to {0} point", "Tracer(RUIAN): modify way to {0} points", ConnectWays.s_oWay.getRealNodesCount(), ConnectWays.s_oWay.getRealNodesCount());
+                    strCommand = trn("Tracer(RUIAN): modify way to {0} point", "Tracer(RUIAN): modify way to {0} points", ConnectWays.getWay().getRealNodesCount(), ConnectWays.getWay().getRealNodesCount());
                   }
                   Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
 
 //                   TracerUtils.showNotification(strCommand, "info");
 
                   if (shift) {
-                    Main.main.getCurrentDataSet().addSelected(ConnectWays.s_oWay);
+                    Main.main.getCurrentDataSet().addSelected(ConnectWays.getWay());
                   } else {
-                    Main.main.getCurrentDataSet().setSelected(ConnectWays.s_oWay);
+                    Main.main.getCurrentDataSet().setSelected(ConnectWays.getWay());
                   }
                 } else {
                     System.out.println("Failed");
