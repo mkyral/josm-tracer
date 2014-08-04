@@ -48,7 +48,7 @@ import org.openstreetmap.josm.plugins.tracer.xyCoor;
 
 
 /**
- * The Tracer pLPIS record class
+ * The Tracer LPIS record class
  *
  */
 
@@ -93,9 +93,9 @@ class geom {
   }
 }
 
-public class pLpisRecord {
+public class LpisRecord {
 
-    private static long     m_plpis_id;
+    private static long     m_lpis_id;
     private static geom     m_geometry;
     private static String   m_usage;
     private static Map <String, String> m_usageOsm;
@@ -105,7 +105,7 @@ public class pLpisRecord {
     * Constructor
     *
     */
-    public void pLpisRecord () {
+    public void LpisRecord () {
       init();
     }
 
@@ -115,7 +115,7 @@ public class pLpisRecord {
     */
     public static void init () {
 
-      m_plpis_id = -1;
+      m_lpis_id = -1;
       m_usage = "";
       m_usageOsm = new HashMap <String, String>();
       m_geometry = new geom();
@@ -130,10 +130,13 @@ public class pLpisRecord {
                           m_usageOsm.put("crop", "hop"); break;
         case "vinice": m_usageOsm.put("landuse", "vineyard"); break;
         case "ovocný sad": m_usageOsm.put("landuse", "orchard"); break;
-        case "travní porost": m_usageOsm.put("landuse", "meadow"); break;
-        case "porost RRD": m_usageOsm.put("landuse", "forest"); break;
+        case "travní porost": m_usageOsm.put("landuse", "meadow");
+                              m_usageOsm.put("meadow", "agricultural"); break;
+        case "porost RRD": m_usageOsm.put("landuse", "forest");
+                           m_usageOsm.put("crop", "fast_growing_wood"); break;
         case "zalesněná půda": m_usageOsm.put("landuse", "forest"); break;
-        case "rybník": m_usageOsm.put("landuse", "reservoir"); break;
+        case "rybník": m_usageOsm.put("natural", "water");
+                       m_usageOsm.put("water", "pond"); break;
         case "jiná kultura": m_usageOsm.put("landuse", "farmland"); break;
         case "jiná kultura (školka)": m_usageOsm.put("landuse", "plant_nursery"); break;
         case "jiná kultura (zelinářská zahrada)": m_usageOsm.put("landuse", "farmland");
@@ -164,9 +167,9 @@ public class pLpisRecord {
     }
 
     /**
-    * Parse given XML string and fill variables with pLPIS data
+    * Parse given XML string and fill variables with LPIS data
     * There are two modes:
-    *   - basic - get pLPIS ID and geometry
+    *   - basic - get LPIS ID and geometry
     *   - extra - get type (landuse) of the element
     *  @param action - basic or extra
     *  @param xmlStr - data for parsing
@@ -196,8 +199,8 @@ public class pLpisRecord {
 
         System.out.println("parseXML(basic) - expID: " + expID);
         nodeList = (NodeList) xPath.compile(expID).evaluate(doc, XPathConstants.NODESET);
-        m_plpis_id = Long.parseLong(nodeList.item(0).getFirstChild().getNodeValue());
-        System.out.println("parseXML(basic) - m_plpis_id: " + m_plpis_id);
+        m_lpis_id = Long.parseLong(nodeList.item(0).getFirstChild().getNodeValue());
+        System.out.println("parseXML(basic) - m_lpis_id: " + m_lpis_id);
 
         System.out.println("parseXML(nasic) - expOuter: " + expOuter);
         nodeList = (NodeList) xPath.compile(expOuter).evaluate(doc, XPathConstants.NODESET);
@@ -285,10 +288,10 @@ public class pLpisRecord {
   }
 
   /**
-   *  Return pLPIS id
-   *  @return pLPIS id
+   *  Return LPIS id
+   *  @return LPIS id
    */
-  public long getpLpisID() {
-    return m_plpis_id;
+  public long getLpisID() {
+    return m_lpis_id;
   }
 }

@@ -47,7 +47,7 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 
-import org.openstreetmap.josm.plugins.tracer.pLpisRecord;
+import org.openstreetmap.josm.plugins.tracer.LpisRecord;
 
 
 import org.xml.sax.SAXException;
@@ -60,15 +60,15 @@ class TracerActionLpis extends MapMode implements MouseListener {
     private boolean ctrl;
     private boolean alt;
     private boolean shift;
-    private String source = "eagri:plpis";
-    private static pLpisRecord record;
+    private String source = "lpis";
+    private static LpisRecord record;
 
     private static StringBuilder msg = new StringBuilder();
 
     protected TracerServerLpis server = new TracerServerLpis();
 
     public TracerActionLpis(MapFrame mapFrame) {
-        super(tr("Tracer - pLPIS"), "tracer-plpis-sml", tr("Get agricultural geometry and some properies from pLPIS."), Shortcut.registerShortcut("tools:tracerpLPIS", tr("Tool: {0}", tr("Tracer - pLPIS")), KeyEvent.VK_T, Shortcut.ALT_CTRL_SHIFT), mapFrame, getCursor());
+        super(tr("Tracer - LPIS"), "tracer-lpis-sml", tr("Get agricultural geometry and some properties from LPIS."), Shortcut.registerShortcut("tools:tracerLPIS", tr("Tool: {0}", tr("Tracer - LPIS")), KeyEvent.VK_T, Shortcut.ALT_CTRL_SHIFT), mapFrame, getCursor());
     }
 
     @Override
@@ -89,7 +89,7 @@ class TracerActionLpis extends MapMode implements MouseListener {
     }
 
     private static Cursor getCursor() {
-        return ImageProvider.getCursor("crosshair", "tracer-plpis-sml");
+        return ImageProvider.getCursor("crosshair", "tracer-lpis-sml");
     }
 
     protected void traceAsync(Point clickPoint) {
@@ -176,15 +176,15 @@ class TracerActionLpis extends MapMode implements MouseListener {
     private void tagMultipolygon (Relation rel) {
       Map <String, String> map = new HashMap <String, String> (record.getUsageOsm());
       map.put("type", "multipolygon");
-      map.put("source", "eagri:plpis");
-      map.put("ref:plpis", Long.toString(record.getpLpisID()));
+      map.put("source", "lpis");
+      map.put("ref", Long.toString(record.getLpisID()));
       rel.setKeys(map);
     }
 
     private void tagOuterWay (Way way) {
       Map <String, String> map = new HashMap <String, String> (record.getUsageOsm());
-      map.put("source", "eagri:plpis");
-      map.put("ref:plpis", Long.toString(record.getpLpisID()));
+      map.put("source", "lpis");
+      map.put("ref", Long.toString(record.getLpisID()));
       way.setKeys(map);
     }
 
@@ -211,16 +211,17 @@ class TracerActionLpis extends MapMode implements MouseListener {
         progressMonitor.beginTask(null, 3);
         try {
               record = server.getElementBasicData(pos, sUrl);
-              System.out.println("  pLPIS ID: " + record.getpLpisID());
-              System.out.println("  pLPIS usage: " + record.getUsage());
-              if (record.getpLpisID() == 0) {
+              System.out.println("  LPIS ID: " + record.getLpisID());
+              System.out.println("  LPIS usage: " + record.getUsage());
+              if (record.getLpisID() == -1) {
                   TracerUtils.showNotification(tr("Data not available.")+ "\n(" + pos.toDisplayString() + ")", "warning");
                   return;
             }
 
-            // Create Outer way
             Way outer = new Way();
+            Relation rel = new Relation();
 
+            // Create Outer way
             Node firstNode = null;
             // record.getCoorCount() - 1 - ommit last node
             for (int i = 0; i < record.getOuter().size() - 1; i++) {
@@ -251,7 +252,6 @@ class TracerActionLpis extends MapMode implements MouseListener {
             if (record.hasInners()) {
               // Inners found - create multipolygon
 
-              Relation rel = new Relation();
               rel.addMember(new RelationMember("outer", outer));
 
               for (int i = 0; i < record.getInnersCount(); i++) {
@@ -287,7 +287,21 @@ class TracerActionLpis extends MapMode implements MouseListener {
                 commands.add(new AddCommand(rel));
               }
 
-            Main.main.undoRedo.add(new SequenceCommand("Trace object", commands));
+            Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
+            String msg = tr("Tracer(LPIS): add an area") + " \"" + record.getUsage() + "\"";
+            if (record.hasInners()) {
+              msg = msg + trn(" with {0} inner.", " with {0} inners.", record.getInnersCount(), record.getInnersCount());
+            } else {
+              msg = msg + ".";
+            }
+
+            TracerUtils.showNotification(msg, "info");
+
+            if (shift) {
+              Main.main.getCurrentDataSet().addSelected(record.hasInners()?rel:outer);
+            } else {
+              Main.main.getCurrentDataSet().setSelected(record.hasInners()?rel:outer);
+            }
 
 
 //             // connect to other buildings or modify existing building

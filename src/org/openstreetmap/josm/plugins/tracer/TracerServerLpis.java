@@ -25,7 +25,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import org.openstreetmap.josm.data.coor.LatLon;
 
-import org.openstreetmap.josm.plugins.tracer.pLpisRecord;
+import org.openstreetmap.josm.plugins.tracer.LpisRecord;
 import org.openstreetmap.josm.plugins.tracer.krovak;
 import org.openstreetmap.josm.plugins.tracer.xyCoor;
 
@@ -65,7 +65,7 @@ public class TracerServerLpis {
      * @param pos Position of the land.
      * @return Land ID and geometry.
      */
-    public pLpisRecord getElementBasicData(LatLon pos, String url) {
+    public LpisRecord getElementBasicData(LatLon pos, String url) {
         try {
             krovak k = new krovak();
             xyCoor xy = k.LatLon2krovak(pos);
@@ -78,31 +78,31 @@ public class TracerServerLpis {
             System.out.println("Request: " + request);
             String content = callServer(request);
             System.out.println("Reply: " + content);
-            pLpisRecord plpis = new pLpisRecord();
-            plpis.parseXML("basic", content);
-            plpis = getElementExtraData(plpis, url);
-            return plpis;
+            LpisRecord lpis = new LpisRecord();
+            lpis.parseXML("basic", content);
+            lpis = getElementExtraData(lpis, url);
+            return lpis;
         } catch (Exception e) {
-            return new pLpisRecord();
+            return new LpisRecord();
         }
     }
 
     /**
      * Get additional information for given ID.
-     * @param pLpisRecord Object of the pLPIS element.
-     * @return Updated pLPIS element.
+     * @param LpisRecord Object of the LPIS element.
+     * @return Updated LPIS element.
      */
-    public pLpisRecord getElementExtraData(pLpisRecord plpisElement, String url) {
+    public LpisRecord getElementExtraData(LpisRecord lpisElement, String url) {
         try {
-            String request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+plpisElement.getpLpisID()+"&SRSNAME=EPSG:102067";
+            String request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpisElement.getLpisID()+"&SRSNAME=EPSG:102067";
 
             System.out.println("Request: " + request);
             String content = callServer(request);
             System.out.println("Reply: " + content);
-            plpisElement.parseXML("extra", content);
-            return plpisElement;
+            lpisElement.parseXML("extra", content);
+            return lpisElement;
         } catch (Exception e) {
-            return plpisElement;
+            return lpisElement;
         }
     }
 }

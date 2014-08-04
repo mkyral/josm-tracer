@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-02-17 08:16+0100\n"
+"POT-Creation-Date: 2014-08-04 19:53+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,67 +18,116 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:291
-msgid "Merge objects nodes"
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:928
+msgid "Trace"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:935
+msgid "Remove Fully covered ways"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:942
+msgid "Connect to other ways"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:949
+msgid "Fix overlaped ways"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:956
+msgid "Remove spare nodes"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:965
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:290
+msgid "Trace object"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:61
 msgid "Tracer"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:61
 msgid "Tracer."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:69
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:61
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:71
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:72
 #, java-format
 msgid "Tool: {0}"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:128
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:101
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:96
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:103
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:104
 msgid "Tracing"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:200
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:168
 #, java-format
 msgid "Tracer: add a way with {0} point"
 msgid_plural "Tracer: add a way with {0} points"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:202
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:170
 #, java-format
 msgid "Tracer: modify way to {0} point"
 msgid_plural "Tracer: modify way to {0} points"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:69
-msgid "Tracer - RUIAN"
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:71
+msgid "Tracer - LPIS"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:69
-msgid "Get building geometry and some properies from RUIAN."
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:71
+msgid "Get agricultural geometry and some properties from LPIS."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:172
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:217
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:202
 msgid "Data not available."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:205
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:291
+msgid "Tracer(LPIS): add an area"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:293
+#, java-format
+msgid " with {0} inner."
+msgid_plural " with {0} inners."
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:72
+msgid "Tracer - RUIAN"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:72
+msgid "Get building geometry and some properies from RUIAN."
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:129
+msgid ""
+"\n"
+"Following tags added:\n"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:236
 msgid "Nothing changed."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:213
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:248
 #, java-format
 msgid "Tracer(RUIAN): add a way with {0} point"
 msgid_plural "Tracer(RUIAN): add a way with {0} points"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:215
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:250
 #, java-format
 msgid "Tracer(RUIAN): modify way to {0} point"
 msgid_plural "Tracer(RUIAN): modify way to {0} points"
