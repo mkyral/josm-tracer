@@ -21,11 +21,11 @@ package org.openstreetmap.josm.plugins.tracer;
 import static org.openstreetmap.josm.tools.I18n.*;
 import java.awt.Cursor;
 import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+// import java.awt.event.ActionEvent;
+// import java.awt.event.InputEvent;
+// import java.awt.event.KeyEvent;
+// import java.awt.event.MouseEvent;
+// import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -47,13 +47,13 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 
-import org.openstreetmap.josm.plugins.tracer.Address;
-import org.openstreetmap.josm.plugins.tracer.RuianRecord;
+// import org.openstreetmap.josm.plugins.tracer.modules.ruian.Address;
+// import org.openstreetmap.josm.plugins.tracer.modules.ruian.RuianRecord;
 
 
 import org.xml.sax.SAXException;
 
-class TracerActionRuian extends MapMode implements MouseListener {
+class RuianModule implements TracerModule {
 
     private static final long serialVersionUID = 1L;
 
@@ -61,120 +61,39 @@ class TracerActionRuian extends MapMode implements MouseListener {
     private boolean ctrl;
     private boolean alt;
     private boolean shift;
+    private boolean moduleEnabled;
     private String source = "cuzk:ruian";
     private static RuianRecord record;
 
     private static StringBuilder msg = new StringBuilder();
 
-    protected TracerServerRuian server = new TracerServerRuian();
+    protected RuianServer server = new RuianServer();
 
-    public TracerActionRuian(MapFrame mapFrame) {
-        super(tr("Tracer - RUIAN"), "tracer-ruian-sml", tr("Get building geometry and some properies from RUIAN."), Shortcut.registerShortcut("tools:tracerRUIAN", tr("Tool: {0}", tr("Tracer - RUIAN")), KeyEvent.VK_T, Shortcut.CTRL_SHIFT), mapFrame, getCursor());
+    public RuianModule(boolean enabled) {
+      moduleEnabled = enabled;
     }
 
-    @Override
-    public void enterMode() {
-        if (!isEnabled()) {
-            return;
-        }
-        super.enterMode();
-        Main.map.mapView.setCursor(getCursor());
-        Main.map.mapView.addMouseListener(this);
+    public void init() {
 
     }
 
-    @Override
-    public void exitMode() {
-        super.exitMode();
-        Main.map.mapView.removeMouseListener(this);
-    }
-
-    private static Cursor getCursor() {
+    public Cursor getCursor() {
         return ImageProvider.getCursor("crosshair", "tracer-ruian-sml");
     }
 
-    protected void traceAsync(Point clickPoint) {
-        cancel = false;
-        /**
-         * Positional data
-         */
-        final LatLon pos = Main.map.mapView.getLatLon(clickPoint.x, clickPoint.y);
-
-        try {
-            PleaseWaitRunnable tracerTask = new PleaseWaitRunnable(tr("Tracing")) {
-
-                @Override
-                protected void realRun() throws SAXException {
-                    traceSync(pos, progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
-                }
-
-                @Override
-                protected void finish() {
-                }
-
-                @Override
-                protected void cancel() {
-                    TracerActionRuian.this.cancel();
-                }
-            };
-            Thread executeTraceThread = new Thread(tracerTask);
-            executeTraceThread.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public String getName() {
+        return tr("RUIAN");
     }
 
-    private void tagBuilding(Way way) {
-        msg.setLength(0);
-        msg.append(tr("\nFollowing tags added:\n"));
-        if(!alt) {
-          if ( record.getBuildingTagKey().equals("building") &&
-               record.getBuildingTagValue().length() > 0) {
-            way.put("building", record.getBuildingTagValue());
-            msg.append("building: " + record.getBuildingTagValue() + "\n");
-          }
-          else {
-            way.put("building", "yes");
-            msg.append("building: yes\n");
-          }
-        }
+    public boolean moduleIsEnabled() {
+      return moduleEnabled;
+    };
 
-        if (record.getBuildingID() > 0 ) {
-          way.put("ref:ruian:building", Long.toString(record.getBuildingID()));
-          msg.append("ref:ruian:building: " + Long.toString(record.getBuildingID()) + "\n");
-        }
+    public void setModuleIsEnabled(boolean enabled){
+      moduleEnabled = enabled;
+    };
 
-        if (record.getBuildingUsageCode().length() > 0) {
-          way.put("building:ruian:type", record.getBuildingUsageCode());
-          msg.append("building:ruian:type: " + record.getBuildingUsageCode() + "\n");
-        }
-
-        if (record.getBuildingLevels().length() > 0) {
-          way.put("building:levels", record.getBuildingLevels());
-          msg.append("building:levels: " + record.getBuildingLevels() + "\n");
-        }
-
-        if (record.getBuildingFlats().length() > 0) {
-          way.put("building:flats", record.getBuildingFlats());
-          msg.append("building:flats: " + record.getBuildingFlats() + "\n");
-        }
-
-        if (record.getBuildingFinished().length() > 0) {
-          way.put("start_date", record.getBuildingFinished());
-          msg.append("start_date: " + record.getBuildingFinished() + "\n");
-        }
-
-        if (record.getSource().length() > 0) {
-          way.put("source", record.getSource());
-          msg.append("source: " + record.getSource() + "\n");
-        }
-        else {
-          way.put("source", source);
-          msg.append("source: " + source + "\n");
-        }
-    }
-
-    private void traceSync(LatLon pos, ProgressMonitor progressMonitor) {
+    public void trace(LatLon pos, ProgressMonitor progressMonitor) {
         Collection<Command> commands = new LinkedList<Command>();
         TracerPreferences pref = TracerPreferences.getInstance();
 
@@ -267,43 +186,55 @@ class TracerActionRuian extends MapMode implements MouseListener {
         }
     }
 
-    public void cancel() {
-        cancel = true;
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        if (!Main.map.mapView.isActiveLayerDrawable()) {
-            return;
+// ---------------------------------------------------------------------------
+    private void tagBuilding(Way way) {
+        msg.setLength(0);
+        msg.append(tr("\nFollowing tags added:\n"));
+        if(!alt) {
+          if ( record.getBuildingTagKey().equals("building") &&
+               record.getBuildingTagValue().length() > 0) {
+            way.put("building", record.getBuildingTagValue());
+            msg.append("building: " + record.getBuildingTagValue() + "\n");
+          }
+          else {
+            way.put("building", "yes");
+            msg.append("building: yes\n");
+          }
         }
-        requestFocusInMapView();
-        updateKeyModifiers(e);
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            traceAsync(e.getPoint());
+
+        if (record.getBuildingID() > 0 ) {
+          way.put("ref:ruian:building", Long.toString(record.getBuildingID()));
+          msg.append("ref:ruian:building: " + Long.toString(record.getBuildingID()) + "\n");
         }
-    }
 
-    @Override
-    protected void updateKeyModifiers(MouseEvent e) {
-        ctrl = (e.getModifiers() & ActionEvent.CTRL_MASK) != 0;
-        alt = (e.getModifiers() & (ActionEvent.ALT_MASK | InputEvent.ALT_GRAPH_MASK)) != 0;
-        shift = (e.getModifiers() & ActionEvent.SHIFT_MASK) != 0;
-    }
+        if (record.getBuildingUsageCode().length() > 0) {
+          way.put("building:ruian:type", record.getBuildingUsageCode());
+          msg.append("building:ruian:type: " + record.getBuildingUsageCode() + "\n");
+        }
 
-    @Override
-    public void mouseReleased(MouseEvent e) {
+        if (record.getBuildingLevels().length() > 0) {
+          way.put("building:levels", record.getBuildingLevels());
+          msg.append("building:levels: " + record.getBuildingLevels() + "\n");
+        }
+
+        if (record.getBuildingFlats().length() > 0) {
+          way.put("building:flats", record.getBuildingFlats());
+          msg.append("building:flats: " + record.getBuildingFlats() + "\n");
+        }
+
+        if (record.getBuildingFinished().length() > 0) {
+          way.put("start_date", record.getBuildingFinished());
+          msg.append("start_date: " + record.getBuildingFinished() + "\n");
+        }
+
+        if (record.getSource().length() > 0) {
+          way.put("source", record.getSource());
+          msg.append("source: " + record.getSource() + "\n");
+        }
+        else {
+          way.put("source", source);
+          msg.append("source: " + source + "\n");
+        }
     }
 }
 

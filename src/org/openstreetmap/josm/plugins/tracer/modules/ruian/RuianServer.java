@@ -25,12 +25,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import org.openstreetmap.josm.data.coor.LatLon;
 
-import org.openstreetmap.josm.plugins.tracer.RuianRecord;
+// import org.openstreetmap.josm.plugins.tracer.RuianRecord;
 
-public class TracerServerRuian {
+public class RuianServer {
 
 
-    public TracerServerRuian() {
+    public RuianServer() {
 
     }
 

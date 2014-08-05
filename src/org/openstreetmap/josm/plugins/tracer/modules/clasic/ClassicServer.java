@@ -1,6 +1,6 @@
 /**
  *  Tracer - plugin for JOSM
- *  Jan Bilak
+ *  Jan Bilak, Marian Kyral
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -25,11 +25,11 @@ import java.net.URL;
 import java.util.ArrayList;
 import org.openstreetmap.josm.data.coor.LatLon;
 
-public class TracerServer {
+public class ClassicServer {
 
 //     static final String URL = "http://localhost:5050/";
 
-    public TracerServer() {
+    public ClassicServer() {
 
     }
 

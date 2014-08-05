@@ -29,7 +29,7 @@ import org.json.JSONArray;
 import java.util.*;
 import java.lang.StringBuilder;
 
-import org.openstreetmap.josm.plugins.tracer.Address;
+// import org.openstreetmap.josm.plugins.tracer.modules.ruian.Address;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils.*;
 
 /**
