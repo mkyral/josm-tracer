@@ -42,7 +42,6 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.osm.WaySegment;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
-// import org.openstreetmap.josm.plugins.tracer2.preferences.ServerParam;
 import org.openstreetmap.josm.tools.Pair;
 
 import org.openstreetmap.josm.plugins.tracer.TracerDebug;

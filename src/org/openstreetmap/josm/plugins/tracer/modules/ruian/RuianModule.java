@@ -21,15 +21,9 @@ package org.openstreetmap.josm.plugins.tracer;
 import static org.openstreetmap.josm.tools.I18n.*;
 import java.awt.Cursor;
 import java.awt.Point;
-// import java.awt.event.ActionEvent;
-// import java.awt.event.InputEvent;
-// import java.awt.event.KeyEvent;
-// import java.awt.event.MouseEvent;
-// import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.lang.StringBuilder;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
@@ -47,9 +41,6 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 
-// import org.openstreetmap.josm.plugins.tracer.modules.ruian.Address;
-// import org.openstreetmap.josm.plugins.tracer.modules.ruian.RuianRecord;
-
 
 import org.xml.sax.SAXException;
 
@@ -64,8 +55,6 @@ class RuianModule implements TracerModule {
     private boolean moduleEnabled;
     private String source = "cuzk:ruian";
     private static RuianRecord record;
-
-    private static StringBuilder msg = new StringBuilder();
 
     protected RuianServer server = new RuianServer();
 
@@ -164,7 +153,7 @@ class RuianModule implements TracerModule {
                 if (!commands.isEmpty()) {
                   String strCommand;
                   if (ConnectWays.s_bAddNewWay == true) {
-                    strCommand = trn("Tracer(RUIAN): add a way with {0} point", "Tracer(RUIAN): add a way with {0} points", ConnectWays.getWay().getRealNodesCount(), ConnectWays.getWay().getRealNodesCount()) + "\n" + msg;
+                    strCommand = trn("Tracer(RUIAN): add a way with {0} point", "Tracer(RUIAN): add a way with {0} points", ConnectWays.getWay().getRealNodesCount(), ConnectWays.getWay().getRealNodesCount());
                   } else {
                     strCommand = trn("Tracer(RUIAN): modify way to {0} point", "Tracer(RUIAN): modify way to {0} points", ConnectWays.getWay().getRealNodesCount(), ConnectWays.getWay().getRealNodesCount());
                   }
@@ -188,52 +177,41 @@ class RuianModule implements TracerModule {
 
 // ---------------------------------------------------------------------------
     private void tagBuilding(Way way) {
-        msg.setLength(0);
-        msg.append(tr("\nFollowing tags added:\n"));
         if(!alt) {
           if ( record.getBuildingTagKey().equals("building") &&
                record.getBuildingTagValue().length() > 0) {
             way.put("building", record.getBuildingTagValue());
-            msg.append("building: " + record.getBuildingTagValue() + "\n");
           }
           else {
             way.put("building", "yes");
-            msg.append("building: yes\n");
           }
         }
 
         if (record.getBuildingID() > 0 ) {
           way.put("ref:ruian:building", Long.toString(record.getBuildingID()));
-          msg.append("ref:ruian:building: " + Long.toString(record.getBuildingID()) + "\n");
         }
 
         if (record.getBuildingUsageCode().length() > 0) {
           way.put("building:ruian:type", record.getBuildingUsageCode());
-          msg.append("building:ruian:type: " + record.getBuildingUsageCode() + "\n");
         }
 
         if (record.getBuildingLevels().length() > 0) {
           way.put("building:levels", record.getBuildingLevels());
-          msg.append("building:levels: " + record.getBuildingLevels() + "\n");
         }
 
         if (record.getBuildingFlats().length() > 0) {
           way.put("building:flats", record.getBuildingFlats());
-          msg.append("building:flats: " + record.getBuildingFlats() + "\n");
         }
 
         if (record.getBuildingFinished().length() > 0) {
           way.put("start_date", record.getBuildingFinished());
-          msg.append("start_date: " + record.getBuildingFinished() + "\n");
         }
 
         if (record.getSource().length() > 0) {
           way.put("source", record.getSource());
-          msg.append("source: " + record.getSource() + "\n");
         }
         else {
           way.put("source", source);
-          msg.append("source: " + source + "\n");
         }
     }
 }

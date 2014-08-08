@@ -27,8 +27,6 @@ import org.openstreetmap.josm.data.coor.LatLon;
 
 public class ClassicServer {
 
-//     static final String URL = "http://localhost:5050/";
-
     public ClassicServer() {
 
     }

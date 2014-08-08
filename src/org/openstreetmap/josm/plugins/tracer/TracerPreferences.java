@@ -22,10 +22,7 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 import javax.swing.JPanel;
 import javax.swing.JFormattedTextField;
-// import java.text.NumberFormat;
 import java.text.DecimalFormat;
-import javax.swing.text.NumberFormatter;
-
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.gui.preferences.DefaultTabPreferenceSetting;
