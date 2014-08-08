@@ -39,11 +39,21 @@ import org.opengis.referencing.operation.TransformException;
 public abstract class TracerUtils {
 
     /**
-     * Show notification.
+     * Show notification for 3 seconds.
      * @param message Message to shown.
      * @param type Type if message (info, warning, error, plain).
      */
     public static void showNotification (String message, String type) {
+      showNotification(message, type, Notification.TIME_SHORT);
+    }
+
+    /**
+     * Show notification.
+     * @param message Message to shown.
+     * @param type Type if message (info, warning, error, plain).
+     * @param time How long will be the message displayed.
+     */
+    public static void showNotification (String message, String type, int time) {
       Notification note = new Notification(message);
 
       if (type.equals("info"))
@@ -55,7 +65,7 @@ public abstract class TracerUtils {
       else
         note.setIcon(JOptionPane.PLAIN_MESSAGE);
 
-      note.setDuration(Notification.TIME_SHORT);
+      note.setDuration(time);
       note.show();
     }
 

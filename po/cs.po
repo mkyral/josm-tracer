@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-08-04 19:53+0200\n"
-"PO-Revision-Date: 2014-08-04 19:54+0200\n"
+"POT-Creation-Date: 2014-08-08 18:38+0200\n"
+"PO-Revision-Date: 2014-08-08 18:40+0200\n"
 "Last-Translator: Marian Kyral <mkyral@email.cz>\n"
 "Language-Team: Czech <kde-i18n-doc@kde.org>\n"
 "Language: cs\n"
@@ -17,53 +17,53 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Lokalize 1.5\n"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:928
-msgid "Trace"
-msgstr "Trasování"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:935
-msgid "Remove Fully covered ways"
-msgstr "Odstraněné plně pokrytých cest"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:942
-msgid "Connect to other ways"
-msgstr "Připojení k jiným cestám"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:949
-msgid "Fix overlaped ways"
-msgstr "Oprava překrývajících se cest"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:956
-msgid "Remove spare nodes"
-msgstr "Odstranění nadbytečných bodů"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:965
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:290
-msgid "Trace object"
-msgstr "Trasování objektu"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:61
-msgid "Tracer"
-msgstr "Trasovač"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:61
-msgid "Tracer."
-msgstr "Trasovač."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:61
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:71
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:72
+msgid "Tracer - LPIS"
+msgstr "Trasovač- LPIS"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:71
+msgid "Get agricultural geometry and some properties from LPIS."
+msgstr "Získá obrys budovy a některé její vlastnosti z LPIS."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:71
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
 #, java-format
 msgid "Tool: {0}"
 msgstr "Nástroje: {0}"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:96
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:103
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:104
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:131
 msgid "Tracing"
 msgstr "Trasuji"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:168
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:217
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:110
+msgid "Data not available."
+msgstr "Data nejsou dostupná."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:290
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:964
+msgid "Trace object"
+msgstr "Trasování objektu"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:291
+msgid "Tracer(LPIS): add an area"
+msgstr "Trasovač(LPIS): přřdána plocha"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:293
+#, java-format
+msgid " with {0} inner."
+msgid_plural " with {0} inners."
+msgstr[0] " obsahující {0} vnitřních členů."
+msgstr[1] ""
+msgstr[2] ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:70
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:222
+msgid "Classic"
+msgstr "Klasický"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:130
 #, java-format
 msgid "Tracer: add a way with {0} point"
 msgid_plural "Tracer: add a way with {0} points"
@@ -71,7 +71,7 @@ msgstr[0] "Trasovač: přidána cesta tvořená {0} bodem"
 msgstr[1] "Trasovač: přidána cesta tvořená {0} body"
 msgstr[2] "Trasovač: přidána cesta tvořená {0} body"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:170
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:132
 #, java-format
 msgid "Tracer: modify way to {0} point"
 msgid_plural "Tracer: modify way to {0} points"
@@ -79,52 +79,16 @@ msgstr[0] "Trasovač: cesta upravena na {0} bod"
 msgstr[1] "Trasovač: cesta upravena na {0} body"
 msgstr[2] "Trasovač: cesta upravena na {0} bodů"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:71
-msgid "Tracer - LPIS"
-msgstr "Trasovač- LPIS"
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:74
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:225
+msgid "RUIAN"
+msgstr "RUIAN"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:71
-msgid "Get agricultural geometry and some properties from LPIS."
-msgstr "Získá obrys zemědělské půdy a některé její vlastnosti z LPIS."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:217
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:202
-msgid "Data not available."
-msgstr "Data nejsou dostupná."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:291
-msgid "Tracer(LPIS): add an area"
-msgstr "Trasovač (LPIS): přidána plocha"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionLpis.java:293
-#, java-format
-msgid " with {0} inner."
-msgid_plural " with {0} inners."
-msgstr[0] " obsahující {0} vnitřní člen."
-msgstr[1] " obsahující {0} vnitřní členy."
-msgstr[2] " obsahující {0} vnitřních členů."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:72
-msgid "Tracer - RUIAN"
-msgstr "Trasovač- RUIAN"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:72
-msgid "Get building geometry and some properies from RUIAN."
-msgstr "Získá obrys budovy a některé její vlastnosti z RÚIAN."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:129
-msgid ""
-"\n"
-"Following tags added:\n"
-msgstr ""
-"\n"
-"Following tags added:\n"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:236
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:144
 msgid "Nothing changed."
 msgstr "Beze změny."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:248
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:156
 #, java-format
 msgid "Tracer(RUIAN): add a way with {0} point"
 msgid_plural "Tracer(RUIAN): add a way with {0} points"
@@ -132,7 +96,7 @@ msgstr[0] "Trasovač(RUIAN): přidána cesta tvořená {0} bodem"
 msgstr[1] "Trasovač(RUIAN): přidána cesta tvořená {0} body"
 msgstr[2] "Trasovač(RUIAN): přidána cesta tvořená {0} body"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerActionRuian.java:250
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:158
 #, java-format
 msgid "Tracer(RUIAN): modify way to {0} point"
 msgid_plural "Tracer(RUIAN): modify way to {0} points"
@@ -140,50 +104,121 @@ msgstr[0] "Trasovač(RUIAN): cesta upravena na {0} bod"
 msgstr[1] "Trasovač(RUIAN): cesta upravena na {0} body"
 msgstr[2] "Trasovač(RUIAN): cesta upravena na {0} bodů"
 
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:128
+msgid "Tracer plugin settings"
+msgstr "Konfigurace Trasovače"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:129
+msgid "Customize Tracer plugin behaviour"
+msgstr "Změňte nastavení trasovače"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:220
+msgid "Enabled modules:"
+msgstr "Povolené moduly"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:227
+msgid "Select modules available for switching"
+msgstr "Vyberte moduly pro přepínání"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:228
+msgid "Use Classic (the original) tracer module"
+msgstr "Použít klasický (původní) trasovací modul"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:229
+msgid "Use RUIAN Tracer module"
+msgstr "Použít RUIAN trasovací modul"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:232
+msgid "Custom Classic Tracer server - requires TracerServer (.NET or Mono)"
+msgstr ""
+"Vlastní url původního trasovacího serveru - vyžaduje TracerServer (.NET nebo "
+"Mono)"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:243
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:284
+msgid "Adjust traced object position"
+msgstr "Úprava pozice trasovaného objektu"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:251
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:292
+msgid "Lat:"
+msgstr "Lat:"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:252
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:293
+msgid "Lon:"
+msgstr "Lon:"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:266
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:306
+msgid "Set Lat adjustment. Interval <0;999>"
+msgstr "Nastavte posun pro Lat. Rozmezí <0-999>"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:270
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:310
+msgid "Set Lon adjustment. Interval <0;999>"
+msgstr "Nastavte posun pro Lon. Rozmezí <0-999>"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:274
+msgid "Custom Ruian server url"
+msgstr "Vlastní url RUIAN serveru"
+
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerException.java:27
 msgid "An unknown error has occurred"
 msgstr "Vyskytla se neznámá chyba"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:120
-msgid "Tracer plugin settings"
-msgstr "Konfigurace Trasovače"
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
+msgid "Tracer"
+msgstr "Trasovač"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:121
-msgid "Customize Tracer plugin behaviour"
-msgstr "Změňte nastavení trasovače"
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
+msgid "Tracer."
+msgstr "Trasovač."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:200
-msgid "Custom Tracer server - requires TracerServer (.NET or Mono)"
-msgstr "Vlastní trasovací server - vyžaduje TracerServer (.NET nebo Mono)"
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:74
+msgid ""
+"Tracer: No active module found!\n"
+"Please enable some in configuration."
+msgstr ""
+"Trasovač: 6ádný aktivná modul nebyl nalezen!\n"
+"Povolte prosím nějaký v konfiguraci."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:211
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:252
-msgid "Adjust traced object position"
-msgstr "Úprava pozice trasovaného objektu"
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:83
+#, java-format
+msgid "Tracer: Module {0} activated."
+msgstr "Trasovač: Modul {0} byl aktivován."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:219
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:260
-msgid "Lat:"
-msgstr "Lat:"
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:114
+#, java-format
+msgid "Tracer: Switched to {0} module."
+msgstr "Trasovač: Přepnuto na modul {0}."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:220
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:261
-msgid "Lon:"
-msgstr "Lon:"
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:927
+msgid "Trace"
+msgstr "Trasovač"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:234
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:274
-msgid "Set Lat adjustment. Interval <0;999>"
-msgstr "Nastavte posun pro Lat. Rozmezí <0-999>"
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:934
+msgid "Remove Fully covered ways"
+msgstr "Odstranění pohlcených ploch"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:238
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:278
-msgid "Set Lon adjustment. Interval <0;999>"
-msgstr "Nastavte posun pro Lon. Rozmezí <0-999>"
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:941
+msgid "Connect to other ways"
+msgstr "Připojení na ostatní cesty"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:242
-msgid "Custom Ruian server"
-msgstr "Vlastní RUIAN server"
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:948
+msgid "Fix overlaped ways"
+msgstr "Oprava překrývajících se cest"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:955
+msgid "Remove spare nodes"
+msgstr "Odstranění nadbytečných uzlů"
+
+#~ msgid ""
+#~ "\n"
+#~ "Following tags added:\n"
+#~ msgstr ""
+#~ "\n"
+#~ "Následující značky byly přidány:\n"
 
 #~ msgid "Merge objects nodes"
 #~ msgstr "Sloučení uzlů objektu"

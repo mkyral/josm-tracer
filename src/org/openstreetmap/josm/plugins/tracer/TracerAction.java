@@ -26,6 +26,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -46,7 +47,7 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.xml.sax.SAXException;
 
-class TracerAction extends MapMode implements MouseListener {
+class TracerAction extends MapMode implements MouseListener, KeyListener{
 
     private static final long serialVersionUID = 1L;
 
@@ -54,11 +55,11 @@ class TracerAction extends MapMode implements MouseListener {
     private boolean ctrl;
     private boolean alt;
     private boolean shift;
-    private String source = "cuzk:km";
-    protected TracerServer server = new TracerServer();
+
+    private Modules m_modules = new Modules();
 
     public TracerAction(MapFrame mapFrame) {
-        super(tr("Tracer"), "tracer-sml", tr("Tracer."), Shortcut.registerShortcut("tools:tracer", tr("Tool: {0}", tr("Tracer")), KeyEvent.VK_T, Shortcut.DIRECT), mapFrame, getCursor());
+        super(tr("Tracer"), "tracer-sml", tr("Tracer."), Shortcut.registerShortcut("tools:tracer", tr("Tool: {0}", tr("Tracer")), KeyEvent.VK_T, Shortcut.DIRECT), mapFrame, null);
     }
 
 
@@ -67,22 +68,56 @@ class TracerAction extends MapMode implements MouseListener {
         if (!isEnabled()) {
             return;
         }
-        super.enterMode();
-        Main.map.mapView.setCursor(getCursor());
-        Main.map.mapView.addMouseListener(this);
-//         Main.map.mapView.addKeyListener(this);
 
+        m_modules.refreshModulesStatus();
+        if (m_modules.getActiveModulesCount() == 0) {
+          TracerUtils.showNotification(tr("Tracer: No active module found!\nPlease enable some in configuration."), "error");
+          return;
+        }
+
+        super.enterMode();
+        Main.map.mapView.addMouseListener(this);
+        Main.map.mapView.addKeyListener(this);
+        Main.map.mapView.requestFocus();
+        Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
+        TracerUtils.showNotification(tr("Tracer: Module {0} activated.", m_modules.getActiveModuleName()), "info", 700);
     }
 
     @Override
     public void exitMode() {
         super.exitMode();
         Main.map.mapView.removeMouseListener(this);
-//         Main.map.mapView.removeKeyListener(this);
+        Main.map.mapView.removeKeyListener(this);
     }
 
-    private static Cursor getCursor() {
-        return ImageProvider.getCursor("crosshair", "tracer-sml");
+    @Override
+    public void keyReleased ( KeyEvent e ) {
+    }
+
+    @Override
+    public void keyTyped ( KeyEvent e ) {
+      checkKey(e);
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+      checkKey(e);
+    }
+
+    private void checkKey(KeyEvent e) {
+      String previousModule = m_modules.getActiveModuleName();
+
+      switch (e.getKeyCode()) {
+      case KeyEvent.VK_T : // T
+        m_modules.nextModule();
+        if (! previousModule.equals(m_modules.getActiveModuleName())) {
+          TracerUtils.showNotification(tr("Tracer: Switched to {0} module.", m_modules.getActiveModuleName()), "info", 700);
+          Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
+        }
+        break;
+      default:
+        return;
+      }
     }
 
     protected void traceAsync(Point clickPoint) {
@@ -97,7 +132,7 @@ class TracerAction extends MapMode implements MouseListener {
 
                 @Override
                 protected void realRun() throws SAXException {
-                    traceSync(pos, progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
+                    m_modules.getActiveModule().trace(pos, progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
                 }
 
                 @Override
@@ -116,77 +151,6 @@ class TracerAction extends MapMode implements MouseListener {
         }
     }
 
-    private void tagBuilding(Way way) {
-        if(!alt) way.put("building", "yes");
-        way.put("source", source);
-    }
-
-    private void traceSync(LatLon pos, ProgressMonitor progressMonitor) {
-        Collection<Command> commands = new LinkedList<Command>();
-        TracerPreferences pref = TracerPreferences.getInstance();
-
-        String sUrl = "http://localhost:5050/";
-        double dAdjX = 0, dAdjY = 0;
-
-        if (pref.m_customTracerUrl)
-          sUrl = pref.m_customTracerUrlText;
-
-        if (pref.m_tracerAdjustPosition) {
-          dAdjX = pref.m_tracerAdjustPositionLat;
-          dAdjY = pref.m_tracerAdjustPositionLon;
-        }
-
-        progressMonitor.beginTask(null, 3);
-        try {
-              ArrayList<LatLon> coordList = server.trace(pos, sUrl, dAdjX, dAdjY);
-
-            if (coordList.size() == 0) {
-                return;
-            }
-
-            // make nodes a way
-            Way way = new Way();
-            Node firstNode = null;
-            for (LatLon coord : coordList) {
-                Node node = new Node(coord);
-                if (firstNode == null) {
-                    firstNode = node;
-                }
-                commands.add(new AddCommand(node));
-                way.addNode(node);
-            }
-            way.addNode(firstNode);
-
-            tagBuilding(way);
-
-            // connect to other buildings or modify existing building
-            commands.add(ConnectWays.connect(way, pos, ctrl, alt, source));
-
-            if (!commands.isEmpty()) {
-              String strCommand;
-              if (ConnectWays.s_bAddNewWay == true) {
-                strCommand = trn("Tracer: add a way with {0} point", "Tracer: add a way with {0} points", coordList.size(), coordList.size());
-              } else {
-                strCommand = trn("Tracer: modify way to {0} point", "Tracer: modify way to {0} points", coordList.size(), coordList.size());
-              }
-              Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
-
-              TracerUtils.showNotification(strCommand, "info");
-
-              if (shift) {
-                Main.main.getCurrentDataSet().addSelected(ConnectWays.s_oWay);
-              } else {
-                Main.main.getCurrentDataSet().setSelected(ConnectWays.s_oWay);
-              }
-            } else {
-                System.out.println("Failed");
-            }
-
-        } finally {
-            progressMonitor.finishTask();
-        }
-    }
-
     public void cancel() {
         cancel = true;
     }
@@ -201,6 +165,7 @@ class TracerAction extends MapMode implements MouseListener {
 
     @Override
     public void mouseExited(MouseEvent e) {
+        Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
     }
 
     @Override
@@ -224,6 +189,7 @@ class TracerAction extends MapMode implements MouseListener {
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
     }
 }
 
