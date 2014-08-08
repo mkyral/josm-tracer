@@ -25,14 +25,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import org.openstreetmap.josm.data.coor.LatLon;
 
-import org.openstreetmap.josm.plugins.tracer.LpisRecord;
-import org.openstreetmap.josm.plugins.tracer.krovak;
-import org.openstreetmap.josm.plugins.tracer.xyCoor;
+// import org.openstreetmap.josm.plugins.tracer.LpisRecord;
+// import org.openstreetmap.josm.plugins.tracer.krovak;
+// import org.openstreetmap.josm.plugins.tracer.xyCoor;
 
-public class TracerServerLpis {
+public class LpisServer {
 
 
-    public TracerServerLpis() {
+    public LpisServer() {
 
     }
 

@@ -35,9 +35,11 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
 
     boolean  m_classicModuleEnabled;
     boolean  m_ruianModuleEnabled;
+    boolean  m_lpisModuleEnabled;
 
     private String KEY_CLASSICENABLED = "tracer.classicmoduleenabled";
     private String KEY_RUIANENABLED = "tracer.ruianmoduleenabled";
+    private String KEY_LPISENABLED = "tracer.lpismoduleenabled";
 
     boolean  m_customTracerUrl;
     String   m_customTracerUrlText;
@@ -87,6 +89,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
     private javax.swing.JLabel enabledModulesLabel;
     private javax.swing.JCheckBox classicCheckBox;
     private javax.swing.JCheckBox ruianCheckBox;
+    private javax.swing.JCheckBox lpisCheckBox;
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JCheckBox tracerUrlCheckBox;
     private javax.swing.JTextField tracerUrlValueField;
@@ -133,6 +136,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
         // Enabled modules
         m_classicModuleEnabled        = Main.pref.getBoolean(KEY_CLASSICENABLED,    classicCheckBox.isSelected());
         m_ruianModuleEnabled          = Main.pref.getBoolean(KEY_RUIANENABLED,      ruianCheckBox.isSelected());
+        m_lpisModuleEnabled           = Main.pref.getBoolean(KEY_LPISENABLED,       lpisCheckBox.isSelected());
 
         // Tracer
         m_customTracerUrl             = Main.pref.getBoolean(KEY_TRACERURL,         tracerUrlCheckBox.isSelected());
@@ -156,6 +160,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
     public void reloadSettings() {
         classicCheckBox.setSelected(m_classicModuleEnabled);
         ruianCheckBox.setSelected(m_ruianModuleEnabled);
+        lpisCheckBox.setSelected(m_lpisModuleEnabled);
 
         tracerUrlCheckBox.setSelected(m_customTracerUrl);
         tracerUrlValueField.setText(m_customTracerUrlText);
@@ -188,6 +193,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
         enabledModulesLabel = new javax.swing.JLabel();
         classicCheckBox = new javax.swing.JCheckBox();
         ruianCheckBox = new javax.swing.JCheckBox();
+        lpisCheckBox = new javax.swing.JCheckBox();
         jSeparator2 = new javax.swing.JSeparator();
         tracerUrlCheckBox = new javax.swing.JCheckBox();
         tracerUrlValueField = new javax.swing.JTextField();
@@ -224,9 +230,12 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
         ruianCheckBox.setSelected(true);
         ruianCheckBox.setText(tr("RUIAN"));
 
+        lpisCheckBox.setText(tr("LPIS"));
+
         enabledModulesLabel.getAccessibleContext().setAccessibleDescription(tr("Select modules available for switching"));
         classicCheckBox.getAccessibleContext().setAccessibleDescription(tr("Use Classic (the original) tracer module"));
         ruianCheckBox.getAccessibleContext().setAccessibleDescription(tr("Use RUIAN Tracer module"));
+        lpisCheckBox.getAccessibleContext().setAccessibleDescription(tr("Use LPIS Tracer module"));
 
         // Tracer settins
         tracerUrlCheckBox.setText(tr("Custom Classic Tracer server - requires TracerServer (.NET or Mono)"));
@@ -324,7 +333,9 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addComponent(classicCheckBox)
                         .addGap(34, 34, 34)
-                        .addComponent(ruianCheckBox)))
+                        .addComponent(ruianCheckBox)
+                        .addGap(34, 34, 34)
+                        .addComponent(lpisCheckBox)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
@@ -335,7 +346,8 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(classicCheckBox)
-                    .addComponent(ruianCheckBox))
+                    .addComponent(ruianCheckBox)
+                    .addComponent(lpisCheckBox))
                 .addGap(0, 7, Short.MAX_VALUE))
         );
 

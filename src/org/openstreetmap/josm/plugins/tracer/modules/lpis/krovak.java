@@ -25,7 +25,7 @@ import javax.swing.JOptionPane;
 
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.plugins.tracer.xyCoor;
+// import org.openstreetmap.josm.plugins.tracer.xyCoor;
 
 import com.vividsolutions.jts.geom.*;
 import org.geotools.geometry.jts.JTS;

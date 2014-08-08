@@ -21,11 +21,6 @@ package org.openstreetmap.josm.plugins.tracer;
 import static org.openstreetmap.josm.tools.I18n.*;
 import java.awt.Cursor;
 import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.util.*;
 import java.lang.StringBuilder;
 
@@ -47,12 +42,11 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 
-import org.openstreetmap.josm.plugins.tracer.LpisRecord;
-
+// import org.openstreetmap.josm.plugins.tracer.modules.lpis.LpisRecord;
 
 import org.xml.sax.SAXException;
 
-class TracerActionLpis extends MapMode implements MouseListener {
+class LpisModule implements TracerModule  {
 
     private static final long serialVersionUID = 1L;
 
@@ -60,135 +54,39 @@ class TracerActionLpis extends MapMode implements MouseListener {
     private boolean ctrl;
     private boolean alt;
     private boolean shift;
-    private String source = "lpis";
-    private static LpisRecord record;
+    private boolean moduleEnabled;
+    private String  source = "lpis";
+    private static  LpisRecord record;
 
     private static StringBuilder msg = new StringBuilder();
 
-    protected TracerServerLpis server = new TracerServerLpis();
+    protected LpisServer server = new LpisServer();
 
-    public TracerActionLpis(MapFrame mapFrame) {
-        super(tr("Tracer - LPIS"), "tracer-lpis-sml", tr("Get agricultural geometry and some properties from LPIS."), Shortcut.registerShortcut("tools:tracerLPIS", tr("Tool: {0}", tr("Tracer - LPIS")), KeyEvent.VK_T, Shortcut.ALT_CTRL_SHIFT), mapFrame, getCursor());
+    public LpisModule(boolean enabled) {
+      moduleEnabled = enabled;
     }
 
-    @Override
-    public void enterMode() {
-        if (!isEnabled()) {
-            return;
-        }
-        super.enterMode();
-        Main.map.mapView.setCursor(getCursor());
-        Main.map.mapView.addMouseListener(this);
+    public void init() {
 
     }
 
-    @Override
-    public void exitMode() {
-        super.exitMode();
-        Main.map.mapView.removeMouseListener(this);
-    }
-
-    private static Cursor getCursor() {
+    public Cursor getCursor() {
         return ImageProvider.getCursor("crosshair", "tracer-lpis-sml");
     }
 
-    protected void traceAsync(Point clickPoint) {
-        cancel = false;
-        /**
-         * Positional data
-         */
-        final LatLon pos = Main.map.mapView.getLatLon(clickPoint.x, clickPoint.y);
-
-        try {
-            PleaseWaitRunnable tracerTask = new PleaseWaitRunnable(tr("Tracing")) {
-
-                @Override
-                protected void realRun() throws SAXException {
-                    traceSync(pos, progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
-                }
-
-                @Override
-                protected void finish() {
-                }
-
-                @Override
-                protected void cancel() {
-                    TracerActionLpis.this.cancel();
-                }
-            };
-            Thread executeTraceThread = new Thread(tracerTask);
-            executeTraceThread.start();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-/*
-    private void tagBuilding(Way way) {
-        msg.setLength(0);
-        msg.append(tr("\nFollowing tags added:\n"));
-        if(!alt) {
-          if ( record.getBuildingTagKey().equals("building") &&
-               record.getBuildingTagValue().length() > 0) {
-            way.put("building", record.getBuildingTagValue());
-            msg.append("building: " + record.getBuildingTagValue() + "\n");
-          }
-          else {
-            way.put("building", "yes");
-            msg.append("building: yes\n");
-          }
-        }
-
-        if (record.getBuildingID() > 0 ) {
-          way.put("ref:ruian:building", Long.toString(record.getBuildingID()));
-          msg.append("ref:ruian:building: " + Long.toString(record.getBuildingID()) + "\n");
-        }
-
-        if (record.getBuildingUsageCode().length() > 0) {
-          way.put("building:ruian:type", record.getBuildingUsageCode());
-          msg.append("building:ruian:type: " + record.getBuildingUsageCode() + "\n");
-        }
-
-        if (record.getBuildingLevels().length() > 0) {
-          way.put("building:levels", record.getBuildingLevels());
-          msg.append("building:levels: " + record.getBuildingLevels() + "\n");
-        }
-
-        if (record.getBuildingFlats().length() > 0) {
-          way.put("building:flats", record.getBuildingFlats());
-          msg.append("building:flats: " + record.getBuildingFlats() + "\n");
-        }
-
-        if (record.getBuildingFinished().length() > 0) {
-          way.put("start_date", record.getBuildingFinished());
-          msg.append("start_date: " + record.getBuildingFinished() + "\n");
-        }
-
-        if (record.getSource().length() > 0) {
-          way.put("source", record.getSource());
-          msg.append("source: " + record.getSource() + "\n");
-        }
-        else {
-          way.put("source", source);
-          msg.append("source: " + source + "\n");
-        }
-    }*/
-
-    private void tagMultipolygon (Relation rel) {
-      Map <String, String> map = new HashMap <String, String> (record.getUsageOsm());
-      map.put("type", "multipolygon");
-      map.put("source", "lpis");
-      map.put("ref", Long.toString(record.getLpisID()));
-      rel.setKeys(map);
+    public String getName() {
+        return tr("LPIS");
     }
 
-    private void tagOuterWay (Way way) {
-      Map <String, String> map = new HashMap <String, String> (record.getUsageOsm());
-      map.put("source", "lpis");
-      map.put("ref", Long.toString(record.getLpisID()));
-      way.setKeys(map);
-    }
+    public boolean moduleIsEnabled() {
+      return moduleEnabled;
+    };
 
-    private void traceSync(LatLon pos, ProgressMonitor progressMonitor) {
+    public void setModuleIsEnabled(boolean enabled){
+      moduleEnabled = enabled;
+    };
+
+    public void trace(LatLon pos, ProgressMonitor progressMonitor) {
         Collection<Command> commands = new LinkedList<Command>();
         TracerPreferences pref = TracerPreferences.getInstance();
 
@@ -334,43 +232,71 @@ class TracerActionLpis extends MapMode implements MouseListener {
         }
     }
 
-    public void cancel() {
-        cancel = true;
-    }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        if (!Main.map.mapView.isActiveLayerDrawable()) {
-            return;
+/*
+    private void tagBuilding(Way way) {
+        msg.setLength(0);
+        msg.append(tr("\nFollowing tags added:\n"));
+        if(!alt) {
+          if ( record.getBuildingTagKey().equals("building") &&
+               record.getBuildingTagValue().length() > 0) {
+            way.put("building", record.getBuildingTagValue());
+            msg.append("building: " + record.getBuildingTagValue() + "\n");
+          }
+          else {
+            way.put("building", "yes");
+            msg.append("building: yes\n");
+          }
         }
-        requestFocusInMapView();
-        updateKeyModifiers(e);
-        if (e.getButton() == MouseEvent.BUTTON1) {
-            traceAsync(e.getPoint());
+
+        if (record.getBuildingID() > 0 ) {
+          way.put("ref:ruian:building", Long.toString(record.getBuildingID()));
+          msg.append("ref:ruian:building: " + Long.toString(record.getBuildingID()) + "\n");
         }
+
+        if (record.getBuildingUsageCode().length() > 0) {
+          way.put("building:ruian:type", record.getBuildingUsageCode());
+          msg.append("building:ruian:type: " + record.getBuildingUsageCode() + "\n");
+        }
+
+        if (record.getBuildingLevels().length() > 0) {
+          way.put("building:levels", record.getBuildingLevels());
+          msg.append("building:levels: " + record.getBuildingLevels() + "\n");
+        }
+
+        if (record.getBuildingFlats().length() > 0) {
+          way.put("building:flats", record.getBuildingFlats());
+          msg.append("building:flats: " + record.getBuildingFlats() + "\n");
+        }
+
+        if (record.getBuildingFinished().length() > 0) {
+          way.put("start_date", record.getBuildingFinished());
+          msg.append("start_date: " + record.getBuildingFinished() + "\n");
+        }
+
+        if (record.getSource().length() > 0) {
+          way.put("source", record.getSource());
+          msg.append("source: " + record.getSource() + "\n");
+        }
+        else {
+          way.put("source", source);
+          msg.append("source: " + source + "\n");
+        }
+    }*/
+
+    private void tagMultipolygon (Relation rel) {
+      Map <String, String> map = new HashMap <String, String> (record.getUsageOsm());
+      map.put("type", "multipolygon");
+      map.put("source", "lpis");
+      map.put("ref", Long.toString(record.getLpisID()));
+      rel.setKeys(map);
     }
 
-    @Override
-    protected void updateKeyModifiers(MouseEvent e) {
-        ctrl = (e.getModifiers() & ActionEvent.CTRL_MASK) != 0;
-        alt = (e.getModifiers() & (ActionEvent.ALT_MASK | InputEvent.ALT_GRAPH_MASK)) != 0;
-        shift = (e.getModifiers() & ActionEvent.SHIFT_MASK) != 0;
+    private void tagOuterWay (Way way) {
+      Map <String, String> map = new HashMap <String, String> (record.getUsageOsm());
+      map.put("source", "lpis");
+      map.put("ref", Long.toString(record.getLpisID()));
+      way.setKeys(map);
     }
 
-    @Override
-    public void mouseReleased(MouseEvent e) {
-    }
 }
 

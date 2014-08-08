@@ -42,9 +42,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import org.openstreetmap.josm.plugins.tracer.TracerUtils.*;
-import org.openstreetmap.josm.plugins.tracer.krovak;
-import org.openstreetmap.josm.plugins.tracer.xyCoor;
+// import org.openstreetmap.josm.plugins.tracer.TracerUtils.*;
+// import org.openstreetmap.josm.plugins.tracer.modules.lpis.*;
 
 
 /**

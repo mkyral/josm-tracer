@@ -18,8 +18,6 @@
 
 package org.openstreetmap.josm.plugins.tracer;
 
-import org.openstreetmap.josm.plugins.tracer.*;
-
 import java.util.*;
 
 /**
@@ -41,6 +39,7 @@ public class Modules {
       m_modules = new LinkedHashMap<String, TracerModule>();
       m_modules.put("classic", new ClassicModule(pref.m_classicModuleEnabled));
       m_modules.put("ruian", new RuianModule(pref.m_ruianModuleEnabled));
+      m_modules.put("lpis", new LpisModule(pref.m_lpisModuleEnabled));
 
       countActiveModules();
 
@@ -86,6 +85,10 @@ public class Modules {
       tm = m_modules.get("ruian");
       tm.setModuleIsEnabled(pref.m_ruianModuleEnabled);
       m_modules.put("ruian", tm);
+
+      tm = m_modules.get("lpis");
+      tm.setModuleIsEnabled(pref.m_lpisModuleEnabled);
+      m_modules.put("lpis", tm);
 
       countActiveModules();
 
