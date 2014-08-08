@@ -23,9 +23,6 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.tools.Utils;
 
-import org.json.JSONObject;
-import org.json.JSONArray;
-
 import java.util.*;
 
 /**
