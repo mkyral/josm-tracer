@@ -51,7 +51,7 @@ class ClassicModule implements TracerModule {
     private boolean shift;
     private boolean moduleEnabled;
     private String source = "cuzk:km";
-    protected ClasicServer server = new ClasicServer();
+    protected ClassicServer server = new ClassicServer();
 
     public ClassicModule(boolean enabled) {
       moduleEnabled = enabled;
