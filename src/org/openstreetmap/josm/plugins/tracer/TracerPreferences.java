@@ -549,6 +549,9 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
         m_ruianModuleEnabled = ruianCheckBox.isSelected();
         Main.pref.put(KEY_RUIANENABLED, m_ruianModuleEnabled);
 
+        m_lpisModuleEnabled = lpisCheckBox.isSelected();
+        Main.pref.put(KEY_LPISENABLED, m_lpisModuleEnabled);
+
         // Tracer
         m_customTracerUrl = tracerUrlCheckBox.isSelected();
         Main.pref.put(KEY_TRACERURL, m_customTracerUrl);

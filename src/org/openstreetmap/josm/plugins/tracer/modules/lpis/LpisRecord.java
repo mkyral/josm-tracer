@@ -138,8 +138,11 @@ public class LpisRecord {
                        m_usageOsm.put("water", "pond"); break;
         case "jiná kultura": m_usageOsm.put("landuse", "farmland"); break;
         case "jiná kultura (školka)": m_usageOsm.put("landuse", "plant_nursery"); break;
+        case "školka": m_usageOsm.put("landuse", "plant_nursery"); break;
         case "jiná kultura (zelinářská zahrada)": m_usageOsm.put("landuse", "farmland");
                                                   m_usageOsm.put("crop", "vegetables"); break;
+        case "zelinářská zahrada": m_usageOsm.put("landuse", "farmland");
+                                   m_usageOsm.put("crop", "vegetables"); break;
         default: System.out.println("  Warning: unknown value: " + m_usage);
       }
     }
