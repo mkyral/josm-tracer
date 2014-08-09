@@ -80,7 +80,9 @@ public class LpisServer {
             System.out.println("Reply: " + content);
             LpisRecord lpis = new LpisRecord();
             lpis.parseXML("basic", content);
-            lpis = getElementExtraData(lpis, url);
+            if (lpis.getLpisID() > 0) {
+              lpis = getElementExtraData(lpis, url);
+            }
             return lpis;
         } catch (Exception e) {
             return new LpisRecord();

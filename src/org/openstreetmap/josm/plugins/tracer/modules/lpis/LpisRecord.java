@@ -201,7 +201,12 @@ public class LpisRecord {
 
         System.out.println("parseXML(basic) - expID: " + expID);
         nodeList = (NodeList) xPath.compile(expID).evaluate(doc, XPathConstants.NODESET);
-        m_lpis_id = Long.parseLong(nodeList.item(0).getFirstChild().getNodeValue());
+        if (nodeList.getLength() > 0) {
+          m_lpis_id = Long.parseLong(nodeList.item(0).getFirstChild().getNodeValue());
+        } else {
+          return;
+        }
+
         System.out.println("parseXML(basic) - m_lpis_id: " + m_lpis_id);
 
         System.out.println("parseXML(nasic) - expOuter: " + expOuter);
