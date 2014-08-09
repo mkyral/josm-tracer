@@ -881,7 +881,7 @@ public class ConnectWays {
               debugMsg("   nodesCount = " + nodesCount + "; nodesFound = " + nodesFound);
               if (nodesCount == nodesFound) {
                 debugMsg("   Ways are equal!");
-                return new SequenceCommand("Nothing", null);
+                return new SequenceCommand("Nothing", (Command) null);
               }
             }
 
