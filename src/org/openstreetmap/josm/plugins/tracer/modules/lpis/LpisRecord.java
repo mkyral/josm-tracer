@@ -18,6 +18,8 @@
 
 package org.openstreetmap.josm.plugins.tracer;
 
+import static org.openstreetmap.josm.tools.I18n.tr;
+
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.coor.LatLon;
@@ -144,6 +146,7 @@ public class LpisRecord {
         case "zelinářská zahrada": m_usageOsm.put("landuse", "farmland");
                                    m_usageOsm.put("crop", "vegetables"); break;
         default: System.out.println("  Warning: unknown value: " + m_usage);
+                 TracerUtils.showNotification(tr("Tracer: Not mapped value found: ")+ m_usage + ".\n " + tr("Please report it to @talk-cz"), "error", 5000);
       }
     }
 

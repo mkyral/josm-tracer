@@ -49,6 +49,7 @@ import org.openstreetmap.josm.plugins.tracer.WaysList;
 
 public class ConnectWays {
 
+// Distance constants
     static double s_dDoubleDiff       = 0.0000001; // Maximal difference for double comparison
     static double s_dMinDistance      = 0.0000005; // Minimal distance, for objects
     static double s_dMinDistanceN2N   = 0.0000005;  // Minimal distance, when nodes are merged
@@ -65,14 +66,20 @@ public class ConnectWays {
 
     static List<Way>  s_overlapWays; // List of ways that overlap traced way (s_oWay)
 
+// Obsolete
 //     static ServerParam s_oParam;
-    static boolean s_bCtrl;
-    static boolean s_bAlt;
+//     static boolean s_bCtrl;
+//     static boolean s_bAlt;
 
     static int maxDebugLevel = 0;
 
     static boolean s_bAddNewWay;
 
+    final static int BUILDING = 1;
+    final static int LANDUSE = 2;
+    final static int UNKNOW = -1;
+
+    private static int wayType; // Type of the way - building or landuse
     /**
      *  Print debug messages - default level is zero
      *  @param msg mesage
@@ -759,6 +766,7 @@ public class ConnectWays {
 
         d_way.put("source", newSource);
 
+        if (wayType == BUILDING) {
         // Building key
         if (s_way.hasKey("building")) {
           if (d_way.get("building").equals("yes")) {
@@ -797,6 +805,32 @@ public class ConnectWays {
             d_way.remove("ref:ruian");
             }
         }
+      }
+
+      if (wayType == LANDUSE) {
+        if (s_way.hasKey("landuse")) {
+
+          // landuse
+          if (s_way.hasKey("landuse")) {
+              d_way.put("landuse", s_way.get("landuse"));
+          }
+
+          // crop
+          if (s_way.hasKey("crop")) {
+              d_way.put("crop", s_way.get("crop"));
+          }
+
+          // crop
+          if (s_way.hasKey("meadow")) {
+              d_way.put("meadow", s_way.get("meadow"));
+          }
+
+          // ref
+          if (s_way.hasKey("ref")) {
+              d_way.put("ref", s_way.get("ref"));
+          }
+        }
+      }
 
         return d_way;
     }
@@ -812,8 +846,12 @@ public class ConnectWays {
     }
 
     /**
-     * Try connect way to other buildings.
-     * @param way Way to connect.
+     * Try connect way to other way with the same key.
+     * @param newWay The traced way that should replace the old way and connect to neighbour ways.
+     * @param pos Position where way was traced
+     * @param ctrl Obsolete - Original meaning: Dont't connect to neighbour ways.
+     * @param alt Obsolete - Original meaning: Dont't add building tag.
+     * @param source The content of the source tag to be added.
      * @return Commands.
      */
     public static Command connect(Way newWay, LatLon pos, boolean ctrl, boolean alt, String source) {
@@ -826,10 +864,21 @@ public class ConnectWays {
         Way s_oWay = new Way();
         Way s_oWayOld = new Way();
 
+        // Obsolete - at least for now
 //         s_bCtrl = ctrl;
-        s_bAlt = alt;
+//         s_bAlt = alt;
 
 //         calcDistance();
+
+        // Determine type of way
+        if (newWay.hasKey("building")) {
+          wayType = BUILDING;
+        } else if (newWay.hasKey("landuse")) {
+          wayType = LANDUSE;
+        } else {
+          wayType = UNKNOW;
+        }
+
         s_Ways = new WaysList();
         s_Ways.add(newWay);
 
@@ -847,7 +896,9 @@ public class ConnectWays {
 //         getSharedNodes(s_oWayOld);
         if (s_oWayOld == null) {
           s_bAddNewWay = true;
-          cmds.add(new AddCommand(newWay));
+          if (wayType == BUILDING) {
+            cmds.add(new AddCommand(newWay));
+          }
           s_oWay = new Way( newWay );
         } else {
             s_bAddNewWay = false;
@@ -927,11 +978,13 @@ public class ConnectWays {
         cmds.add(new SequenceCommand(tr("Trace"), xcmds));
 
         // Modify the way
-        debugMsg("");
-        debugMsg("-----------------------------------------");
-        xcmds = new LinkedList<Command>(removeFullyCoveredWays());
-        if (xcmds.size() > 0) {
-          cmds.add(new SequenceCommand(tr("Remove Fully covered ways"), xcmds));
+        if (wayType == BUILDING) {
+          debugMsg("");
+          debugMsg("-----------------------------------------");
+          xcmds = new LinkedList<Command>(removeFullyCoveredWays());
+          if (xcmds.size() > 0) {
+            cmds.add(new SequenceCommand(tr("Remove Fully covered ways"), xcmds));
+          }
         }
 
         debugMsg("");
@@ -948,11 +1001,13 @@ public class ConnectWays {
           cmds.add(new SequenceCommand(tr("Fix overlaped ways"), xcmds));
         }
 
-        debugMsg("");
-        debugMsg("-----------------------------------------");
-        xcmds = new LinkedList<Command>(removeSpareNodes());
-        if (xcmds.size() > 0) {
-          cmds.add(new SequenceCommand(tr("Remove spare nodes"), xcmds));
+        if (wayType == BUILDING) {
+          debugMsg("");
+          debugMsg("-----------------------------------------");
+          xcmds = new LinkedList<Command>(removeSpareNodes());
+          if (xcmds.size() > 0) {
+            cmds.add(new SequenceCommand(tr("Remove spare nodes"), xcmds));
+          }
         }
 
 
@@ -1193,7 +1248,7 @@ public class ConnectWays {
     }
 
     /**
-     * Determines if the specified node is a part of a building.
+     * Determines if the specified node is a part of a defined type of way (building or landuse).
      * @param n The node to be tested
      * @return True if building key is set and different from no,entrance
      */
@@ -1210,13 +1265,24 @@ public class ConnectWays {
     }
 
     /**
-     * Determines if the specified primitive denotes a building.
+     * Determines if the specified primitive denotes a specified key.
+     * Building or landuse.
      * @param p The primitive to be tested
-     * @return True if building key is set and different from no,entrance
+     * @return True if building key is set and different from no (entrance for building)
      */
     protected static final boolean isSameTag(Way w) {
       debugMsg("-- isSameTag() --");
-      return (w.getKeys().get("building") == null ? false : !w.getKeys().get("building").equals("no") && !w.getKeys().get("building").equals("entrance"));
+      if (wayType == LANDUSE) {
+        debugMsg("-- isSameTag(): landuse");
+        return (w.getKeys().get("landuse") == null ? false : !w.getKeys().get("landuse").equals("no"));
+      }
+
+      if (wayType == BUILDING) {
+        debugMsg("-- isSameTag(): building");
+        return (w.getKeys().get("building") == null ? false : !w.getKeys().get("building").equals("no") && !w.getKeys().get("building").equals("entrance"));
+      }
+
+      return false;
     }
 
 }

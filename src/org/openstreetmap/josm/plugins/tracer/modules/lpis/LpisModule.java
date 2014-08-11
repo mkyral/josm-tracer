@@ -185,115 +185,59 @@ class LpisModule implements TracerModule  {
                 commands.add(new AddCommand(rel));
               }
 
-            Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
-            String msg = tr("Tracer(LPIS): add an area") + " \"" + record.getUsage() + "\"";
-            if (record.hasInners()) {
-              msg = msg + trn(" with {0} inner.", " with {0} inners.", record.getInnersCount(), record.getInnersCount());
+            // connect to other landuse or modify existing landuse
+            Command connCmd = ConnectWays.connect(outer, pos, ctrl, alt, source);
+
+            String s[] = connCmd.getDescriptionText().split(": ");
+
+            if (s[1].equals("Nothing")) {
+              TracerUtils.showNotification(tr("Nothing changed."), "info");
+
+              if (shift) {
+                Main.main.getCurrentDataSet().addSelected(record.hasInners()?rel:outer);
+              } else {
+                Main.main.getCurrentDataSet().setSelected(record.hasInners()?rel:outer);
+              }
             } else {
-              msg = msg + ".";
+                commands.add(connCmd);
+
+                if (!commands.isEmpty()) {
+                  String msg = tr("Tracer(LPIS): add an area") + " \"" + record.getUsage() + "\"";
+                  if (record.hasInners()) {
+                    msg = msg + trn(" with {0} inner.", " with {0} inners.", record.getInnersCount(), record.getInnersCount());
+                  } else {
+                    msg = msg + ".";
+                  }
+
+                  TracerUtils.showNotification(msg, "info");
+
+                  Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
+
+                  if (shift) {
+                    Main.main.getCurrentDataSet().addSelected(record.hasInners()?rel:ConnectWays.getWay());
+                  } else {
+                    Main.main.getCurrentDataSet().setSelected(record.hasInners()?rel:ConnectWays.getWay());
+                  }
+                } else {
+                    System.out.println("Failed");
+                }
             }
-
-            TracerUtils.showNotification(msg, "info");
-
-            if (shift) {
-              Main.main.getCurrentDataSet().addSelected(record.hasInners()?rel:outer);
-            } else {
-              Main.main.getCurrentDataSet().setSelected(record.hasInners()?rel:outer);
-            }
-
-
-//             // connect to other buildings or modify existing building
-//             Command connCmd = ConnectWays.connect(way, pos, ctrl, alt, source);
-//
-//             String s[] = connCmd.getDescriptionText().split(": ");
-//
-//             if (s[1].equals("Nothing")) {
-//               TracerUtils.showNotification(tr("Nothing changed."), "info");
-//               if (shift) {
-//                 Main.main.getCurrentDataSet().addSelected(ConnectWays.s_oWay);
-//               } else {
-//                 Main.main.getCurrentDataSet().setSelected(ConnectWays.s_oWay);
-//               }
-//             } else {
-//                 commands.add(connCmd);
-//
-//                 if (!commands.isEmpty()) {
-//                   if (shift) {
-//                     Main.main.getCurrentDataSet().addSelected(ConnectWays.s_oWay);
-//                   } else {
-//                     Main.main.getCurrentDataSet().setSelected(ConnectWays.s_oWay);
-//                   }
-//                 } else {
-//                     System.out.println("Failed");
-//                 }
-//             }
         } finally {
             progressMonitor.finishTask();
         }
     }
 
-/*
-    private void tagBuilding(Way way) {
-        msg.setLength(0);
-        msg.append(tr("\nFollowing tags added:\n"));
-        if(!alt) {
-          if ( record.getBuildingTagKey().equals("building") &&
-               record.getBuildingTagValue().length() > 0) {
-            way.put("building", record.getBuildingTagValue());
-            msg.append("building: " + record.getBuildingTagValue() + "\n");
-          }
-          else {
-            way.put("building", "yes");
-            msg.append("building: yes\n");
-          }
-        }
-
-        if (record.getBuildingID() > 0 ) {
-          way.put("ref:ruian:building", Long.toString(record.getBuildingID()));
-          msg.append("ref:ruian:building: " + Long.toString(record.getBuildingID()) + "\n");
-        }
-
-        if (record.getBuildingUsageCode().length() > 0) {
-          way.put("building:ruian:type", record.getBuildingUsageCode());
-          msg.append("building:ruian:type: " + record.getBuildingUsageCode() + "\n");
-        }
-
-        if (record.getBuildingLevels().length() > 0) {
-          way.put("building:levels", record.getBuildingLevels());
-          msg.append("building:levels: " + record.getBuildingLevels() + "\n");
-        }
-
-        if (record.getBuildingFlats().length() > 0) {
-          way.put("building:flats", record.getBuildingFlats());
-          msg.append("building:flats: " + record.getBuildingFlats() + "\n");
-        }
-
-        if (record.getBuildingFinished().length() > 0) {
-          way.put("start_date", record.getBuildingFinished());
-          msg.append("start_date: " + record.getBuildingFinished() + "\n");
-        }
-
-        if (record.getSource().length() > 0) {
-          way.put("source", record.getSource());
-          msg.append("source: " + record.getSource() + "\n");
-        }
-        else {
-          way.put("source", source);
-          msg.append("source: " + source + "\n");
-        }
-    }*/
-
     private void tagMultipolygon (Relation rel) {
       Map <String, String> map = new HashMap <String, String> (record.getUsageOsm());
       map.put("type", "multipolygon");
-      map.put("source", "lpis");
+      map.put("source", source);
       map.put("ref", Long.toString(record.getLpisID()));
       rel.setKeys(map);
     }
 
     private void tagOuterWay (Way way) {
       Map <String, String> map = new HashMap <String, String> (record.getUsageOsm());
-      map.put("source", "lpis");
+      map.put("source", source);
       map.put("ref", Long.toString(record.getLpisID()));
       way.setKeys(map);
     }
