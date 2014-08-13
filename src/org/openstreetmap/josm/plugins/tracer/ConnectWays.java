@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Collection;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.command.AddCommand;
@@ -40,6 +41,8 @@ import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.osm.WaySegment;
+import org.openstreetmap.josm.data.osm.Relation;
+import org.openstreetmap.josm.data.osm.RelationMember;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.tools.Pair;
@@ -75,11 +78,15 @@ public class ConnectWays {
 
     static boolean s_bAddNewWay;
 
+    static Relation parentRelation;
+
     final static int BUILDING = 1;
     final static int LANDUSE = 2;
-    final static int UNKNOW = -1;
+    final static int UNKNOWN = -1;
 
     private static int wayType; // Type of the way - building or landuse
+    private static boolean wayIsForest;  // True if way has key landuse=forest
+
     /**
      *  Print debug messages - default level is zero
      *  @param msg mesage
@@ -353,11 +360,20 @@ public class ConnectWays {
 
       for (i = 1; i < s_Ways.size(); i++) {
         Way way = s_Ways.get(i);
-        if (!isSameTag(way)) {
+        if (!isSameTag(way, wayType)) {
           continue;
         }
         if (isNodeInsideWay(pos, way)) {
-          return way;
+          if (wayType == BUILDING) {
+            return way;
+          } else if (wayType == LANDUSE &&
+                      ( way.getKeys().get("landuse").equals("farmland") ||
+                        way.getKeys().get("landuse").equals("meadow") ||
+                        (wayIsForest && way.getKeys().get("landuse").equals("forest"))
+                      )
+                    ){
+            return way;
+          }
         }
       }
       return null;
@@ -495,6 +511,21 @@ public class ConnectWays {
     }
 
     /**
+     * Check whether the way has outer rolw in relation
+     * @param way way
+     * @param rel relation
+     * @return True when way is outer in the relation
+     */
+    private static boolean isOuter(Way way, Relation rel) {
+      for (RelationMember rm : rel.getMembers()) {
+        if ( rm.hasRole("outer") && rm.refersTo((Way) way))
+          return true;
+      }
+      return false;
+    }
+
+
+    /**
      * Correct overlaping of ways
      * @param way overlaped way
      * @return List of Commands.
@@ -579,6 +610,12 @@ public class ConnectWays {
             }
           }
         }
+      }
+
+      // Exit when no intersection nodes found
+      if (intNodes.size() == 0) {
+        System.out.println("No ways found.");
+        return cmds;
       }
 
       // 2) Integrate intersection nodes into ways
@@ -855,6 +892,19 @@ public class ConnectWays {
      * @return Commands.
      */
     public static Command connect(Way newWay, LatLon pos, boolean ctrl, boolean alt, String source) {
+      return connect(newWay, (Relation) null, pos, ctrl, alt, source);
+    }
+    /**
+     * Try connect way to other way with the same key.
+     * @param newWay The traced way that should replace the old way and connect to neighbour ways.
+     * @param wayRelation Relation which way is outer member
+     * @param pos Position where way was traced
+     * @param ctrl Obsolete - Original meaning: Dont't connect to neighbour ways.
+     * @param alt Obsolete - Original meaning: Dont't add building tag.
+     * @param source The content of the source tag to be added.
+     * @return Commands.
+     */
+    public static Command connect(Way newWay, Relation wayRelation, LatLon pos, boolean ctrl, boolean alt, String source) {
         debugMsg("-- connect() --");
 
         LinkedList<Command> cmds = new LinkedList<Command>();
@@ -870,13 +920,45 @@ public class ConnectWays {
 
 //         calcDistance();
 
+        wayIsForest = false;
         // Determine type of way
         if (newWay.hasKey("building")) {
           wayType = BUILDING;
         } else if (newWay.hasKey("landuse")) {
           wayType = LANDUSE;
+          if (newWay.getKeys().get("landuse").equals("forest") &&
+              newWay.hasKey("crop")
+             ) {
+                wayIsForest = true;
+          }
         } else {
-          wayType = UNKNOW;
+          // check for parent relations
+          if (wayRelation != null) {
+            System.out.println("Relation Keys: " + wayRelation.getKeys().toString());
+            if (wayRelation.hasKey("building")) {
+              System.out.println("Relation: building");
+              wayType = BUILDING;
+              parentRelation = wayRelation;
+            } else if (wayRelation.hasKey("landuse")) {
+              System.out.println("Relation: landuse");
+              wayType = LANDUSE;
+              parentRelation = wayRelation;
+              if (wayRelation.getKeys().get("landuse").equals("forest") &&
+                  wayRelation.hasKey("crop")
+                ) {
+                    wayIsForest = true;
+                }
+            } else {
+              wayType = UNKNOWN;
+              parentRelation = (Relation) null;
+            }
+          }
+        }
+
+        switch (wayType) {
+          case BUILDING: System.out.println("Way is: building"); break;
+          case LANDUSE: System.out.println("Way is: landuse"); break;
+          case UNKNOWN: System.out.println("Way is: unknown"); break;
         }
 
         s_Ways = new WaysList();
@@ -1141,7 +1223,7 @@ public class ConnectWays {
       List<Way> tmpWaysList = new LinkedList<Way> (s_Ways.getWays());
 
       for (Way w : tmpWaysList) {
-        if (!w.isUsable() || !isSameTag(w) || w.equals(s_Ways.get(0))) {
+        if (!w.isUsable() || !isSameTag(w, wayType) || w.equals(s_Ways.get(0))) {
           continue;
         }
 
@@ -1179,7 +1261,7 @@ public class ConnectWays {
       LinkedList<Command> cmds = new LinkedList<Command>();
 
       for (Way w : new LinkedList<Way>(s_Ways.getWays())) {
-        if (!w.equals(s_Ways.get(0)) && isSameTag(w) && areWaysOverlaped(s_Ways.get(0), w)) {
+        if (!w.equals(s_Ways.get(0)) && isSameTag(w, wayType) && areWaysOverlaped(s_Ways.get(0), w)) {
           cmds.addAll(correctOverlaping(w));
         }
       }
@@ -1200,7 +1282,7 @@ public class ConnectWays {
       LinkedList<Command> cmds2 = new LinkedList<Command>();
 
       for (Way w : new LinkedList<Way>(s_Ways.getWays())) {
-        if (!w.equals(s_Ways.get(0)) && isSameTag(w)) {
+        if (!w.equals(s_Ways.get(0)) && isSameTag(w, wayType)) {
           Way bckWay = new Way(w);
           cmds2 = new LinkedList<Command>();
           boolean wayChanged = true;
@@ -1256,7 +1338,7 @@ public class ConnectWays {
         debugMsg("-- isInSameTag() --");
         for (OsmPrimitive op : n.getReferrers()) {
             if (op instanceof Way) {
-                if (isSameTag((Way) op)) {
+                if (isSameTag((Way) op, wayType)) {
                     return true;
                 }
             }
@@ -1267,14 +1349,28 @@ public class ConnectWays {
     /**
      * Determines if the specified primitive denotes a specified key.
      * Building or landuse.
-     * @param p The primitive to be tested
+     * @param w The way to be tested
+     * @param wType Type of the way - building or landuse
      * @return True if building key is set and different from no (entrance for building)
      */
-    protected static final boolean isSameTag(Way w) {
+    protected static final boolean isSameTag(Way w, int wType) {
       debugMsg("-- isSameTag() --");
-      if (wayType == LANDUSE) {
+      if (wType == LANDUSE) {
         debugMsg("-- isSameTag(): landuse");
-        return (w.getKeys().get("landuse") == null ? false : !w.getKeys().get("landuse").equals("no"));
+        if ( (!w.hasKey("landuse") && !w.hasKey("natural")) ) {
+          return false;
+        } else if ((w.hasKey("landuse") &&
+                    w.getKeys().get("landuse").equals("no")) ||
+                   (w.hasKey("natural") &&
+                    w.getKeys().get("natural").equals("no"))) {
+          return false;
+        } else if (w.hasKey("landuse") ||
+                   (w.hasKey("natural") &&
+                    (w.getKeys().get("natural").equals("scrub") ||
+                     w.getKeys().get("natural").equals("wood")))) {
+          return true;
+        }
+        return false;
       }
 
       if (wayType == BUILDING) {

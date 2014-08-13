@@ -186,7 +186,12 @@ class LpisModule implements TracerModule  {
               }
 
             // connect to other landuse or modify existing landuse
-            Command connCmd = ConnectWays.connect(outer, pos, ctrl, alt, source);
+            Command connCmd;
+            if (record.hasInners()) {
+              connCmd = ConnectWays.connect(outer, rel, pos, ctrl, alt, source);
+            } else {
+              connCmd = ConnectWays.connect(outer, pos, ctrl, alt, source);
+            }
 
             String s[] = connCmd.getDescriptionText().split(": ");
 
