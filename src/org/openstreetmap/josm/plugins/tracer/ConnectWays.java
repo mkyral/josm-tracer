@@ -87,6 +87,243 @@ public class ConnectWays {
     private static int wayType; // Type of the way - building or landuse
     private static boolean wayIsForest;  // True if way has key landuse=forest
 
+
+// -----------------------------------------------------------------------------------------------------
+// Public methods
+// -----------------------------------------------------------------------------------------------------
+
+    /**
+     * Return connected way.
+     * @return Connected Way.
+     */
+    public static Way getWay() {
+      return s_Ways.get(0);
+    }
+
+    /**
+     * Try connect way to other way with the same key.
+     * @param newWay The traced way that should replace the old way and connect to neighbour ways.
+     * @param pos Position where way was traced
+     * @param ctrl Obsolete - Original meaning: Dont't connect to neighbour ways.
+     * @param alt Obsolete - Original meaning: Dont't add building tag.
+     * @param source The content of the source tag to be added.
+     * @return Commands.
+     */
+    public static Command connect(Way newWay, LatLon pos, boolean ctrl, boolean alt, String source) {
+      return connect(newWay, (Relation) null, pos, ctrl, alt, source);
+    }
+
+    /**
+     * Try connect way to other way with the same key.
+     * @param newWay The traced way that should replace the old way and connect to neighbour ways.
+     * @param wayRelation Relation which way is outer member
+     * @param pos Position where way was traced
+     * @param ctrl Obsolete - Original meaning: Dont't connect to neighbour ways.
+     * @param alt Obsolete - Original meaning: Dont't add building tag.
+     * @param source The content of the source tag to be added.
+     * @return Commands.
+     */
+    public static Command connect(Way newWay, Relation wayRelation, LatLon pos, boolean ctrl, boolean alt, String source) {
+        debugMsg("-- connect() --");
+
+        LinkedList<Command> cmds = new LinkedList<Command>();
+        LinkedList<Command> cmds2 = new LinkedList<Command>();
+        LinkedList<Command> xcmds = new LinkedList<Command>();
+
+        Way s_oWay = new Way();
+        Way s_oWayOld = new Way();
+
+        // Obsolete - at least for now
+//         s_bCtrl = ctrl;
+//         s_bAlt = alt;
+
+//         calcDistance();
+
+        wayIsForest = false;
+        // Determine type of way
+        if (newWay.hasKey("building")) {
+          wayType = BUILDING;
+        } else if (newWay.hasKey("landuse")) {
+          wayType = LANDUSE;
+          if (newWay.getKeys().get("landuse").equals("forest") &&
+              newWay.hasKey("crop")
+             ) {
+                wayIsForest = true;
+          }
+        } else {
+          // check for parent relations
+          if (wayRelation != null) {
+            System.out.println("Relation Keys: " + wayRelation.getKeys().toString());
+            if (wayRelation.hasKey("building")) {
+              System.out.println("Relation: building");
+              wayType = BUILDING;
+              parentRelation = wayRelation;
+            } else if (wayRelation.hasKey("landuse")) {
+              System.out.println("Relation: landuse");
+              wayType = LANDUSE;
+              parentRelation = wayRelation;
+              if (wayRelation.getKeys().get("landuse").equals("forest") &&
+                  wayRelation.hasKey("crop")
+                ) {
+                    wayIsForest = true;
+                }
+            } else {
+              wayType = UNKNOWN;
+              parentRelation = (Relation) null;
+            }
+          }
+        }
+
+        switch (wayType) {
+          case BUILDING: System.out.println("Way is: building"); break;
+          case LANDUSE: System.out.println("Way is: landuse"); break;
+          case UNKNOWN: System.out.println("Way is: unknown"); break;
+        }
+
+        s_Ways = new WaysList();
+        s_Ways.add(newWay);
+
+        getNodes(newWay);
+        getWays(newWay);
+
+        Way oldWay = getOldWay(pos);
+        if (oldWay != null && s_Ways.indexOf(oldWay) > 0) {
+          s_oWayOld = new Way (oldWay);
+          s_Ways.setAsMyWay(s_oWayOld);
+        } else {
+          s_oWayOld = null;
+        }
+
+//         getSharedNodes(s_oWayOld);
+        if (s_oWayOld == null) {
+          s_bAddNewWay = true;
+          if (wayType == BUILDING) {
+            cmds.add(new AddCommand(newWay));
+          }
+          s_oWay = new Way( newWay );
+        } else {
+            s_bAddNewWay = false;
+            /*
+            * Compare ways
+            * Do not continue when way is traced again.
+            * Old and new ways are equal - have the same count
+            * of nodes and all nodes are on the same place
+            */
+            int o, n, nodesCount, nodesFound;
+            nodesFound = 0;
+            nodesCount = newWay.getNodesCount();
+            // 1) have the same numbers of nodes?
+            if (newWay.getNodesCount() == s_oWayOld.getNodesCount()) {
+              debugMsg("   Old and New ways have " + s_oWayOld.getNodesCount() + " nodes");
+              // 2) All nodes have the same coordination
+              outer: for (n = 0; n < nodesCount; n++) {
+                Node newNode = newWay.getNode(n);
+                debugMsg("    New.Node(" + n + ") = " + newNode.getCoor().toDisplayString());
+                inner: for (o = 0; o < nodesCount; o++) {
+                  Node oldNode = s_oWayOld.getNode(o);
+                  debugMsg("     -> Old.Node(" + o + ") = " + oldNode.getCoor().toDisplayString());
+                  if (oldNode.getCoor().equalsEpsilon(newNode.getCoor())) {
+                    debugMsg("     Nodes: New(" + n + ") and Old(" + o + ") are equal.");
+                    nodesFound += 1;
+                    continue outer;
+                  }
+                }
+              }
+
+              debugMsg("   nodesCount = " + nodesCount + "; nodesFound = " + nodesFound);
+              if (nodesCount == nodesFound) {
+                debugMsg("   Ways are equal!");
+                return new SequenceCommand("Nothing", (Command) null);
+              }
+            }
+
+            // Ways are different - merging
+            debugMsg("   Ways are NOT equal!");
+            debugMsg("   -------------------");
+
+            // Create a working copy of the oldWay
+            Way tempWay = new Way(s_oWayOld);
+            debugMsg("s_oWayOld: " + s_oWayOld);
+
+            // Add New nodes
+            for (int i = 0; i < newWay.getNodesCount(); i++) {
+              tempWay.addNode(tempWay.getNodesCount(), newWay.getNode(i));
+              s_oNodes.add(newWay.getNode(i));
+            }
+
+            // Remove Old nodes
+            for (int i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
+              tempWay.removeNode( s_oWayOld.getNode(i) );
+            }
+
+            replaceWayInList(s_oWayOld, tempWay);
+            // Remove old nodes from list of working nodes list
+            for (int i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
+              Node nd = s_oWayOld.getNode(i);
+              List<Way> ways = getWaysOfNode(nd);
+              if (ways.size() == 0) {
+                  debugMsg("    Delete node: " + nd);
+                  cmds2.add(new DeleteCommand(nd));
+                  s_oNodes.remove(nd);
+              }
+
+            }
+            s_oWay = tempWay;
+            s_oWay = updateKeys(s_oWay, newWay, source);
+            replaceWayInList(s_oWayOld, s_oWay);
+            debugMsg("updatedWay: " + s_oWay);
+        }
+        xcmds.add(new ChangeCommand(s_Ways.getOriginalWay(s_oWay), s_oWay));
+        xcmds.addAll(cmds2);
+
+        cmds.add(new SequenceCommand(tr("Trace"), xcmds));
+
+        // Modify the way
+        if (wayType == BUILDING) {
+          debugMsg("");
+          debugMsg("-----------------------------------------");
+          xcmds = new LinkedList<Command>(removeFullyCoveredWays());
+          if (xcmds.size() > 0) {
+            cmds.add(new SequenceCommand(tr("Remove Fully covered ways"), xcmds));
+          }
+        }
+
+        debugMsg("");
+        debugMsg("-----------------------------------------");
+        xcmds = new LinkedList<Command>(mergeWithExistingNodes());
+        if (xcmds.size() > 0) {
+          cmds.add(new SequenceCommand(tr("Connect to other ways"), xcmds));
+        }
+
+        debugMsg("");
+        debugMsg("-----------------------------------------");
+        xcmds = new LinkedList<Command>(fixOverlapedWays());
+        if (xcmds.size() > 0) {
+          cmds.add(new SequenceCommand(tr("Fix overlaped ways"), xcmds));
+        }
+
+        if (wayType == BUILDING) {
+          debugMsg("");
+          debugMsg("-----------------------------------------");
+          xcmds = new LinkedList<Command>(removeSpareNodes());
+          if (xcmds.size() > 0) {
+            cmds.add(new SequenceCommand(tr("Remove spare nodes"), xcmds));
+          }
+        }
+
+        debugMsg("-----------------------------------------");
+
+//         new TracerDebug().OutputCommands(cmds);
+
+        Command cmd = new SequenceCommand(tr("Trace object"), cmds);
+
+        return cmd;
+    }
+
+// -----------------------------------------------------------------------------------------------------
+// Private methods
+// -----------------------------------------------------------------------------------------------------
+
     /**
      *  Print debug messages - default level is zero
      *  @param msg mesage
@@ -870,289 +1107,6 @@ public class ConnectWays {
       }
 
         return d_way;
-    }
-
-// -----------------------------------------------------------------------------------------------------
-
-    /**
-     * Return connected way.
-     * @return Connected Way.
-     */
-    public static Way getWay() {
-      return s_Ways.get(0);
-    }
-
-    /**
-     * Try connect way to other way with the same key.
-     * @param newWay The traced way that should replace the old way and connect to neighbour ways.
-     * @param pos Position where way was traced
-     * @param ctrl Obsolete - Original meaning: Dont't connect to neighbour ways.
-     * @param alt Obsolete - Original meaning: Dont't add building tag.
-     * @param source The content of the source tag to be added.
-     * @return Commands.
-     */
-    public static Command connect(Way newWay, LatLon pos, boolean ctrl, boolean alt, String source) {
-      return connect(newWay, (Relation) null, pos, ctrl, alt, source);
-    }
-    /**
-     * Try connect way to other way with the same key.
-     * @param newWay The traced way that should replace the old way and connect to neighbour ways.
-     * @param wayRelation Relation which way is outer member
-     * @param pos Position where way was traced
-     * @param ctrl Obsolete - Original meaning: Dont't connect to neighbour ways.
-     * @param alt Obsolete - Original meaning: Dont't add building tag.
-     * @param source The content of the source tag to be added.
-     * @return Commands.
-     */
-    public static Command connect(Way newWay, Relation wayRelation, LatLon pos, boolean ctrl, boolean alt, String source) {
-        debugMsg("-- connect() --");
-
-        LinkedList<Command> cmds = new LinkedList<Command>();
-        LinkedList<Command> cmds2 = new LinkedList<Command>();
-        LinkedList<Command> xcmds = new LinkedList<Command>();
-
-        Way s_oWay = new Way();
-        Way s_oWayOld = new Way();
-
-        // Obsolete - at least for now
-//         s_bCtrl = ctrl;
-//         s_bAlt = alt;
-
-//         calcDistance();
-
-        wayIsForest = false;
-        // Determine type of way
-        if (newWay.hasKey("building")) {
-          wayType = BUILDING;
-        } else if (newWay.hasKey("landuse")) {
-          wayType = LANDUSE;
-          if (newWay.getKeys().get("landuse").equals("forest") &&
-              newWay.hasKey("crop")
-             ) {
-                wayIsForest = true;
-          }
-        } else {
-          // check for parent relations
-          if (wayRelation != null) {
-            System.out.println("Relation Keys: " + wayRelation.getKeys().toString());
-            if (wayRelation.hasKey("building")) {
-              System.out.println("Relation: building");
-              wayType = BUILDING;
-              parentRelation = wayRelation;
-            } else if (wayRelation.hasKey("landuse")) {
-              System.out.println("Relation: landuse");
-              wayType = LANDUSE;
-              parentRelation = wayRelation;
-              if (wayRelation.getKeys().get("landuse").equals("forest") &&
-                  wayRelation.hasKey("crop")
-                ) {
-                    wayIsForest = true;
-                }
-            } else {
-              wayType = UNKNOWN;
-              parentRelation = (Relation) null;
-            }
-          }
-        }
-
-        switch (wayType) {
-          case BUILDING: System.out.println("Way is: building"); break;
-          case LANDUSE: System.out.println("Way is: landuse"); break;
-          case UNKNOWN: System.out.println("Way is: unknown"); break;
-        }
-
-        s_Ways = new WaysList();
-        s_Ways.add(newWay);
-
-        getNodes(newWay);
-        getWays(newWay);
-
-        Way oldWay = getOldWay(pos);
-        if (oldWay != null && s_Ways.indexOf(oldWay) > 0) {
-          s_oWayOld = new Way (oldWay);
-          s_Ways.setAsMyWay(s_oWayOld);
-        } else {
-          s_oWayOld = null;
-        }
-
-//         getSharedNodes(s_oWayOld);
-        if (s_oWayOld == null) {
-          s_bAddNewWay = true;
-          if (wayType == BUILDING) {
-            cmds.add(new AddCommand(newWay));
-          }
-          s_oWay = new Way( newWay );
-        } else {
-            s_bAddNewWay = false;
-            /*
-            * Compare ways
-            * Do not continue when way is traced again.
-            * Old and new ways are equal - have the same count
-            * of nodes and all nodes are on the same place
-            */
-            int o, n, nodesCount, nodesFound;
-            nodesFound = 0;
-            nodesCount = newWay.getNodesCount();
-            // 1) have the same numbers of nodes?
-            if (newWay.getNodesCount() == s_oWayOld.getNodesCount()) {
-              debugMsg("   Old and New ways have " + s_oWayOld.getNodesCount() + " nodes");
-              // 2) All nodes have the same coordination
-              outer: for (n = 0; n < nodesCount; n++) {
-                Node newNode = newWay.getNode(n);
-                debugMsg("    New.Node(" + n + ") = " + newNode.getCoor().toDisplayString());
-                inner: for (o = 0; o < nodesCount; o++) {
-                  Node oldNode = s_oWayOld.getNode(o);
-                  debugMsg("     -> Old.Node(" + o + ") = " + oldNode.getCoor().toDisplayString());
-                  if (oldNode.getCoor().equalsEpsilon(newNode.getCoor())) {
-                    debugMsg("     Nodes: New(" + n + ") and Old(" + o + ") are equal.");
-                    nodesFound += 1;
-                    continue outer;
-                  }
-                }
-              }
-
-              debugMsg("   nodesCount = " + nodesCount + "; nodesFound = " + nodesFound);
-              if (nodesCount == nodesFound) {
-                debugMsg("   Ways are equal!");
-                return new SequenceCommand("Nothing", (Command) null);
-              }
-            }
-
-            // Ways are different - merging
-            debugMsg("   Ways are NOT equal!");
-            debugMsg("   -------------------");
-
-            // Create a working copy of the oldWay
-            Way tempWay = new Way(s_oWayOld);
-            debugMsg("s_oWayOld: " + s_oWayOld);
-
-            // Add New nodes
-            for (int i = 0; i < newWay.getNodesCount(); i++) {
-              tempWay.addNode(tempWay.getNodesCount(), newWay.getNode(i));
-              s_oNodes.add(newWay.getNode(i));
-            }
-
-            // Remove Old nodes
-            for (int i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
-              tempWay.removeNode( s_oWayOld.getNode(i) );
-            }
-
-            replaceWayInList(s_oWayOld, tempWay);
-            // Remove old nodes from list of working nodes list
-            for (int i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
-              Node nd = s_oWayOld.getNode(i);
-              List<Way> ways = getWaysOfNode(nd);
-              if (ways.size() == 0) {
-                  debugMsg("    Delete node: " + nd);
-                  cmds2.add(new DeleteCommand(nd));
-                  s_oNodes.remove(nd);
-              }
-
-            }
-            s_oWay = tempWay;
-            s_oWay = updateKeys(s_oWay, newWay, source);
-            replaceWayInList(s_oWayOld, s_oWay);
-            debugMsg("updatedWay: " + s_oWay);
-        }
-        xcmds.add(new ChangeCommand(s_Ways.getOriginalWay(s_oWay), s_oWay));
-        xcmds.addAll(cmds2);
-
-        cmds.add(new SequenceCommand(tr("Trace"), xcmds));
-
-        // Modify the way
-        if (wayType == BUILDING) {
-          debugMsg("");
-          debugMsg("-----------------------------------------");
-          xcmds = new LinkedList<Command>(removeFullyCoveredWays());
-          if (xcmds.size() > 0) {
-            cmds.add(new SequenceCommand(tr("Remove Fully covered ways"), xcmds));
-          }
-        }
-
-        debugMsg("");
-        debugMsg("-----------------------------------------");
-        xcmds = new LinkedList<Command>(mergeWithExistingNodes());
-        if (xcmds.size() > 0) {
-          cmds.add(new SequenceCommand(tr("Connect to other ways"), xcmds));
-        }
-
-        debugMsg("");
-        debugMsg("-----------------------------------------");
-        xcmds = new LinkedList<Command>(fixOverlapedWays());
-        if (xcmds.size() > 0) {
-          cmds.add(new SequenceCommand(tr("Fix overlaped ways"), xcmds));
-        }
-
-        if (wayType == BUILDING) {
-          debugMsg("");
-          debugMsg("-----------------------------------------");
-          xcmds = new LinkedList<Command>(removeSpareNodes());
-          if (xcmds.size() > 0) {
-            cmds.add(new SequenceCommand(tr("Remove spare nodes"), xcmds));
-          }
-        }
-
-
-//         listWays();
-        debugMsg("-----------------------------------------");
-
-//         new TracerDebug().OutputCommands(cmds);
-
-        Command cmd = new SequenceCommand(tr("Trace object"), cmds);
-
-        return cmd;
-    }
-
-
-    /**
-     * Try connect way to other buildings.
-     * @param way Way to connect.
-     * @return Commands.
-     */
-    public static List<Command> connectTo() {
-        debugMsg("-- connectTo() --");
-
-        Map<Way, Way> modifiedWays = new HashMap<Way, Way>();
-        LinkedList<Command> cmds = new LinkedList<Command>();
-
-        Way way = new Way(s_Ways.get(0));
-
-        for (int i = 0; i < way.getNodesCount() - 1; i++) {
-            Node n = way.getNode(i);
-            debugMsg("   Node: " + n);
-            LatLon ll = n.getCoor();
-
-            // Will merge with something else?
-            double minDistanceSq = s_dMinDistanceN2N;
-            Node nearestNode = null;
-            for (Node nn : new LinkedList<Node>(s_oNodes)) {
-              debugMsg("    Node: " + nn);
-                if (!nn.isUsable() || way.containsNode(nn) || s_Ways.get(0).containsNode(nn) || !isInSameTag(nn)) {
-                    debugMsg("    -> Continue");
-                    continue;
-                }
-                double dist = nn.getCoor().distance(ll);
-                debugMsg("    Dist: "+ dist+"; minDistanceSq: "+ minDistanceSq);
-                if (dist <= minDistanceSq) {
-                    minDistanceSq = dist;
-                    nearestNode = nn;
-                }
-            }
-
-            debugMsg("   Nearest: " + nearestNode + " distance: " + minDistanceSq);
-            if (nearestNode == null) {
-            } else {
-                debugMsg("+add Node distance: " + minDistanceSq);
-                cmds.addAll(mergeNodes(n, nearestNode));
-            }
-        }
-
-        for (Map.Entry<Way, Way> e : modifiedWays.entrySet()) {
-            cmds.add(new ChangeCommand(e.getKey(), e.getValue()));
-        }
-
-        List<Command> cmd = cmds;
-        return cmd;
     }
 
     /**
