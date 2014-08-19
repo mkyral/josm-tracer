@@ -783,7 +783,12 @@ public class ConnectWays {
     private static List<Command> correctOverlaping(Way way) {
 
       debugMsg("-- correctOverlaping() --");
-      debugMsg("    Overlaped way" + way);
+      debugMsg("    Overlaped way" + way.getUniqueId());
+
+      if (!way.isClosed()) {
+        debugMsg(" TODO: Unclosed ways are not supported. ");
+        return new LinkedList<Command>();
+      }
 
       List<Command> cmds = new LinkedList<Command>();
       List<Command> cmds2 = new LinkedList<Command>();
