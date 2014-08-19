@@ -121,8 +121,8 @@ class RuianModule implements TracerModule {
                 if (!pref.m_ruianAdjustPosition) {
                   node = new Node(record.getCoor(i));
                 } else {
-                  node = new Node(new LatLon(LatLon.roundToOsmPrecisionStrict(record.getCoor(i).lat()+dAdjX),
-                                             LatLon.roundToOsmPrecisionStrict(record.getCoor(i).lon()+dAdjY)));
+                  node = new Node(new LatLon(LatLon.roundToOsmPrecision(record.getCoor(i).lat()+dAdjX),
+                                             LatLon.roundToOsmPrecision(record.getCoor(i).lon()+dAdjY)));
                 }
                 if (firstNode == null) {
                     firstNode = node;

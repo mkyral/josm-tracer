@@ -106,7 +106,8 @@ public class krovak {
       com.vividsolutions.jts.geom.Point p1 = (com.vividsolutions.jts.geom.Point) JTS.transform(p, mathTransform);
 
 //       System.out.println(p1.getCoordinate());
-      ll = new LatLon(p1.getY(), p1.getX());
+      ll = new LatLon(LatLon.roundToOsmPrecision(p1.getY()),
+                      LatLon.roundToOsmPrecision(p1.getX()));
     } catch (Exception e) {
       System.out.println("CRS conversion exception: " + e.getMessage());
     }

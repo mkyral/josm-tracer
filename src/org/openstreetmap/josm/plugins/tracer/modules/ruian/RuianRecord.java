@@ -273,8 +273,8 @@ public class RuianRecord {
 
           try {
             LatLon coor = new LatLon(
-              LatLon.roundToOsmPrecisionStrict(node.getJsonNumber(1).doubleValue()),
-              LatLon.roundToOsmPrecisionStrict(node.getJsonNumber(0).doubleValue())
+              LatLon.roundToOsmPrecision(node.getJsonNumber(1).doubleValue()),
+              LatLon.roundToOsmPrecision(node.getJsonNumber(0).doubleValue())
             );
             System.out.println("coor: " + coor.toString());
             m_geometry.add(coor);

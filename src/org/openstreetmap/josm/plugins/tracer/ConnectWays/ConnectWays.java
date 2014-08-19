@@ -25,6 +25,7 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.awt.geom.Point2D;
 import java.util.HashMap;
+import java.util.TreeMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -362,8 +363,8 @@ public class ConnectWays {
      */
     private static void replaceWayInList(Way oldWay, Way newWay) {
       debugMsg("  -- replaceWayInList() --");
-      debugMsg("     oldWay: " + oldWay);
-      debugMsg("     newWay: " + newWay);
+//       debugMsg("     oldWay: " + oldWay);
+//       debugMsg("     newWay: " + newWay);
 
       s_Ways.updateWay(oldWay, newWay);
     }
@@ -545,7 +546,7 @@ public class ConnectWays {
         dAlphaOld = dAlpha;
       }
       dSumAlpha = Math.abs(dSumAlpha);
-      debugMsg("Way: " + way.getUniqueId() + "; dSumAlpha: " + dSumAlpha);
+      debugMsg("Way: " + way.getUniqueId() + "; Node: " + pos + "; dSumAlpha: " + dSumAlpha);
 
       return dSumAlpha > 359 && dSumAlpha < 361;
     }
@@ -626,21 +627,23 @@ public class ConnectWays {
     private static Boolean areWaysOverlaped(Way w1, Way w2) {
 
       debugMsg("-- areWaysOverlaped() --");
-      debugMsg("    w1: " + w1.getId() + "; w2: " + w2.getId());
-//       s_overlapWays = new LinkedList<Way>();
-      for (int i = 0; i < w1.getNodesCount() - 1; i++) {
-        Node n = w1.getNode(i);
-        if (isNodeInsideWay(n.getCoor(), w2)) {
-          debugMsg("    Found node: " + n.getId() + " inside way: " + w2.getId());
-          return true;
-        }
+      debugMsg("    w1: " + w1.getUniqueId() + "; w2: " + w2.getUniqueId());
+
+      // It no BBox intersection, ways can't have intersection
+      if (! w1.getBBox().intersects(w2.getBBox())) {
+        debugMsg("    BBoxes are not overlaped");
+        return false;
       }
 
-      for (int i = 0; i < w2.getNodesCount() - 1; i++) {
-        Node n = w2.getNode(i);
-        if (isNodeInsideWay(n.getCoor(), w1)) {
-          debugMsg("    Found node: " + n.getId() + " inside way: " + w1.getId());
-          return true;
+      // Check for intersection of ways segments
+      for (int i = 0; i < w1.getNodesCount() - 1; i++) {
+        WaySegment ws1 = new WaySegment(w1, i);
+        for (int j = 0; j < w2.getNodesCount() - 1; j++) {
+          WaySegment ws2 = new WaySegment(w2, j);
+          if (ws1.intersects(ws2)) {
+            debugMsg("    Ways are overlaped");
+            return true;
+          }
         }
       }
 
@@ -711,6 +714,16 @@ public class ConnectWays {
     }
 
     /**
+     *  Return middle point coordinations
+     *  @param p1 - first point coordinates
+     *  @param p2 - second point coordinates
+     *  @return middle point
+     */
+     private static LatLon getMiddlePoint (LatLon p1, LatLon p2) {
+      return new LatLon(((p1.lat() + p2.lat())/2), ((p1.lon() + p2.lon())/2));
+     }
+
+    /**
      * Return intersection node
      * @param ws1 way segment 1
      * @param ws2 way segment 2
@@ -748,7 +761,7 @@ public class ConnectWays {
     }
 
     /**
-     * Check whether the way has outer rolw in relation
+     * Check whether the way has outer role in relation
      * @param way way
      * @param rel relation
      * @return True when way is outer in the relation
@@ -776,12 +789,12 @@ public class ConnectWays {
       List<Command> cmds2 = new LinkedList<Command>();
 
       Way myWay = new Way(s_Ways.get(0));
-      Way overlapWay = new Way(way);
+      Way overlapedWay = new Way(way);
 
       Node iNode;
 
       // Go through all myWay segments
-      // Check an intersection with any way segment from
+      // Check an intersection way segment with waysegment of the overlaped way
       // If intersection is found - incorporate the node into both ways
       // Remove all nodes from otherWay that are inside myWay
       // Incorporate all nodes from myWay that are inside otherWay to otherWay border
@@ -792,18 +805,18 @@ public class ConnectWays {
       for (int i = 0; i < s_Ways.get(0).getNodesCount()-1; i++) {
         WaySegment myWaySegment = new WaySegment(s_Ways.get(0), i);
         for (int j = 0; j < way.getNodesCount()-1; j++) {
-          WaySegment overlapWaySegment = new WaySegment(way, j);
-          if (! myWaySegment.intersects(overlapWaySegment) && !segmentOnSegment(myWaySegment, overlapWaySegment)) {
+          WaySegment overlapedWaySegment = new WaySegment(way, j);
+          if (! myWaySegment.intersects(overlapedWaySegment) && !segmentOnSegment(myWaySegment, overlapedWaySegment)) {
             continue;
           }
 
           // segments are intersected
-          iNode = getIntersectionNode(myWaySegment, overlapWaySegment);
+          iNode = getIntersectionNode(myWaySegment, overlapedWaySegment);
           debugMsg("    --------------------------------");
           debugMsg("    myWaySegment:      " + myWaySegment);
           debugMsg("                       " + myWaySegment.getFirstNode() + ", " + myWaySegment.getSecondNode());
-          debugMsg("    overlapWaySegment: " + overlapWaySegment);
-          debugMsg("                       " + overlapWaySegment.getFirstNode() + ", " + overlapWaySegment.getSecondNode());
+          debugMsg("    overlapedWaySegment: " + overlapedWaySegment);
+          debugMsg("                       " + overlapedWaySegment.getFirstNode() + ", " + overlapedWaySegment.getSecondNode());
 
           if (pointIsCloseToLine(iNode.getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
             debugMsg("    Intersection node: " + iNode);
@@ -831,18 +844,18 @@ public class ConnectWays {
               }
             }
           } else {
-            if (pointIsCloseToLine(overlapWaySegment.getFirstNode().getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
-              debugMsg("    Intersection node: " + overlapWaySegment.getFirstNode());
+            if (pointIsCloseToLine(overlapedWaySegment.getFirstNode().getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
+              debugMsg("    Intersection node: " + overlapedWaySegment.getFirstNode());
               // Add intersection to both ways
-              if (intNodes.indexOf(overlapWaySegment.getFirstNode()) == -1) {
-                intNodes.add(overlapWaySegment.getFirstNode());
+              if (intNodes.indexOf(overlapedWaySegment.getFirstNode()) == -1) {
+                intNodes.add(overlapedWaySegment.getFirstNode());
               }
             }
-            if (pointIsCloseToLine(overlapWaySegment.getSecondNode().getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
-              debugMsg("    Intersection node: " + overlapWaySegment.getSecondNode());
+            if (pointIsCloseToLine(overlapedWaySegment.getSecondNode().getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
+              debugMsg("    Intersection node: " + overlapedWaySegment.getSecondNode());
               // Add intersection to both ways
-              if (intNodes.indexOf(overlapWaySegment.getSecondNode()) == -1) {
-                intNodes.add(overlapWaySegment.getSecondNode());
+              if (intNodes.indexOf(overlapedWaySegment.getSecondNode()) == -1) {
+                intNodes.add(overlapedWaySegment.getSecondNode());
               }
             }
           }
@@ -858,119 +871,232 @@ public class ConnectWays {
       // 2) Integrate intersection nodes into ways
       debugMsg("    --------------------------------");
       debugMsg("    --> 2) Integrate intersection nodes into ways");
-      Way tmpWay;
       for (Node intNode : intNodes) {
         // my Way
         if (myWay.getNodes().indexOf(intNode) >= 0) {
-          debugMsg("    Node is already in myWay: " + intNode);
+          debugMsg("    Node is already in myWay: " + intNode.getUniqueId());
         } else {
-          tmpWay = new Way(myWay);
-          for (int i = 0; i < tmpWay.getNodesCount()-1; i++) {
-            if (pointIsCloseToLine(intNode.getCoor(), tmpWay.getNode(i).getCoor(), tmpWay.getNode(i+1).getCoor())) {
+          for (int i = 0; i < myWay.getNodesCount()-1; i++) {
+            if (pointIsCloseToLine(intNode.getCoor(), myWay.getNode(i).getCoor(), myWay.getNode(i+1).getCoor())) {
               debugMsg("    --myWay: ");
-              debugMsg("      Add node       : "+ intNode);
-              debugMsg("        between nodes: (" + i + ")" + tmpWay.getNode(i));
-              debugMsg("                     : (" + (i+1) + ")"+ tmpWay.getNode(i+1));
+              debugMsg("      Add node       : "+ intNode.getUniqueId());
+              debugMsg("        between nodes: (" + i + ")" + myWay.getNode(i).getUniqueId());
+              debugMsg("                     : (" + (i+1) + ")"+ myWay.getNode(i+1).getUniqueId());
               myWay.addNode((i + 1), intNode);
               break;
              }
           }
         }
         // overlap Way
-        if (overlapWay.getNodes().indexOf(intNode) >= 0) {
-          debugMsg("    Node is already in overlapWay: " + intNode);
-//           overlapWay.removeNode(intNode);
+        if (overlapedWay.getNodes().indexOf(intNode) >= 0) {
+          debugMsg("    Node is already in overlapedWay: " + intNode.getUniqueId());
+//           overlapedWay.removeNode(intNode);
         } else {
-          tmpWay = new Way(overlapWay);
-          for (int i = 0; i < tmpWay.getNodesCount()-1; i++) {
-            if (pointIsCloseToLine(intNode.getCoor(), tmpWay.getNode(i).getCoor(), tmpWay.getNode(i+1).getCoor())) {
-              debugMsg("    --overlapWay: ");
-              debugMsg("      Add node       : "+ intNode);
-              debugMsg("        between nodes: (" + i + ")" + tmpWay.getNode(i));
-              debugMsg("                     : (" + (i+1) + ")"+ tmpWay.getNode(i+1));
-              overlapWay.addNode((i + 1), intNode);
+          for (int i = 0; i < overlapedWay.getNodesCount()-1; i++) {
+            if (pointIsCloseToLine(intNode.getCoor(), overlapedWay.getNode(i).getCoor(), overlapedWay.getNode(i+1).getCoor())) {
+              debugMsg("    --overlapedWay: ");
+              debugMsg("      Add node       : "+ intNode.getUniqueId());
+              debugMsg("        between nodes: (" + i + ")" + overlapedWay.getNode(i).getUniqueId());
+              debugMsg("                     : (" + (i+1) + ")"+ overlapedWay.getNode(i+1).getUniqueId());
+              overlapedWay.addNode((i + 1), intNode);
               break;
              }
           }
         }
       }
 
-      // 3) Remove all nodes from otherWay that are inside myWay
-      debugMsg("    --------------------------------");
-      debugMsg("    --> 3) Remove all nodes from otherWay that are inside myWay");
-      boolean wayWasClosed = overlapWay.isClosed();
-      tmpWay = new Way(overlapWay);
-      for (int k = 0; k < tmpWay.getNodesCount() -1 ; k++) {
-        Node n = tmpWay.getNode(k);
-        if (myWay.getNodes().indexOf(n) < 0 && isNodeInsideWay(n.getCoor(), myWay)) {
-          debugMsg("      Remove node from way: " + n);
-          overlapWay.removeNode(n);
-          if (wayWasClosed && !overlapWay.isClosed() ) {
-            // FirstLast node removed - close the way
-            debugMsg("      Close way: " + n);
-            overlapWay.addNode(overlapWay.getNodesCount() +1, overlapWay.getNode(0));
-          }
-          replaceWayInList(tmpWay, overlapWay);
-          if (getWaysOfNode(n).size() == 0 && ! n.hasKeys()) {
-              debugMsg("      Delete node: " + n);
-              cmds2.add(new DeleteCommand(n));
-              s_oNodes.remove(n);
-          }
-        }
+      replaceWayInList(s_Ways.get(0), myWay);
+      replaceWayInList(way, overlapedWay);
+
+      /* Go trough way fragments between intersection nodes
+       * If fragment is inside myWay, delete all middle nodes
+       * in overlaped way frogment and incorporate myWay nodes
+       * into the overlaped Way.
+       */
+
+       // First sort the list of intersection Nodes
+       // to have correct order according to overlapedWay
+       TreeMap <Integer, Node> sortedIntNodesMap = new TreeMap<Integer, Node>();
+
+       for (Node n : intNodes) {
+        sortedIntNodesMap.put(overlapedWay.getNodes().indexOf(n), n);
+       }
+
+      List<Node> intNodesSorted = new LinkedList<Node>();
+      for (Integer i : sortedIntNodesMap.keySet()) {
+        intNodesSorted.add(sortedIntNodesMap.get(i));
       }
 
-      // 4) Integrate all nodes of myWay into overlapWay
-      debugMsg("    --------------------------------");
-      debugMsg("    --> 4) Integrate all nodes of myWay into overlapWay");
-      for (int i = 0; i <  myWay.getRealNodesCount(); i++) {
-        Node myNode = myWay.getNode(i);
-        debugMsg("    -1");
-        if (overlapWay.getNodes().indexOf(myNode) >= 0) {
-          // skip intersection nodes
+      Way tmpWay;
+      WayFragment overlapedWF;
+      WayFragment myWF;
+
+      System.out.println("  --------------------------------");
+      System.out.println("         Intersection nodes: " + intNodes);
+      System.out.println("  Sorted intersection nodes: " + intNodesSorted);
+      for (int idx = 0; idx < intNodesSorted.size(); idx++) {
+        System.out.println("");
+        System.out.println("  ---- New Fragment("+ idx +") ----");
+
+        overlapedWF = null;;
+        myWF = null;
+
+        // First test the overlapedWay segment
+
+        int startIdx, endIdx;
+
+        if (idx == intNodesSorted.size() - 1) {
+          startIdx = overlapedWay.getNodes().indexOf(intNodesSorted.get(idx));
+          endIdx = overlapedWay.getNodes().indexOf(intNodesSorted.get(0));
+        } else {
+          startIdx = overlapedWay.getNodes().indexOf(intNodesSorted.get(idx));
+          endIdx = overlapedWay.getNodes().indexOf(intNodesSorted.get(idx + 1));
+        }
+
+        if (startIdx == -1 || endIdx == -1) {
+          System.out.println("   ERROR: first or last node has index -1!!!");
           continue;
         }
 
-        if (isNodeInsideWay(myNode.getCoor(), overlapWay)) {
-        debugMsg("    -2");
+        overlapedWF = new WayFragment(overlapedWay, startIdx, endIdx);
 
-          tmpWay = new Way();
-          tmpWay.addNode(new Node(myWay.getBBox().getCenter()));
-          tmpWay.addNode(myNode);
-          WaySegment myWaySegment = new WaySegment(tmpWay, 0);
-          boolean wayChanged = true;
+        if (overlapedWF.hasInnerNodes()) {
+          overlapedWF.resetInnerIndex();
+          Node n = overlapedWF.getNextInnerNode();
+          if (! isNodeInsideWay(n.getCoor(), myWay)) {
+            // Node is not inside myWay - skip this way fragment
+            continue;
+          }
+        } else {
+          // when no inner nodes, check whether way segment is crossing the myWay
+          // (middle point of the segment is inside myWay).
+          LatLon ll = getMiddlePoint(overlapedWF.getFirstNode().getCoor(),
+                                     overlapedWF.getLastNode().getCoor());
+          if (! isNodeInsideWay(ll, myWay)) {
+            // Node is not inside myWay - skip this way fragment
+            continue;
+          }
+        }
 
-          while (wayChanged) {
-          debugMsg("    -3");
-            wayChanged = false;
-            for (int j = 0; j < overlapWay.getRealNodesCount()-1; j++) {
-             debugMsg("    -4");
-              WaySegment ows = new WaySegment(overlapWay, j);
-              if (! myWaySegment.intersects(ows)) {
-                continue;
-              }
+        // Now test the myWay segment.
+        startIdx = myWay.getNodes().indexOf(overlapedWF.getFirstNode());
+        endIdx = myWay.getNodes().indexOf(overlapedWF.getLastNode());
 
-              if (overlapWay.getNodes().indexOf(myNode) >= 0) {
-                continue;
-              }
+        System.out.println("   overlapedWay.startIdx: " + overlapedWay.getNodes().indexOf(overlapedWF.getFirstNode()) + " .endIdx: " + overlapedWay.getNodes().indexOf(overlapedWF.getLastNode()));
+        System.out.println("   myWay.startIdx: " + startIdx + " .endIdx: " + endIdx);
 
-              debugMsg("       First node : " + ows.getFirstNode());
-              debugMsg("       Second node: " + ows.getSecondNode());
-              debugMsg("       Add node to way: " + myNode);
-              // Add myNode to position of second node
-              overlapWay.addNode(overlapWay.getNodes().indexOf(ows.getSecondNode()), myNode);
-              wayChanged = true;
-              break;
+        if (startIdx == -1 || endIdx == -1) {
+          System.out.println("   ERROR: first or last node has index -1!!!");
+          continue;
+        }
+
+        if ((endIdx - startIdx) > 1 || (startIdx - endIdx) > 1) {
+          Node nextNode = myWay.getNode(startIdx + 1);
+          System.out.println("  Tested node: " + nextNode.getUniqueId());
+          if (isNodeInsideWay(nextNode.getCoor(), overlapedWay)) {
+            System.out.println("   -> 1): ");
+            myWF = new WayFragment(myWay, startIdx, endIdx);
+          } else {
+            nextNode = myWay.getNode(startIdx - 1);
+            System.out.println("  Tested node: " + nextNode.getUniqueId());
+            if (isNodeInsideWay(nextNode.getCoor(), overlapedWay)) {
+              System.out.println("   -> 2): ");
+              myWF = new WayFragment(myWay, endIdx, startIdx);
+            }
+          }
+        } else {
+          LatLon ll = getMiddlePoint(overlapedWF.getFirstNode().getCoor(),
+                                    overlapedWF.getLastNode().getCoor());
+          if (isNodeInsideWay(ll, overlapedWay)) {
+            System.out.println("   -> 3): ");
+            myWF = new WayFragment(myWay, startIdx, endIdx);
+          } else {
+            ll = getMiddlePoint(overlapedWF.getLastNode().getCoor(),
+                                overlapedWF.getFirstNode().getCoor());
+            if (isNodeInsideWay(ll, overlapedWay)) {
+              System.out.println("   -> 4): ");
+              myWF = new WayFragment(myWay, endIdx, startIdx);
             }
           }
         }
+
+        if (myWF == null) {
+          System.out.println("ERROR: myWay fragment is not defined!");
+          continue;
+        }
+
+        // We have both fragments now.
+        // Try to fix overlaping
+
+        System.out.println(" Overlaped Way Fragment: " + overlapedWF.toString());
+        System.out.println("        My Way Fragment: " + myWF.toString());
+
+        if (overlapedWF.hasInnerNodes()) {
+          // delete inner nodes from overlapedWay
+          debugMsg("    --------------------------------");
+          debugMsg("    --> 3) Remove all inner nodes from otherWayFragment");
+          boolean wayWasClosed = overlapedWay.isClosed();
+          tmpWay = new Way(overlapedWay);
+          overlapedWF.resetInnerIndex();
+          Node in = overlapedWF.getNextInnerNode();
+          while (in != null) {
+            debugMsg("      Remove node from way: " + in);
+            overlapedWay.removeNode(in);
+            if (wayWasClosed && !overlapedWay.isClosed() ) {
+              // FirstLast node removed - close the way
+              debugMsg("      Close way: " + in);
+              overlapedWay.addNode(overlapedWay.getNodesCount() +1, overlapedWay.getNode(0));
+              }
+              replaceWayInList(tmpWay, overlapedWay);
+              if (getWaysOfNode(in).size() == 0 && ! in.hasKeys()) {
+                  debugMsg("      Delete node: " + in);
+                  cmds2.add(new DeleteCommand(in));
+                  s_oNodes.remove(in);
+              }
+              in = overlapedWF.getNextInnerNode();
+            }
+          }
+
+        if (myWF.hasInnerNodes()) {
+          // Incorporate Inner nodes of MayWay into overlapedWay
+          debugMsg("    --------------------------------");
+          debugMsg("    --> 4) Incorporate inner nodes from myWayFragment");
+
+          boolean backward;
+
+          tmpWay = new Way(overlapedWay);
+
+          int startIndex = overlapedWay.getNodes().indexOf(overlapedWF.getFirstNode());
+
+          if (overlapedWF.getFirstNode().getUniqueId() == myWF.getFirstNode().getUniqueId()) {
+            myWF.resetInnerIndex();
+            backward = false;
+          } else {
+            myWF.setMaxInnerIndex();
+            backward = true;
+          }
+
+          Node in = backward?myWF.getPreviousInnerNode():myWF.getNextInnerNode();
+
+          while (in != null) {
+            startIndex++;
+            debugMsg("      Add node into way: " + in);
+            debugMsg("      ... at index: " + startIndex);
+            overlapedWay.addNode(startIndex , in);
+            in = backward?myWF.getPreviousInnerNode():myWF.getNextInnerNode();
+          }
+          replaceWayInList(tmpWay, overlapedWay);
+        }
       }
+
+
 
       debugMsg("    -- -- -- -- --");
       replaceWayInList(s_Ways.get(0), myWay);
-      replaceWayInList(way, overlapWay);
+      replaceWayInList(way, overlapedWay);
 
       cmds.add(new ChangeCommand(s_Ways.getOriginalWay(myWay), myWay));
-      cmds.add(new ChangeCommand(s_Ways.getOriginalWay(overlapWay), overlapWay));
+      cmds.add(new ChangeCommand(s_Ways.getOriginalWay(overlapedWay), overlapedWay));
 
       cmds.addAll(cmds2);
       return cmds;
