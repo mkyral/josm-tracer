@@ -189,7 +189,7 @@ public class LpisRecord {
       DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
       DocumentBuilder builder = factory.newDocumentBuilder();
 
-      Document doc = builder.parse(new ByteArrayInputStream(xmlStr.getBytes()));
+      Document doc = builder.parse(new ByteArrayInputStream(xmlStr.getBytes("UTF-8")));
       doc.getDocumentElement().normalize();
 
       XPath xPath =  XPathFactory.newInstance().newXPath();
