@@ -44,7 +44,7 @@ public class LpisServer {
     private String callServer(String urlString) {
         try {
             URL url = new URL(urlString);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
 
             StringBuilder sb = new StringBuilder();
             String line;
