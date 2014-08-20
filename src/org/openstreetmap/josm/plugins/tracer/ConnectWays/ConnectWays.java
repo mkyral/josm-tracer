@@ -280,14 +280,14 @@ public class ConnectWays {
         cmds.add(new SequenceCommand(tr("Trace"), xcmds));
 
         // Modify the way
-        if (wayType == BUILDING) {
+//         if (wayType == BUILDING) {
           debugMsg("");
           debugMsg("-----------------------------------------");
           xcmds = new LinkedList<Command>(removeFullyCoveredWays());
           if (xcmds.size() > 0) {
             cmds.add(new SequenceCommand(tr("Remove Fully covered ways"), xcmds));
           }
-        }
+//         }
 
         debugMsg("");
         debugMsg("-----------------------------------------");
@@ -605,9 +605,9 @@ public class ConnectWays {
           if (wayType == BUILDING) {
             return way;
           } else if (wayType == LANDUSE &&
-                      ( way.getKeys().get("landuse").equals("farmland") ||
-                        way.getKeys().get("landuse").equals("meadow") ||
-                        (wayIsForest && way.getKeys().get("landuse").equals("forest"))
+                      ( way.hasKey("landuse") && way.getKeys().get("landuse").equals("farmland") ||
+                        way.hasKey("landuse") && way.getKeys().get("landuse").equals("meadow") ||
+                        (wayIsForest && way.hasKey("landuse") && way.getKeys().get("landuse").equals("forest"))
                       )
                     ){
             return way;
@@ -720,7 +720,8 @@ public class ConnectWays {
      *  @return middle point
      */
      private static LatLon getMiddlePoint (LatLon p1, LatLon p2) {
-      return new LatLon(((p1.lat() + p2.lat())/2), ((p1.lon() + p2.lon())/2));
+      return new LatLon(LatLon.roundToOsmPrecision((p1.lat() + p2.lat())/2),
+                        LatLon.roundToOsmPrecision((p1.lon() + p2.lon())/2));
      }
 
     /**
@@ -741,7 +742,8 @@ public class ConnectWays {
 
         Point2D.Double oPoint = oStraightLine1.GetIntersectionPoint(oStraightLine2);
 
-        return new Node(new LatLon(oPoint.getY(), oPoint.getX()));
+        return new Node(new LatLon(LatLon.roundToOsmPrecision(oPoint.getY()),
+                                   LatLon.roundToOsmPrecision(oPoint.getX())));
     }
 
     /**
