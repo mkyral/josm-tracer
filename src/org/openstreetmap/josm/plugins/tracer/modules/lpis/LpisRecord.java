@@ -135,6 +135,8 @@ public class LpisRecord {
                               m_usageOsm.put("meadow", "agricultural"); break;
         case "porost RRD": m_usageOsm.put("landuse", "forest");
                            m_usageOsm.put("crop", "fast_growing_wood"); break;
+        case "RRD": m_usageOsm.put("landuse", "forest");
+                    m_usageOsm.put("crop", "fast_growing_wood"); break;
         case "zalesněná půda": m_usageOsm.put("landuse", "forest"); break;
         case "rybník": m_usageOsm.put("natural", "water");
                        m_usageOsm.put("water", "pond"); break;
