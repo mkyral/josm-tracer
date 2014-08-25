@@ -373,6 +373,8 @@
                           <EmptySpace min="-2" pref="34" max="-2" attributes="0"/>
                           <Component id="ruianCheckBox" min="-2" max="-2" attributes="0"/>
                           <EmptySpace min="-2" pref="34" max="-2" attributes="0"/>
+                          <Component id="ruianLandsCheckBox" min="-2" max="-2" attributes="0"/>
+                          <EmptySpace min="-2" pref="34" max="-2" attributes="0"/>
                           <Component id="lpisCheckBox" min="-2" max="-2" attributes="0"/>
                       </Group>
                   </Group>
@@ -389,6 +391,7 @@
                   <Group type="103" groupAlignment="3" attributes="0">
                       <Component id="classicCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="ruianCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="ruianLandsCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="lpisCheckBox" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace min="0" pref="7" max="32767" attributes="0"/>
@@ -423,6 +426,15 @@
           </Properties>
           <AccessibilityProperties>
             <Property name="AccessibleContext.accessibleDescription" type="java.lang.String" value="Use RUIAN Tracer module"/>
+          </AccessibilityProperties>
+        </Component>
+        <Component class="javax.swing.JCheckBox" name="ruianLandsCheckBox">
+          <Properties>
+            <Property name="selected" type="boolean" value="false"/>
+            <Property name="text" type="java.lang.String" value="RUIAN-Lands"/>
+          </Properties>
+          <AccessibilityProperties>
+            <Property name="AccessibleContext.accessibleDescription" type="java.lang.String" value="Use RUIAN-Lands Tracer module"/>
           </AccessibilityProperties>
         </Component>
         <Component class="javax.swing.JCheckBox" name="lpisCheckBox">

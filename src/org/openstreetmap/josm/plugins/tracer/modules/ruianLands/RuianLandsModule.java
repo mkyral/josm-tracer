@@ -24,6 +24,8 @@ import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
@@ -44,7 +46,7 @@ import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 
 import org.xml.sax.SAXException;
 
-class RuianModule implements TracerModule {
+class RuianLandsModule implements TracerModule {
 
     private static final long serialVersionUID = 1L;
 
@@ -54,11 +56,11 @@ class RuianModule implements TracerModule {
     private boolean shift;
     private boolean moduleEnabled;
     private String source = "cuzk:ruian";
-    private static RuianRecord record;
+    private static RuianLandsRecord record;
 
-    protected RuianServer server = new RuianServer();
+    protected RuianLandsServer server = new RuianLandsServer();
 
-    public RuianModule(boolean enabled) {
+    public RuianLandsModule(boolean enabled) {
       moduleEnabled = enabled;
     }
 
@@ -67,11 +69,11 @@ class RuianModule implements TracerModule {
     }
 
     public Cursor getCursor() {
-        return ImageProvider.getCursor("crosshair", "tracer-ruian-sml");
+        return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-sml");
     }
 
     public String getName() {
-        return tr("RUIAN");
+        return tr("RUIAN-Lands");
     }
 
     public boolean moduleIsEnabled() {
@@ -134,7 +136,8 @@ class RuianModule implements TracerModule {
             way.addNode(firstNode);
 
             System.out.println("TracedWay: " + way.toString());
-            tagBuilding(way);
+            tagLand(way);
+
             // connect to other buildings or modify existing building
             Command connCmd = ConnectWays.connect(way, pos, ctrl, alt, source);
 
@@ -153,9 +156,9 @@ class RuianModule implements TracerModule {
                 if (!commands.isEmpty()) {
                   String strCommand;
                   if (ConnectWays.s_bAddNewWay == true) {
-                    strCommand = trn("Tracer(RUIAN): add a way with {0} point", "Tracer(RUIAN): add a way with {0} points", ConnectWays.getWay().getRealNodesCount(), ConnectWays.getWay().getRealNodesCount());
+                    strCommand = trn("Tracer(RUIAN-Lands): add a way with {0} point", "Tracer(RUIAN-Lands): add a way with {0} points", ConnectWays.getWay().getRealNodesCount(), ConnectWays.getWay().getRealNodesCount());
                   } else {
-                    strCommand = trn("Tracer(RUIAN): modify way to {0} point", "Tracer(RUIAN): modify way to {0} points", ConnectWays.getWay().getRealNodesCount(), ConnectWays.getWay().getRealNodesCount());
+                    strCommand = trn("Tracer(RUIAN-Lands): modify way to {0} point", "Tracer(RUIAN-Lands): modify way to {0} points", ConnectWays.getWay().getRealNodesCount(), ConnectWays.getWay().getRealNodesCount());
                   }
                   Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
 
@@ -176,43 +179,26 @@ class RuianModule implements TracerModule {
     }
 
 // ---------------------------------------------------------------------------
-    private void tagBuilding(Way way) {
-        if(!alt) {
-          if ( record.getBuildingTagKey().equals("building") &&
-               record.getBuildingTagValue().length() > 0) {
-            way.put("building", record.getBuildingTagValue());
-          }
-          else {
-            way.put("building", "yes");
-          }
-        }
+    private void tagLand(Way way) {
+      Map <String, String> map;
 
-        if (record.getBuildingID() > 0 ) {
-          way.put("ref:ruian:building", Long.toString(record.getBuildingID()));
-        }
+      if(!alt) {
+        map = new HashMap <String, String> (record.getKeys());
+      } else {
+        map = new HashMap <String, String> ();
+      }
 
-        if (record.getBuildingUsageCode().length() > 0) {
-          way.put("building:ruian:type", record.getBuildingUsageCode());
-        }
+      map.put("source", source);
 
-        if (record.getBuildingLevels().length() > 0) {
-          way.put("building:levels", record.getBuildingLevels());
-        }
+      if (record.getLandID() > 0 ) {
+        map.put("ref:ruian:parcel", Long.toString(record.getLandID()));
+      }
+/*
+      if (record.getLandUsageCode().length() > 0) {
+        map.put("building:ruian:type", record.getLandUsageCode());
+      }*/
 
-        if (record.getBuildingFlats().length() > 0) {
-          way.put("building:flats", record.getBuildingFlats());
-        }
-
-        if (record.getBuildingFinished().length() > 0) {
-          way.put("start_date", record.getBuildingFinished());
-        }
-
-        if (record.getSource().length() > 0) {
-          way.put("source", record.getSource());
-        }
-        else {
-          way.put("source", source);
-        }
+      way.setKeys(map);
     }
 }
 

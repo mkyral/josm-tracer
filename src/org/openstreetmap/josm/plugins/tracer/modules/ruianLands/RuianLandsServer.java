@@ -27,10 +27,10 @@ import org.openstreetmap.josm.data.coor.LatLon;
 
 // import org.openstreetmap.josm.plugins.tracer.RuianRecord;
 
-public class RuianServer {
+public class RuianLandsServer {
 
 
-    public RuianServer() {
+    public RuianLandsServer() {
 
     }
 
@@ -63,16 +63,16 @@ public class RuianServer {
      * @param pos Position of building.
      * @return Building border.
      */
-    public RuianRecord trace(LatLon pos, String url) {
+    public RuianLandsRecord trace(LatLon pos, String url) {
         try {
-            System.out.println("Request: "+ url + "/ruian-buildings/?lat=" + pos.lat() + "&lon=" + pos.lon());
-            String content = callServer(url + "/ruian-buildings/?lat=" + pos.lat() + "&lon=" + pos.lon());
+            System.out.println("Request: "+ url + "/ruian-lands/?lat=" + pos.lat() + "&lon=" + pos.lon());
+            String content = callServer(url + "/ruian-lands/?lat=" + pos.lat() + "&lon=" + pos.lon());
             System.out.println("Reply: " + content);
-            RuianRecord ruian = new RuianRecord();
+            RuianLandsRecord ruian = new RuianLandsRecord();
             ruian.parseJSON(content);
             return ruian;
         } catch (Exception e) {
-            return new RuianRecord();
+            return new RuianLandsRecord();
         }
     }
 }

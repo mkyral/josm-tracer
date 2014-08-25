@@ -35,10 +35,12 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
 
     boolean  m_classicModuleEnabled;
     boolean  m_ruianModuleEnabled;
+    boolean  m_ruianLandsModuleEnabled;
     boolean  m_lpisModuleEnabled;
 
     private String KEY_CLASSICENABLED = "tracer.classicmoduleenabled";
     private String KEY_RUIANENABLED = "tracer.ruianmoduleenabled";
+    private String KEY_RUIANLANDSENABLED = "tracer.ruianlandsmoduleenabled";
     private String KEY_LPISENABLED = "tracer.lpismoduleenabled";
 
     boolean  m_customTracerUrl;
@@ -89,6 +91,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
     private javax.swing.JLabel enabledModulesLabel;
     private javax.swing.JCheckBox classicCheckBox;
     private javax.swing.JCheckBox ruianCheckBox;
+    private javax.swing.JCheckBox ruianLandsCheckBox;
     private javax.swing.JCheckBox lpisCheckBox;
     private javax.swing.JSeparator jSeparator2;
     private javax.swing.JCheckBox tracerUrlCheckBox;
@@ -136,6 +139,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
         // Enabled modules
         m_classicModuleEnabled        = Main.pref.getBoolean(KEY_CLASSICENABLED,    classicCheckBox.isSelected());
         m_ruianModuleEnabled          = Main.pref.getBoolean(KEY_RUIANENABLED,      ruianCheckBox.isSelected());
+        m_ruianLandsModuleEnabled     = Main.pref.getBoolean(KEY_RUIANLANDSENABLED, ruianLandsCheckBox.isSelected());
         m_lpisModuleEnabled           = Main.pref.getBoolean(KEY_LPISENABLED,       lpisCheckBox.isSelected());
 
         // Tracer
@@ -160,6 +164,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
     public void reloadSettings() {
         classicCheckBox.setSelected(m_classicModuleEnabled);
         ruianCheckBox.setSelected(m_ruianModuleEnabled);
+        ruianLandsCheckBox.setSelected(m_ruianLandsModuleEnabled);
         lpisCheckBox.setSelected(m_lpisModuleEnabled);
 
         tracerUrlCheckBox.setSelected(m_customTracerUrl);
@@ -193,6 +198,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
         enabledModulesLabel = new javax.swing.JLabel();
         classicCheckBox = new javax.swing.JCheckBox();
         ruianCheckBox = new javax.swing.JCheckBox();
+        ruianLandsCheckBox = new javax.swing.JCheckBox();
         lpisCheckBox = new javax.swing.JCheckBox();
         jSeparator2 = new javax.swing.JSeparator();
         tracerUrlCheckBox = new javax.swing.JCheckBox();
@@ -230,11 +236,14 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
         ruianCheckBox.setSelected(true);
         ruianCheckBox.setText(tr("RUIAN"));
 
+        ruianLandsCheckBox.setText(tr("RUIAN-Lands"));
+
         lpisCheckBox.setText(tr("LPIS"));
 
         enabledModulesLabel.getAccessibleContext().setAccessibleDescription(tr("Select modules available for switching"));
         classicCheckBox.getAccessibleContext().setAccessibleDescription(tr("Use Classic (the original) tracer module"));
         ruianCheckBox.getAccessibleContext().setAccessibleDescription(tr("Use RUIAN Tracer module"));
+        ruianLandsCheckBox.getAccessibleContext().setAccessibleDescription(tr("Use RUIAN Lands Tracer module"));
         lpisCheckBox.getAccessibleContext().setAccessibleDescription(tr("Use LPIS Tracer module"));
 
         // Tracer settins
@@ -335,6 +344,8 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
                         .addGap(34, 34, 34)
                         .addComponent(ruianCheckBox)
                         .addGap(34, 34, 34)
+                        .addComponent(ruianLandsCheckBox)
+                        .addGap(34, 34, 34)
                         .addComponent(lpisCheckBox)))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -347,6 +358,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(classicCheckBox)
                     .addComponent(ruianCheckBox)
+                    .addComponent(ruianLandsCheckBox)
                     .addComponent(lpisCheckBox))
                 .addGap(0, 7, Short.MAX_VALUE))
         );
@@ -548,6 +560,9 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
 
         m_ruianModuleEnabled = ruianCheckBox.isSelected();
         Main.pref.put(KEY_RUIANENABLED, m_ruianModuleEnabled);
+
+        m_ruianLandsModuleEnabled = ruianLandsCheckBox.isSelected();
+        Main.pref.put(KEY_RUIANLANDSENABLED, m_ruianLandsModuleEnabled);
 
         m_lpisModuleEnabled = lpisCheckBox.isSelected();
         Main.pref.put(KEY_LPISENABLED, m_lpisModuleEnabled);
