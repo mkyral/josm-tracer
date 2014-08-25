@@ -1485,17 +1485,22 @@ public class ConnectWays {
       debugMsg("-- isSameTag() --");
       if (wType == LANDUSE) {
         debugMsg("-- isSameTag(): landuse");
-        if ( (!w.hasKey("landuse") && !w.hasKey("natural")) ) {
+        if ( (!w.hasKey("landuse") && !w.hasKey("natural") && !w.hasKey("leisure")) ) {
           return false;
         } else if ((w.hasKey("landuse") &&
                     w.getKeys().get("landuse").equals("no")) ||
                    (w.hasKey("natural") &&
-                    w.getKeys().get("natural").equals("no"))) {
+                    w.getKeys().get("natural").equals("no")) ||
+                   (w.hasKey("leisure") &&
+                    w.getKeys().get("leisure").equals("no"))) {
           return false;
         } else if (w.hasKey("landuse") ||
                    (w.hasKey("natural") &&
                     (w.getKeys().get("natural").equals("scrub") ||
-                     w.getKeys().get("natural").equals("wood")))) {
+                     w.getKeys().get("natural").equals("wood"))) ||
+                   (w.hasKey("leisure") &&
+                    (w.getKeys().get("leisure").equals("garden")))
+                     ) {
           return true;
         }
         return false;
