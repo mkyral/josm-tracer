@@ -83,6 +83,7 @@ public class ConnectWays {
 
     final static int BUILDING = 1;
     final static int LANDUSE = 2;
+    final static int LANDUSE_RUAIN = 3;
     final static int UNKNOWN = -1;
 
     private static int wayType; // Type of the way - building or landuse
@@ -144,6 +145,8 @@ public class ConnectWays {
         // Determine type of way
         if (newWay.hasKey("building")) {
           wayType = BUILDING;
+        } else if (newWay.hasKey("landuse") && source.equals("cuzk:ruian")) {
+          wayType = LANDUSE_RUAIN;
         } else if (newWay.hasKey("landuse")) {
           wayType = LANDUSE;
           if (newWay.getKeys().get("landuse").equals("forest") &&
@@ -176,8 +179,9 @@ public class ConnectWays {
         }
 
         switch (wayType) {
-          case BUILDING: System.out.println("Way is: building"); break;
+          case BUILDING: System.out.println("Way is: Ruian building"); break;
           case LANDUSE: System.out.println("Way is: landuse"); break;
+          case LANDUSE_RUAIN: System.out.println("Way is: Ruian landuse"); break;
           case UNKNOWN: System.out.println("Way is: unknown"); break;
         }
 
@@ -198,7 +202,7 @@ public class ConnectWays {
 //         getSharedNodes(s_oWayOld);
         if (s_oWayOld == null) {
           s_bAddNewWay = true;
-          if (wayType == BUILDING) {
+          if (wayType == BUILDING || wayType == LANDUSE_RUAIN) {
             cmds.add(new AddCommand(newWay));
           }
           s_oWay = new Way( newWay );
@@ -254,7 +258,7 @@ public class ConnectWays {
 
             // Remove Old nodes
             for (int i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
-              tempWay.removeNode( s_oWayOld.getNode(i) );
+                tempWay.removeNode( s_oWayOld.getNode(i) );
             }
 
             replaceWayInList(s_oWayOld, tempWay);
@@ -262,7 +266,7 @@ public class ConnectWays {
             for (int i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
               Node nd = s_oWayOld.getNode(i);
               List<Way> ways = getWaysOfNode(nd);
-              if (ways.size() == 0) {
+              if (ways.size() == 0 && ! nd.isOutsideDownloadArea() && ! nd.isConnectionNode()) {
                   debugMsg("    Delete node: " + nd);
                   cmds2.add(new DeleteCommand(nd));
                   s_oNodes.remove(nd);
@@ -625,7 +629,7 @@ public class ConnectWays {
           continue;
         }
         if (isNodeInsideWay(pos, way)) {
-          if (wayType == BUILDING) {
+          if (wayType == BUILDING || wayType == LANDUSE_RUAIN) {
             return way;
           } else if (wayType == LANDUSE &&
                       ( way.hasKey("landuse") && way.getKeys().get("landuse").equals("farmland") ||
@@ -1084,7 +1088,7 @@ public class ConnectWays {
               overlapedWay.addNode(overlapedWay.getNodesCount(), overlapedWay.getNode(0));
               }
               replaceWayInList(tmpWay, overlapedWay);
-              if (getWaysOfNode(in).size() == 0 && ! in.hasKeys()) {
+              if (getWaysOfNode(in).size() == 0 && ! in.hasKeys() && ! in.isOutsideDownloadArea() ) {
                   debugMsg("      Delete node: " + in.getUniqueId());
                   cmds2.add(new DeleteCommand(in));
                   s_oNodes.remove(in);
@@ -1181,7 +1185,7 @@ public class ConnectWays {
 
       replaceWayInList(tmpWay, myWay);
 
-      if (getWaysOfNode(myNode).size() == 0) {
+      if (getWaysOfNode(myNode).size() == 0 && ! myNode.isOutsideDownloadArea()) {
           debugMsg("    Delete node: " + myNode);
           cmds.add(new DeleteCommand(myNode));
           s_oNodes.remove(myNode);
@@ -1243,6 +1247,10 @@ public class ConnectWays {
             d_way.remove("ref:ruian");
             }
         }
+      }
+
+      if (wayType == LANDUSE_RUAIN) {
+        // TODO
       }
 
       if (wayType == LANDUSE) {
@@ -1313,7 +1321,8 @@ public class ConnectWays {
               s_oWay.removeNode(myNode);
               replaceWayInList(tmpWay, s_oWay);
 
-              if (deletedNodes.indexOf(myNode) < 0 &&  getWaysOfNode(myNode).size() <= 1) {
+              if (deletedNodes.indexOf(myNode) < 0 &&  getWaysOfNode(myNode).size() <= 1 &&
+                  ! myNode.isOutsideDownloadArea()) {
                 debugMsg("    Delete node: " + myNode);
                 s_oNodes.remove(myNode);
                 cmds2.add(new DeleteCommand(myNode));
@@ -1358,7 +1367,7 @@ public class ConnectWays {
               continue;
             }
 
-            if ( getWaysOfNode(nd).size() == 0) {
+            if ( getWaysOfNode(nd).size() == 0 && ! nd.isOutsideDownloadArea() ) {
                 debugMsg("    Delete node: " + nd);
                 cmds.add(new DeleteCommand(nd));
                 s_oNodes.remove(nd);
@@ -1427,7 +1436,7 @@ public class ConnectWays {
                   }
 
                   replaceWayInList(bckWay, w);
-                  if (getWaysOfNode(middleNode).size() == 0) {
+                  if (getWaysOfNode(middleNode).size() == 0 && ! middleNode.isOutsideDownloadArea()) {
                     debugMsg("    -> Node: Delete command");
                     cmds2.add(new DeleteCommand(middleNode));
                     s_oNodes.remove(middleNode);
