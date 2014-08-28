@@ -86,13 +86,35 @@ public class RuianLandsRecord {
     *
     */
     private static void mapKeys () {
-      if (m_druh_pozemku.equals("zahrada")) {
+      if (m_druh_pozemku.equals("orná půda")){
+        m_keys.put("landuse", "farmland");
+
+      } else if (m_druh_pozemku.equals("chmelnice")){
+        m_keys.put("landuse", "farmland");
+        m_keys.put("crop", "hop");
+
+      } else if (m_druh_pozemku.equals("vinice")){
+        m_keys.put("landuse", "vineyard");
+
+      } else if (m_druh_pozemku.equals("ovocný sad")){
+        m_keys.put("orchard", "orchard");
+
+      } else if (m_druh_pozemku.equals("trvalý travní porost")){
+        m_keys.put("landuse", "meadow");
+        m_keys.put("meadow", "agricultural");
+
+      } else if (m_druh_pozemku.equals("lesní pozemek")){
+        m_keys.put("landuse", "forest");
+
+      } else if (m_druh_pozemku.equals("zahrada")) {
         m_keys.put("leisure", "garden");
+        m_keys.put("garden:type", "residental");
+
       } else if (m_druh_pozemku.equals("zastavěná plocha a nádvoří")){
         m_keys.put("building", "yes");
-      } else if (m_druh_pozemku.equals("orná půda")){
-        m_keys.put("landuse", "farmland");
-      } else if (m_druh_pozemku.equals("ostatní plocha")) {
+
+      } else if (m_druh_pozemku.equals("ostatní plocha") ||
+                 m_druh_pozemku.equals("vodní plocha")) {
         if (m_zpusob_vyuziti.equals("skleník, pařeniště")) {
           m_keys.put("landuse", "common");
         }
