@@ -37,10 +37,43 @@ public class Modules {
 
     private void init () {
       m_modules = new LinkedHashMap<String, TracerModule>();
-      m_modules.put("classic", new ClassicModule(pref.m_classicModuleEnabled));
-      m_modules.put("ruian", new RuianModule(pref.m_ruianModuleEnabled));
-      m_modules.put("ruian-lands", new RuianLandsModule(pref.m_ruianLandsModuleEnabled));
-      m_modules.put("lpis", new LpisModule(pref.m_lpisModuleEnabled));
+      m_modules.put("classic", new ClassicModule(false));
+      m_modules.put("ruian", new RuianModule(true));
+      m_modules.put("ruian-lands", new RuianLandsModule(false));
+      m_modules.put("lpis", new LpisModule(false));
+
+      List<String> m_modules_array = new LinkedList<String>();
+      Map.Entry<String, TracerModule> m_current_module;
+
+      // Refresh modules list in configuration
+      m_it = m_modules.entrySet().iterator();
+      while (m_it.hasNext()) {
+        m_current_module = m_it.next();
+        m_modules_array.add(m_current_module.getKey());
+      }
+      pref.setAvailableModules(m_modules_array);
+
+      // Set enabled modules
+      for (String s: pref.getActiveModules()) {
+        m_modules.get(s).setModuleIsEnabled(true);
+      }
+
+      // Reorder modules
+      // First add enabled modules
+      Map<String, TracerModule> m_bckModules = new LinkedHashMap<String, TracerModule>(m_modules);
+      m_modules.clear();
+      for (String s: pref.getActiveModules()) {
+        m_modules.put(s, m_bckModules.get(s));
+      }
+
+      // Second: add remaining modules
+      Iterator<Map.Entry<String, TracerModule>> it = m_bckModules.entrySet().iterator();
+      while (it.hasNext()) {
+        Map.Entry<String, TracerModule> module = it.next();
+        if (!m_modules.containsValue(module.getValue())) {
+          m_modules.put(module.getKey(), module.getValue());
+        }
+      }
 
       countActiveModules();
 
@@ -76,26 +109,41 @@ public class Modules {
 
     public void refreshModulesStatus() {
 
-      TracerModule tm;
       pref.reloadSettings();
 
-      tm = m_modules.get("classic");
-      tm.setModuleIsEnabled(pref.m_classicModuleEnabled);
-      m_modules.put("classic", tm);
+      // Reorder modules
+      // First add enabled modules
+      Map<String, TracerModule> m_bckModules = new LinkedHashMap<String, TracerModule>(m_modules);
+      m_modules.clear();
+      for (String s: pref.getActiveModules()) {
+        m_modules.put(s, m_bckModules.get(s));
+        m_modules.get(s).setModuleIsEnabled(true);
+      }
 
-      tm = m_modules.get("ruian");
-      tm.setModuleIsEnabled(pref.m_ruianModuleEnabled);
-      m_modules.put("ruian", tm);
-
-      tm = m_modules.get("ruian-lands");
-      tm.setModuleIsEnabled(pref.m_ruianLandsModuleEnabled);
-      m_modules.put("ruian-lands", tm);
-
-      tm = m_modules.get("lpis");
-      tm.setModuleIsEnabled(pref.m_lpisModuleEnabled);
-      m_modules.put("lpis", tm);
+      // Second: add remaining modules
+      Iterator<Map.Entry<String, TracerModule>> it = m_bckModules.entrySet().iterator();
+      while (it.hasNext()) {
+        Map.Entry<String, TracerModule> module = it.next();
+        if (!m_modules.containsValue(module.getValue())) {
+          m_modules.put(module.getKey(), module.getValue());
+          m_modules.get(module.getKey()).setModuleIsEnabled(false);
+        }
+      }
 
       countActiveModules();
+
+      if (m_activeModulesCount == 0) {
+        return;
+      }
+
+      String m_bckKey= new String(m_active_module.getKey());
+      m_it = m_modules.entrySet().iterator();
+      m_active_module = m_it.next();
+      if (m_modules.containsKey(m_bckKey) && pref.isModuleEnabled(m_bckKey)) {
+        while (!m_active_module.getKey().equals(m_bckKey)) {
+          m_active_module = m_it.next();
+        }
+      }
 
     }
 

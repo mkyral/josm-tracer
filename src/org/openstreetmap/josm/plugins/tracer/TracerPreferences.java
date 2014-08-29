@@ -22,6 +22,13 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 import javax.swing.JPanel;
 import javax.swing.JFormattedTextField;
+import javax.swing.DefaultListModel;
+import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.LinkedList;
 import java.text.DecimalFormat;
 
 import org.openstreetmap.josm.Main;
@@ -33,15 +40,11 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
 
     public JPanel thisPanel;
 
-    boolean  m_classicModuleEnabled;
-    boolean  m_ruianModuleEnabled;
-    boolean  m_ruianLandsModuleEnabled;
-    boolean  m_lpisModuleEnabled;
+    private DefaultListModel m_modulesAvailableModel;
+    private DefaultListModel m_modulesEnabledModel;
 
-    private String KEY_CLASSICENABLED = "tracer.classicmoduleenabled";
-    private String KEY_RUIANENABLED = "tracer.ruianmoduleenabled";
-    private String KEY_RUIANLANDSENABLED = "tracer.ruianlandsmoduleenabled";
-    private String KEY_LPISENABLED = "tracer.lpismoduleenabled";
+    private String KEY_MODULESAVAILABLE = "tracer.modulesavailable";
+    private String KEY_MODULESENABLED = "tracer.modulesenabled";
 
     boolean  m_customTracerUrl;
     String   m_customTracerUrlText;
@@ -87,37 +90,46 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
     private String KEY_RUIANADJUSTPOSITIONLATSIGN = "tracer.ruianadjustpositionlatvaluesign";
     private String KEY_RUIANADJUSTPOSITIONLONSIGN = "tracer.ruianadjustpositionlonvaluesign";
 
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JLabel enabledModulesLabel;
-    private javax.swing.JCheckBox classicCheckBox;
-    private javax.swing.JCheckBox ruianCheckBox;
-    private javax.swing.JCheckBox ruianLandsCheckBox;
-    private javax.swing.JCheckBox lpisCheckBox;
-    private javax.swing.JSeparator jSeparator2;
-    private javax.swing.JCheckBox tracerUrlCheckBox;
-    private javax.swing.JTextField tracerUrlValueField;
-    private javax.swing.JCheckBox tracerAdjustCheckBox;
-    private javax.swing.JSpinner tracerAdjustLatSpinner;
-    private javax.swing.JSpinner tracerAdjustLonSpinner;
-    private javax.swing.JLabel tracerLatLabel;
-    private javax.swing.JComboBox tracerLatSignComboBox;
-    private javax.swing.JLabel tracerLatZeroLabel;
-    private javax.swing.JLabel tracerLonLabel;
-    private javax.swing.JComboBox tracerLonSignComboBox;
-    private javax.swing.JLabel tracerLonZeroLabel;
-    private javax.swing.JSeparator jSeparator1;
-    private javax.swing.JCheckBox ruianUrlCheckBox;
-    private javax.swing.JTextField ruianUrlValueField;
-    private javax.swing.JCheckBox ruianAdjustCheckBox;
-    private javax.swing.JSpinner ruianAdjustLatSpinner;
-    private javax.swing.JSpinner ruianAdjustLonSpinner;
-    private javax.swing.JLabel ruianLatLabel;
-    private javax.swing.JComboBox ruianLatSignComboBox;
-    private javax.swing.JLabel ruianLatZeroLabel;
-    private javax.swing.JLabel ruianLonLabel;
-    private javax.swing.JComboBox ruianLonSignComboBox;
-    private javax.swing.JLabel ruianLonZeroLabel;
+//     private DefaultListModel AvailableModulesModel;
+//     private DefaultListModel EnabledModulesModel;
 
+
+    private javax.swing.JList AvailableModulesList;
+    private javax.swing.JLabel AvilableModulesLabel;
+    private javax.swing.JLabel EnabledModulesLabel;
+    private javax.swing.JList EnabledModulesList;
+    private javax.swing.JPanel MainConfigPanel;
+    private javax.swing.JPanel ModulesConfigPanel;
+    private javax.swing.JButton ModulesDownButton;
+    private javax.swing.JButton ModulesLeftButton;
+    private javax.swing.JButton ModulesRightButton;
+    private javax.swing.JButton ModulesUpButton;
+    private javax.swing.JCheckBox RuianAdjustCheckBox;
+    private javax.swing.JSpinner RuianAdjustLatSpinner;
+    private javax.swing.JSpinner RuianAdjustLonSpinner;
+    private javax.swing.JPanel RuianConfigPanel;
+    private javax.swing.JLabel RuianLatLabel;
+    private javax.swing.JComboBox RuianLatSignComboBox;
+    private javax.swing.JLabel RuianLatZeroLabel;
+    private javax.swing.JLabel RuianLonLabel;
+    private javax.swing.JComboBox RuianLonSignComboBox;
+    private javax.swing.JLabel RuianLonZeroLabel;
+    private javax.swing.JCheckBox RuianUrlCheckBox;
+    private javax.swing.JTextField RuianUrlValueField;
+    private javax.swing.JCheckBox TracerAdjustCheckBox;
+    private javax.swing.JSpinner TracerAdjustLatSpinner;
+    private javax.swing.JSpinner TracerAdjustLonSpinner;
+    private javax.swing.JPanel TracerConfigPanel;
+    private javax.swing.JLabel TracerLatLabel;
+    private javax.swing.JComboBox TracerLatSignComboBox;
+    private javax.swing.JLabel TracerLatZeroLabel;
+    private javax.swing.JLabel TracerLonLabel;
+    private javax.swing.JComboBox TracerLonSignComboBox;
+    private javax.swing.JLabel TracerLonZeroLabel;
+    private javax.swing.JCheckBox TracerUrlCheckBox;
+    private javax.swing.JTextField TracerUrlValueField;
+    private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JPanel mainPanel;
 
     private static TracerPreferences singleton = null;
@@ -129,6 +141,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
     }
 
     /** Creates new form Preferences */
+    @SuppressWarnings("unchecked")
     private TracerPreferences() {
         super(   "tracer-ruian-sml",
               tr("Tracer plugin settings"),
@@ -137,53 +150,51 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
         initComponents();
 
         // Enabled modules
-        m_classicModuleEnabled        = Main.pref.getBoolean(KEY_CLASSICENABLED,    classicCheckBox.isSelected());
-        m_ruianModuleEnabled          = Main.pref.getBoolean(KEY_RUIANENABLED,      ruianCheckBox.isSelected());
-        m_ruianLandsModuleEnabled     = Main.pref.getBoolean(KEY_RUIANLANDSENABLED, ruianLandsCheckBox.isSelected());
-        m_lpisModuleEnabled           = Main.pref.getBoolean(KEY_LPISENABLED,       lpisCheckBox.isSelected());
+        for (String s : Main.pref.getCollection (KEY_MODULESAVAILABLE)) {
+          m_modulesAvailableModel.addElement(s);
+        }
+
+        for (String s : Main.pref.getCollection (KEY_MODULESENABLED)) {
+          m_modulesEnabledModel.addElement(s);
+        }
 
         // Tracer
-        m_customTracerUrl             = Main.pref.getBoolean(KEY_TRACERURL,         tracerUrlCheckBox.isSelected());
-        m_customTracerUrlText         = Main.pref.get       (KEY_TRACERURLVALUE,    tracerUrlValueField.getText());
-        m_tracerAdjustPosition        = Main.pref.getBoolean(KEY_TRACERADJUSTPOSITION,    tracerAdjustCheckBox.isSelected());
-        m_tracerAdjustPositionLatSign = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLATSIGN, tracerLatSignComboBox.getSelectedIndex());
-        m_tracerAdjustPositionLonSign = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLONSIGN, tracerLonSignComboBox.getSelectedIndex());
-        m_tracerAdjustPositionLatVal  = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLAT, (Integer) tracerAdjustLatSpinner.getValue());
-        m_tracerAdjustPositionLonVal  = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLON, (Integer) tracerAdjustLonSpinner.getValue());
+        m_customTracerUrl             = Main.pref.getBoolean(KEY_TRACERURL,         TracerUrlCheckBox.isSelected());
+        m_customTracerUrlText         = Main.pref.get       (KEY_TRACERURLVALUE,    TracerUrlValueField.getText());
+        m_tracerAdjustPosition        = Main.pref.getBoolean(KEY_TRACERADJUSTPOSITION,    TracerAdjustCheckBox.isSelected());
+        m_tracerAdjustPositionLatSign = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLATSIGN, TracerLatSignComboBox.getSelectedIndex());
+        m_tracerAdjustPositionLonSign = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLONSIGN, TracerLonSignComboBox.getSelectedIndex());
+        m_tracerAdjustPositionLatVal  = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLAT, (Integer) TracerAdjustLatSpinner.getValue());
+        m_tracerAdjustPositionLonVal  = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLON, (Integer) TracerAdjustLonSpinner.getValue());
         // RUIAN
-        m_customRuianUrl             = Main.pref.getBoolean(KEY_RUIANURL,          ruianUrlCheckBox.isSelected());
-        m_customRuianUrlText         = Main.pref.get       (KEY_RUIANURLVALUE,     ruianUrlValueField.getText());
-        m_ruianAdjustPosition        = Main.pref.getBoolean(KEY_RUIANADJUSTPOSITION,    ruianAdjustCheckBox.isSelected());
-        m_ruianAdjustPositionLatSign = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLATSIGN, ruianLatSignComboBox.getSelectedIndex());
-        m_ruianAdjustPositionLonSign = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLONSIGN, ruianLonSignComboBox.getSelectedIndex());
-        m_ruianAdjustPositionLatVal  = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLAT, (Integer) ruianAdjustLatSpinner.getValue());
-        m_ruianAdjustPositionLonVal  = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLON, (Integer) ruianAdjustLonSpinner.getValue());
+        m_customRuianUrl             = Main.pref.getBoolean(KEY_RUIANURL,          RuianUrlCheckBox.isSelected());
+        m_customRuianUrlText         = Main.pref.get       (KEY_RUIANURLVALUE,     RuianUrlValueField.getText());
+        m_ruianAdjustPosition        = Main.pref.getBoolean(KEY_RUIANADJUSTPOSITION,    RuianAdjustCheckBox.isSelected());
+        m_ruianAdjustPositionLatSign = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLATSIGN, RuianLatSignComboBox.getSelectedIndex());
+        m_ruianAdjustPositionLonSign = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLONSIGN, RuianLonSignComboBox.getSelectedIndex());
+        m_ruianAdjustPositionLatVal  = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLAT, (Integer) RuianAdjustLatSpinner.getValue());
+        m_ruianAdjustPositionLonVal  = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLON, (Integer) RuianAdjustLonSpinner.getValue());
         setLatLonAdjust();
     }
 
     public void reloadSettings() {
-        classicCheckBox.setSelected(m_classicModuleEnabled);
-        ruianCheckBox.setSelected(m_ruianModuleEnabled);
-        ruianLandsCheckBox.setSelected(m_ruianLandsModuleEnabled);
-        lpisCheckBox.setSelected(m_lpisModuleEnabled);
+        TracerUrlCheckBox.setSelected(m_customTracerUrl);
+        TracerUrlValueField.setText(m_customTracerUrlText);
 
-        tracerUrlCheckBox.setSelected(m_customTracerUrl);
-        tracerUrlValueField.setText(m_customTracerUrlText);
+        TracerAdjustCheckBox.setSelected(m_tracerAdjustPosition);
+        TracerAdjustLatSpinner.setValue(new Integer(m_tracerAdjustPositionLatVal));
+        TracerAdjustLonSpinner.setValue(new Integer(m_tracerAdjustPositionLonVal));
+        TracerLatSignComboBox.setSelectedIndex(m_tracerAdjustPositionLatSign);
+        TracerLonSignComboBox.setSelectedIndex(m_tracerAdjustPositionLonSign);
 
-        tracerAdjustCheckBox.setSelected(m_tracerAdjustPosition);
-        tracerAdjustLatSpinner.setValue(new Integer(m_tracerAdjustPositionLatVal));
-        tracerAdjustLonSpinner.setValue(new Integer(m_tracerAdjustPositionLonVal));
-        tracerLatSignComboBox.setSelectedIndex(m_tracerAdjustPositionLatSign);
-        tracerLonSignComboBox.setSelectedIndex(m_tracerAdjustPositionLonSign);
+        RuianUrlCheckBox.setSelected(m_customRuianUrl);
+        RuianUrlValueField.setText(m_customRuianUrlText);
 
-        ruianUrlCheckBox.setSelected(m_customRuianUrl);
-        ruianUrlValueField.setText(m_customRuianUrlText);
-
-        ruianAdjustCheckBox.setSelected(m_ruianAdjustPosition);
-        ruianAdjustLatSpinner.setValue(new Integer(m_ruianAdjustPositionLatVal));
-        ruianAdjustLonSpinner.setValue(new Integer(m_ruianAdjustPositionLonVal));
-        ruianLatSignComboBox.setSelectedIndex(m_ruianAdjustPositionLatSign);
-        ruianLonSignComboBox.setSelectedIndex(m_ruianAdjustPositionLonSign);
+        RuianAdjustCheckBox.setSelected(m_ruianAdjustPosition);
+        RuianAdjustLatSpinner.setValue(new Integer(m_ruianAdjustPositionLatVal));
+        RuianAdjustLonSpinner.setValue(new Integer(m_ruianAdjustPositionLonVal));
+        RuianLatSignComboBox.setSelectedIndex(m_ruianAdjustPositionLatSign);
+        RuianLonSignComboBox.setSelectedIndex(m_ruianAdjustPositionLonSign);
     }
 
     /** This method is called from within the constructor to
@@ -194,329 +205,447 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
 
         mainPanel = new javax.swing.JPanel();
 
-        jPanel1 = new javax.swing.JPanel();
-        enabledModulesLabel = new javax.swing.JLabel();
-        classicCheckBox = new javax.swing.JCheckBox();
-        ruianCheckBox = new javax.swing.JCheckBox();
-        ruianLandsCheckBox = new javax.swing.JCheckBox();
-        lpisCheckBox = new javax.swing.JCheckBox();
-        jSeparator2 = new javax.swing.JSeparator();
-        tracerUrlCheckBox = new javax.swing.JCheckBox();
-        tracerUrlValueField = new javax.swing.JTextField();
-        jSeparator1 = new javax.swing.JSeparator();
-        tracerAdjustLatSpinner = new javax.swing.JSpinner();
-        tracerAdjustLonSpinner = new javax.swing.JSpinner();
-        tracerLatSignComboBox = new javax.swing.JComboBox();
-        tracerLonSignComboBox = new javax.swing.JComboBox();
-        tracerLatZeroLabel = new javax.swing.JLabel();
-        tracerLonZeroLabel = new javax.swing.JLabel();
-        tracerLatLabel = new javax.swing.JLabel();
-        tracerAdjustCheckBox = new javax.swing.JCheckBox();
-        tracerLonLabel = new javax.swing.JLabel();
-        ruianUrlCheckBox = new javax.swing.JCheckBox();
-        ruianUrlValueField = new javax.swing.JTextField();
-        ruianAdjustCheckBox = new javax.swing.JCheckBox();
-        ruianLatLabel = new javax.swing.JLabel();
-        ruianLonLabel = new javax.swing.JLabel();
-        ruianLatZeroLabel = new javax.swing.JLabel();
-        ruianLonZeroLabel = new javax.swing.JLabel();
-        ruianLatSignComboBox = new javax.swing.JComboBox();
-        ruianLonSignComboBox = new javax.swing.JComboBox();
-        ruianAdjustLatSpinner = new javax.swing.JSpinner();
-        ruianAdjustLonSpinner = new javax.swing.JSpinner();
+        MainConfigPanel = new javax.swing.JPanel();
 
+        ModulesConfigPanel = new javax.swing.JPanel();
+        AvilableModulesLabel = new javax.swing.JLabel();
+        AvailableModulesList = new javax.swing.JList();
+        jScrollPane3 = new javax.swing.JScrollPane();
+        EnabledModulesLabel = new javax.swing.JLabel();
+        EnabledModulesList = new javax.swing.JList();
+        jScrollPane4 = new javax.swing.JScrollPane();
+
+        ModulesRightButton = new javax.swing.JButton();
+        ModulesLeftButton = new javax.swing.JButton();
+        ModulesUpButton = new javax.swing.JButton();
+        ModulesDownButton = new javax.swing.JButton();
+
+        TracerConfigPanel = new javax.swing.JPanel();
+        TracerUrlCheckBox = new javax.swing.JCheckBox();
+        TracerUrlValueField = new javax.swing.JTextField();
+        TracerAdjustCheckBox = new javax.swing.JCheckBox();
+        TracerLatLabel = new javax.swing.JLabel();
+        TracerLonLabel = new javax.swing.JLabel();
+        TracerLatSignComboBox = new javax.swing.JComboBox();
+        TracerLonSignComboBox = new javax.swing.JComboBox();
+        TracerLatZeroLabel = new javax.swing.JLabel();
+        TracerLonZeroLabel = new javax.swing.JLabel();
+        TracerAdjustLatSpinner = new javax.swing.JSpinner();
+        TracerAdjustLonSpinner = new javax.swing.JSpinner();
+
+        RuianConfigPanel = new javax.swing.JPanel();
+        RuianUrlCheckBox = new javax.swing.JCheckBox();
+        RuianUrlValueField = new javax.swing.JTextField();
+        RuianAdjustCheckBox = new javax.swing.JCheckBox();
+        RuianLonLabel = new javax.swing.JLabel();
+        RuianLatLabel = new javax.swing.JLabel();
+        RuianLatSignComboBox = new javax.swing.JComboBox();
+        RuianLonSignComboBox = new javax.swing.JComboBox();
+        RuianLatZeroLabel = new javax.swing.JLabel();
+        RuianLonZeroLabel = new javax.swing.JLabel();
+        RuianAdjustLatSpinner = new javax.swing.JSpinner();
+        RuianAdjustLonSpinner = new javax.swing.JSpinner();
+
+        ModulesConfigPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
 
         thisPanel.setLayout(new java.awt.GridLayout(1, 0));
 
-        // Enabled modules
-        enabledModulesLabel.setText(tr("Enabled modules:"));
+        // Modules selection
+        AvilableModulesLabel.setText(tr("Available modules:"));
 
-        classicCheckBox.setText(tr("Classic"));
+        m_modulesAvailableModel = new DefaultListModel();
+        AvailableModulesList.setModel(m_modulesAvailableModel);
+        jScrollPane3.setViewportView(AvailableModulesList);
 
-        ruianCheckBox.setSelected(true);
-        ruianCheckBox.setText(tr("RUIAN"));
+        AvailableModulesList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                AvailableModulesListValueChanged(evt);
+            }
+        });
 
-        ruianLandsCheckBox.setText(tr("RUIAN-Lands"));
+        ModulesRightButton.setText(">>");
+        ModulesRightButton.setEnabled(false);
+        ModulesRightButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ModulesRightButtonActionPerformed(evt);
+            }
+        });
 
-        lpisCheckBox.setText(tr("LPIS"));
+        ModulesLeftButton.setText("<<");
+        ModulesLeftButton.setEnabled(false);
+        ModulesLeftButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ModulesLeftButtonActionPerformed(evt);
+            }
+        });
 
-        enabledModulesLabel.getAccessibleContext().setAccessibleDescription(tr("Select modules available for switching"));
-        classicCheckBox.getAccessibleContext().setAccessibleDescription(tr("Use Classic (the original) tracer module"));
-        ruianCheckBox.getAccessibleContext().setAccessibleDescription(tr("Use RUIAN Tracer module"));
-        ruianLandsCheckBox.getAccessibleContext().setAccessibleDescription(tr("Use RUIAN Lands Tracer module"));
-        lpisCheckBox.getAccessibleContext().setAccessibleDescription(tr("Use LPIS Tracer module"));
+        ModulesUpButton.setText(tr("Up"));
+        ModulesUpButton.setEnabled(false);
+        ModulesUpButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ModulesUpButtonActionPerformed(evt);
+            }
+        });
+
+        ModulesDownButton.setText(tr("Down"));
+        ModulesDownButton.setEnabled(false);
+        ModulesDownButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ModulesDownButtonActionPerformed(evt);
+            }
+        });
+
+        EnabledModulesLabel.setText(tr("Enabled modules:"));
+
+        m_modulesEnabledModel = new DefaultListModel();
+        EnabledModulesList.setModel(m_modulesEnabledModel);
+        jScrollPane4.setViewportView(EnabledModulesList);
+
+        EnabledModulesList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+                EnabledModulesListValueChanged(evt);
+            }
+        });
+
+
+        javax.swing.GroupLayout ModulesConfigPanelLayout = new javax.swing.GroupLayout(ModulesConfigPanel);
+        ModulesConfigPanel.setLayout(ModulesConfigPanelLayout);
+        ModulesConfigPanelLayout.setHorizontalGroup(
+            ModulesConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(ModulesConfigPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(ModulesConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 126, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(AvilableModulesLabel))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(ModulesConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.CENTER)
+                    .addComponent(ModulesUpButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(ModulesDownButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(ModulesRightButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(ModulesLeftButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(14, 14, 14)
+                .addGroup(ModulesConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 132, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(EnabledModulesLabel))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        ModulesConfigPanelLayout.setVerticalGroup(
+            ModulesConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(ModulesConfigPanelLayout.createSequentialGroup()
+                .addGroup(ModulesConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(ModulesConfigPanelLayout.createSequentialGroup()
+                        .addGap(6, 6, 6)
+                        .addGroup(ModulesConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(AvilableModulesLabel)
+                            .addComponent(EnabledModulesLabel)))
+                    .addGroup(ModulesConfigPanelLayout.createSequentialGroup()
+                        .addGap(27, 27, 27)
+                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(ModulesConfigPanelLayout.createSequentialGroup()
+                        .addGap(27, 27, 27)
+                        .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 131, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(ModulesConfigPanelLayout.createSequentialGroup()
+                        .addGap(33, 33, 33)
+                        .addComponent(ModulesUpButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(ModulesRightButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(ModulesLeftButton)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(ModulesDownButton)))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
         // Tracer settins
-        tracerUrlCheckBox.setText(tr("Custom Classic Tracer server - requires TracerServer (.NET or Mono)"));
-        tracerUrlCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+        TracerConfigPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        TracerUrlCheckBox.setText(tr("Custom Classic Tracer server - requires TracerServer (.NET or Mono)"));
+        TracerUrlCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 tracerUrlChanged(evt);
             }
         });
 
-        tracerUrlValueField.setText("http://localhost:5050/");
-        tracerUrlValueField.setEnabled(false);
+        TracerUrlValueField.setText("http://localhost:5050/");
+        TracerUrlValueField.setEnabled(false);
 
 
-        tracerAdjustCheckBox.setText(tr("Adjust traced object position"));
-//         tracerAdjustCheckBox.setToolTipText("");
-        tracerAdjustCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+        TracerAdjustCheckBox.setText(tr("Adjust traced object position"));
+        TracerAdjustCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 tracerAdjustChanged(evt);
             }
         });
 
-        tracerLatLabel.setText(tr("Lat:"));
-        tracerLonLabel.setText(tr("Lon:"));
-        tracerLatZeroLabel.setText("0.0000");
-        tracerLonZeroLabel.setText("0.0000");
+        TracerLatLabel.setText(tr("Lat:"));
+        TracerLonLabel.setText(tr("Lon:"));
+        TracerLatZeroLabel.setText("0.0000");
+        TracerLonZeroLabel.setText("0.0000");
 
 
-        tracerLatSignComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "+", "-" }));
-        tracerLatSignComboBox.setSelectedIndex(0);
-        tracerLatSignComboBox.setEnabled(false);
+        TracerLatSignComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "+", "-" }));
+        TracerLatSignComboBox.setSelectedIndex(0);
+        TracerLatSignComboBox.setEnabled(false);
 
-        tracerLonSignComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "+", "-" }));
-        tracerLonSignComboBox.setSelectedIndex(0);
-        tracerLonSignComboBox.setEnabled(false);
+        TracerLonSignComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "+", "-" }));
+        TracerLonSignComboBox.setSelectedIndex(0);
+        TracerLonSignComboBox.setEnabled(false);
 
-        tracerAdjustLatSpinner.setModel(new javax.swing.SpinnerNumberModel(0, 0, 999, 1));
-        tracerAdjustLatSpinner.setToolTipText(tr("Set Lat adjustment. Interval <0;999>"));
-        tracerAdjustLatSpinner.setEnabled(false);
+        TracerAdjustLatSpinner.setModel(new javax.swing.SpinnerNumberModel(0, 0, 999, 1));
+        TracerAdjustLatSpinner.setToolTipText(tr("Set Lat adjustment. Interval <0;999>"));
+        TracerAdjustLatSpinner.setEnabled(false);
 
-        tracerAdjustLonSpinner.setModel(new javax.swing.SpinnerNumberModel(0, 0, 999, 1));
-        tracerAdjustLonSpinner.setToolTipText(tr("Set Lon adjustment. Interval <0;999>"));
-        tracerAdjustLonSpinner.setEnabled(false);
+        TracerAdjustLonSpinner.setModel(new javax.swing.SpinnerNumberModel(0, 0, 999, 1));
+        TracerAdjustLonSpinner.setToolTipText(tr("Set Lon adjustment. Interval <0;999>"));
+        TracerAdjustLonSpinner.setEnabled(false);
+
+        javax.swing.GroupLayout TracerConfigPanelLayout = new javax.swing.GroupLayout(TracerConfigPanel);
+        TracerConfigPanel.setLayout(TracerConfigPanelLayout);
+        TracerConfigPanelLayout.setHorizontalGroup(
+            TracerConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(TracerConfigPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(TracerConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(TracerUrlCheckBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(TracerConfigPanelLayout.createSequentialGroup()
+                        .addGroup(TracerConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(TracerAdjustCheckBox, javax.swing.GroupLayout.PREFERRED_SIZE, 384, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(TracerConfigPanelLayout.createSequentialGroup()
+                                .addGap(21, 21, 21)
+                                .addGroup(TracerConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(TracerLatLabel)
+                                    .addComponent(TracerLonLabel))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addGroup(TracerConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(TracerLatSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(TracerLonSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                .addGap(12, 12, 12)
+                                .addGroup(TracerConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(TracerConfigPanelLayout.createSequentialGroup()
+                                        .addComponent(TracerLonZeroLabel)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(TracerAdjustLonSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addGroup(TracerConfigPanelLayout.createSequentialGroup()
+                                        .addComponent(TracerLatZeroLabel)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(TracerAdjustLatSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                        .addGap(0, 21, Short.MAX_VALUE))
+                    .addGroup(TracerConfigPanelLayout.createSequentialGroup()
+                        .addGap(21, 21, 21)
+                        .addComponent(TracerUrlValueField)
+                        .addGap(3, 3, 3)))
+                .addContainerGap())
+        );
+        TracerConfigPanelLayout.setVerticalGroup(
+            TracerConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(TracerConfigPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(TracerUrlCheckBox)
+                .addGap(4, 4, 4)
+                .addComponent(TracerUrlValueField, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(TracerAdjustCheckBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(TracerConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(TracerConfigPanelLayout.createSequentialGroup()
+                        .addComponent(TracerLatLabel)
+                        .addGap(12, 12, 12)
+                        .addComponent(TracerLonLabel))
+                    .addGroup(TracerConfigPanelLayout.createSequentialGroup()
+                        .addGroup(TracerConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(TracerLatSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(TracerConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(TracerLatZeroLabel)
+                                .addComponent(TracerAdjustLatSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGroup(TracerConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(TracerConfigPanelLayout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TracerLonSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(TracerConfigPanelLayout.createSequentialGroup()
+                                .addGap(15, 15, 15)
+                                .addComponent(TracerLonZeroLabel))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, TracerConfigPanelLayout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TracerAdjustLonSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
         // RUIAN settins
-        ruianUrlCheckBox.setText(tr("Custom Ruian server url"));
-        ruianUrlCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+        RuianConfigPanel.setBorder(javax.swing.BorderFactory.createEtchedBorder());
+
+        RuianUrlCheckBox.setText(tr("Custom Ruian server url"));
+        RuianUrlCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 ruianUrlChanged(evt);
             }
         });
 
-        ruianUrlValueField.setText("http://josm.poloha.net/");
-        ruianUrlValueField.setEnabled(false);
+        RuianUrlValueField.setText("http://josm.poloha.net/");
+        RuianUrlValueField.setEnabled(false);
 
-        ruianAdjustCheckBox.setText(tr("Adjust traced object position"));
-//         ruianAdjustCheckBox.setToolTipText("");
-        ruianAdjustCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
+        RuianAdjustCheckBox.setText(tr("Adjust traced object position"));
+        RuianAdjustCheckBox.addChangeListener(new javax.swing.event.ChangeListener() {
             public void stateChanged(javax.swing.event.ChangeEvent evt) {
                 ruianAdjustChanged(evt);
             }
         });
 
-        ruianLatLabel.setText(tr("Lat:"));
-        ruianLonLabel.setText(tr("Lon:"));
-        ruianLatZeroLabel.setText("0.0000");
-        ruianLonZeroLabel.setText("0.0000");
+        RuianLatLabel.setText(tr("Lat:"));
+        RuianLonLabel.setText(tr("Lon:"));
+        RuianLatZeroLabel.setText("0.0000");
+        RuianLonZeroLabel.setText("0.0000");
 
-        ruianLatSignComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "+", "-" }));
-        ruianLatSignComboBox.setSelectedIndex(0);
-        ruianLatSignComboBox.setEnabled(false);
+        RuianLatSignComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "+", "-" }));
+        RuianLatSignComboBox.setSelectedIndex(0);
+        RuianLatSignComboBox.setEnabled(false);
 
-        ruianLonSignComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "+", "-" }));
-        ruianLonSignComboBox.setSelectedIndex(0);
-        ruianLonSignComboBox.setEnabled(false);
+        RuianLonSignComboBox.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "+", "-" }));
+        RuianLonSignComboBox.setSelectedIndex(0);
+        RuianLonSignComboBox.setEnabled(false);
 
-        ruianAdjustLatSpinner.setModel(new javax.swing.SpinnerNumberModel(0, 0, 999, 1));
-        ruianAdjustLatSpinner.setToolTipText(tr("Set Lat adjustment. Interval <0;999>"));
-        ruianAdjustLatSpinner.setEnabled(false);
+        RuianAdjustLatSpinner.setModel(new javax.swing.SpinnerNumberModel(0, 0, 999, 1));
+        RuianAdjustLatSpinner.setToolTipText(tr("Set Lat adjustment. Interval <0;999>"));
+        RuianAdjustLatSpinner.setEnabled(false);
 
-        ruianAdjustLonSpinner.setModel(new javax.swing.SpinnerNumberModel(0, 0, 999, 1));
-        ruianAdjustLonSpinner.setToolTipText(tr("Set Lon adjustment. Interval <0;999>"));
-        ruianAdjustLonSpinner.setEnabled(false);
+        RuianAdjustLonSpinner.setModel(new javax.swing.SpinnerNumberModel(0, 0, 999, 1));
+        RuianAdjustLonSpinner.setToolTipText(tr("Set Lon adjustment. Interval <0;999>"));
+        RuianAdjustLonSpinner.setEnabled(false);
 
-        // Border around modules selection
-        jPanel1.setBorder(javax.swing.BorderFactory.createEtchedBorder());
-
-        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
-        jPanel1.setLayout(jPanel1Layout);
-        jPanel1Layout.setHorizontalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(enabledModulesLabel)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(classicCheckBox)
-                        .addGap(34, 34, 34)
-                        .addComponent(ruianCheckBox)
-                        .addGap(34, 34, 34)
-                        .addComponent(ruianLandsCheckBox)
-                        .addGap(34, 34, 34)
-                        .addComponent(lpisCheckBox)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-        );
-        jPanel1Layout.setVerticalGroup(
-            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGap(6, 6, 6)
-                .addComponent(enabledModulesLabel)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(classicCheckBox)
-                    .addComponent(ruianCheckBox)
-                    .addComponent(ruianLandsCheckBox)
-                    .addComponent(lpisCheckBox))
-                .addGap(0, 7, Short.MAX_VALUE))
-        );
-
+        // ==============
         // Dialog Layout
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(mainPanel);
-        mainPanel.setLayout(layout);
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+        // ==============
+        javax.swing.GroupLayout RuianConfigPanelLayout = new javax.swing.GroupLayout(RuianConfigPanel);
+        RuianConfigPanel.setLayout(RuianConfigPanelLayout);
+        RuianConfigPanelLayout.setHorizontalGroup(
+            RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(RuianConfigPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(tracerUrlCheckBox, javax.swing.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE)
-                            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(tracerAdjustCheckBox, javax.swing.GroupLayout.PREFERRED_SIZE, 384, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(21, 21, 21)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(tracerLatLabel)
-                                    .addComponent(tracerLonLabel))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(tracerLatSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(tracerLonSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(12, 12, 12)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(tracerLonZeroLabel)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(tracerAdjustLonSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                    .addGroup(layout.createSequentialGroup()
-                                        .addComponent(tracerLatZeroLabel)
-                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(tracerAdjustLatSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                            .addComponent(ruianAdjustCheckBox)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(32, 32, 32)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(ruianLatLabel)
-                                    .addComponent(ruianLonLabel))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(ruianLatSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(ruianLonSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addGap(12, 12, 12)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(ruianLatZeroLabel)
-                                    .addComponent(ruianLonZeroLabel))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(ruianAdjustLatSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addComponent(ruianAdjustLonSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                        .addContainerGap(24, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addComponent(jSeparator1, javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(ruianUrlCheckBox, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 397, Short.MAX_VALUE)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(21, 21, 21)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(tracerUrlValueField)
-                                    .addComponent(ruianUrlValueField))))
-                        .addGap(0, 0, Short.MAX_VALUE))))
-        );
-        layout.setVerticalGroup(
-            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(tracerUrlCheckBox)
-                .addGap(4, 4, 4)
-                .addComponent(tracerUrlValueField, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(tracerAdjustCheckBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(tracerLatLabel)
+                .addGroup(RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(RuianAdjustCheckBox)
+                    .addGroup(RuianConfigPanelLayout.createSequentialGroup()
+                        .addGap(32, 32, 32)
+                        .addGroup(RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(RuianLatLabel)
+                            .addComponent(RuianLonLabel))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(RuianLatSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(RuianLonSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(12, 12, 12)
-                        .addComponent(tracerLonLabel))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(tracerLatSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                                .addComponent(tracerLatZeroLabel)
-                                .addComponent(tracerAdjustLatSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(tracerLonSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(15, 15, 15)
-                                .addComponent(tracerLonZeroLabel))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(tracerAdjustLonSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, 8, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(ruianUrlCheckBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(ruianUrlValueField, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(ruianAdjustCheckBox)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(ruianAdjustLatSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(4, 4, 4))
-                            .addComponent(ruianLatLabel))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(7, 7, 7)
-                                .addComponent(ruianAdjustLonSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(ruianLonLabel))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(ruianLatSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(ruianLatZeroLabel))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(ruianLonSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(15, 15, 15)
-                                .addComponent(ruianLonZeroLabel)))))
+                        .addGroup(RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(RuianLatZeroLabel)
+                            .addComponent(RuianLonZeroLabel))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(RuianAdjustLatSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(RuianAdjustLonSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(RuianUrlCheckBox, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 397, Short.MAX_VALUE)
+                        .addGroup(RuianConfigPanelLayout.createSequentialGroup()
+                            .addGap(21, 21, 21)
+                            .addComponent(RuianUrlValueField))))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
-        thisPanel.add(mainPanel);
+        RuianConfigPanelLayout.setVerticalGroup(
+            RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(RuianConfigPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(RuianUrlCheckBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(RuianUrlValueField, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(RuianAdjustCheckBox)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(RuianConfigPanelLayout.createSequentialGroup()
+                        .addGroup(RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(RuianConfigPanelLayout.createSequentialGroup()
+                                .addComponent(RuianAdjustLatSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(4, 4, 4))
+                            .addComponent(RuianLatLabel))
+                        .addGroup(RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(RuianConfigPanelLayout.createSequentialGroup()
+                                .addGap(7, 7, 7)
+                                .addComponent(RuianAdjustLonSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, RuianConfigPanelLayout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(RuianLonLabel))))
+                    .addGroup(RuianConfigPanelLayout.createSequentialGroup()
+                        .addGroup(RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(RuianLatSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(RuianLatZeroLabel))
+                        .addGroup(RuianConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(RuianConfigPanelLayout.createSequentialGroup()
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(RuianLonSignComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(RuianConfigPanelLayout.createSequentialGroup()
+                                .addGap(15, 15, 15)
+                                .addComponent(RuianLonZeroLabel)))))
+                .addContainerGap(25, Short.MAX_VALUE))
+        );
+
+        javax.swing.GroupLayout MainConfigPanelLayout = new javax.swing.GroupLayout(MainConfigPanel);
+        MainConfigPanel.setLayout(MainConfigPanelLayout);
+        MainConfigPanelLayout.setHorizontalGroup(
+            MainConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(MainConfigPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(MainConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(RuianConfigPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(TracerConfigPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ModulesConfigPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addContainerGap())
+        );
+        MainConfigPanelLayout.setVerticalGroup(
+            MainConfigPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(MainConfigPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(ModulesConfigPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(TracerConfigPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(RuianConfigPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+//         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(MainConfigPanel);
+//         this.setLayout(layout);
+//         layout.setHorizontalGroup(
+//             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//             .addGroup(layout.createSequentialGroup()
+//                 .addGap(0, 0, Short.MAX_VALUE)
+//                 .addComponent(MainConfigPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+//                 .addGap(0, 0, Short.MAX_VALUE))
+//         );
+//         layout.setVerticalGroup(
+//             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+//             .addGroup(layout.createSequentialGroup()
+//                 .addContainerGap()
+//                 .addComponent(MainConfigPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+//         );
+        thisPanel.add(MainConfigPanel);
     }
 
     private void tracerUrlChanged(javax.swing.event.ChangeEvent evt) {
-        tracerUrlValueField.setEnabled(tracerUrlCheckBox.isSelected());
+        TracerUrlValueField.setEnabled(TracerUrlCheckBox.isSelected());
     }
 
     private void ruianUrlChanged(javax.swing.event.ChangeEvent evt) {
-        ruianUrlValueField.setEnabled(ruianUrlCheckBox.isSelected());
+        RuianUrlValueField.setEnabled(RuianUrlCheckBox.isSelected());
     }
 
     private void tracerAdjustChanged(javax.swing.event.ChangeEvent evt) {
-        tracerAdjustLatSpinner.setEnabled(tracerAdjustCheckBox.isSelected());
-        tracerAdjustLonSpinner.setEnabled(tracerAdjustCheckBox.isSelected());
-        tracerLatSignComboBox.setEnabled(tracerAdjustCheckBox.isSelected());
-        tracerLonSignComboBox.setEnabled(tracerAdjustCheckBox.isSelected());
+        TracerAdjustLatSpinner.setEnabled(TracerAdjustCheckBox.isSelected());
+        TracerAdjustLonSpinner.setEnabled(TracerAdjustCheckBox.isSelected());
+        TracerLatSignComboBox.setEnabled(TracerAdjustCheckBox.isSelected());
+        TracerLonSignComboBox.setEnabled(TracerAdjustCheckBox.isSelected());
     }
 
     private void ruianAdjustChanged(javax.swing.event.ChangeEvent evt) {
-        ruianAdjustLatSpinner.setEnabled(ruianAdjustCheckBox.isSelected());
-        ruianAdjustLonSpinner.setEnabled(ruianAdjustCheckBox.isSelected());
-        ruianLatSignComboBox.setEnabled(ruianAdjustCheckBox.isSelected());
-        ruianLonSignComboBox.setEnabled(ruianAdjustCheckBox.isSelected());
+        RuianAdjustLatSpinner.setEnabled(RuianAdjustCheckBox.isSelected());
+        RuianAdjustLonSpinner.setEnabled(RuianAdjustCheckBox.isSelected());
+        RuianLatSignComboBox.setEnabled(RuianAdjustCheckBox.isSelected());
+        RuianLonSignComboBox.setEnabled(RuianAdjustCheckBox.isSelected());
     }
 
     private void setLatLonAdjust() {
@@ -546,69 +675,187 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
       }
     }
 
+    @SuppressWarnings("unchecked")
+    private void ModulesUpButtonActionPerformed(java.awt.event.ActionEvent evt) {
+      int currentIndex = EnabledModulesList.getSelectedIndex();
+      String currentValue = (String) EnabledModulesList.getSelectedValue();
+      m_modulesEnabledModel.add(currentIndex - 1, currentValue);
+      m_modulesEnabledModel.remove(currentIndex + 1);
+      EnabledModulesList.setSelectedIndex(currentIndex - 1);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void ModulesDownButtonActionPerformed(java.awt.event.ActionEvent evt) {
+      int currentIndex = EnabledModulesList.getSelectedIndex();
+      String currentValue = (String) EnabledModulesList.getSelectedValue();
+      m_modulesEnabledModel.remove(currentIndex);
+      m_modulesEnabledModel.add(currentIndex + 1, currentValue);
+      EnabledModulesList.setSelectedIndex(currentIndex + 1);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void ModulesLeftButtonActionPerformed(java.awt.event.ActionEvent evt) {
+      for (String s : (List<String>) EnabledModulesList.getSelectedValuesList()) {
+        m_modulesAvailableModel.addElement(s);
+        m_modulesEnabledModel.remove(m_modulesEnabledModel.indexOf(s));
+      }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void ModulesRightButtonActionPerformed(java.awt.event.ActionEvent evt) {
+      for (String s : (List<String>) AvailableModulesList.getSelectedValuesList()) {
+        m_modulesEnabledModel.addElement(s);
+        m_modulesAvailableModel.remove(m_modulesAvailableModel.indexOf(s));
+      }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void EnabledModulesListValueChanged(javax.swing.event.ListSelectionEvent evt) {
+      int cnt = EnabledModulesList.getSelectedIndices().length;
+      switch (cnt) {
+        case 0: ModulesLeftButton.setEnabled(false);
+                ModulesUpButton.setEnabled(false);
+                ModulesDownButton.setEnabled(false);
+                break;
+        case 1: ModulesLeftButton.setEnabled(true);
+                ModulesUpButton.setEnabled(true);
+                ModulesDownButton.setEnabled(true);
+                break;
+       default: ModulesLeftButton.setEnabled(true);
+                ModulesUpButton.setEnabled(false);
+                ModulesDownButton.setEnabled(false);
+                break;
+      }
+
+      if (cnt == 1) {
+        int selIndex = EnabledModulesList.getSelectedIndex();
+        if (selIndex == 0) {
+          ModulesUpButton.setEnabled(false);
+        } else if (selIndex == m_modulesEnabledModel.getSize() - 1) {
+          ModulesDownButton.setEnabled(false);
+        }
+      }
+    }
+
+    @SuppressWarnings("unchecked")
+    private void AvailableModulesListValueChanged(javax.swing.event.ListSelectionEvent evt) {
+      int cnt = AvailableModulesList.getSelectedIndices().length;
+      if (cnt > 0) {
+        ModulesRightButton.setEnabled(true);
+      } else {
+        ModulesRightButton.setEnabled(false);
+      }
+    }
+
+    /**
+     *  Sets Available modules
+     *  @param modules - List of strings to add
+     */
+    @SuppressWarnings("unchecked")
+    public void setAvailableModules(List<String> modules) {
+
+      // Clean up Enabled modules - remove not existing modules
+      for (int i = 0; i< m_modulesEnabledModel.getSize(); i++) {
+        if (modules.indexOf(m_modulesEnabledModel.get(i)) < 0) {
+          m_modulesEnabledModel.remove(i);
+        }
+      }
+
+      // Add remaining modules as Available
+      m_modulesAvailableModel.clear();
+      for (int i = 0; i < modules.size(); i++) {
+        String m = modules.get(i);
+        if (m_modulesEnabledModel.indexOf(m) < 0)
+          m_modulesAvailableModel.addElement(m);
+      }
+    }
+
+    /**
+     *  Return list of enabled modules
+     *  @return List of enabled modules
+     */
+    @SuppressWarnings("unchecked")
+    public List<String> getActiveModules() {
+      List<String> list = new LinkedList<String>();
+      for (Enumeration<String> e = m_modulesEnabledModel.elements(); e.hasMoreElements();) {
+        list.add(e.nextElement());
+      }
+      return list;
+    }
+
+    /**
+     *  Return whether is given module enabled
+     *  @return True if module is enabled
+     */
+    public boolean isModuleEnabled(String module) {
+      if (m_modulesEnabledModel.indexOf(module) >= 0) {
+        return true;
+      }
+      return false;
+    }
+
     public void addGui(PreferenceTabbedPane gui) {
-        createPreferenceTabWithScrollPane(gui, mainPanel);
-//         JPanel p = gui.createPreferenceTab(this);
-//         p.add(mainPanel);
+        createPreferenceTabWithScrollPane(gui, MainConfigPanel);
         reloadSettings();
     }
 
+    @SuppressWarnings("unchecked")
     public boolean ok() {
-        // Enabled modules
-        m_classicModuleEnabled = classicCheckBox.isSelected();
-        Main.pref.put(KEY_CLASSICENABLED, m_classicModuleEnabled);
+        // Modules
+        List<String> availableModules = new LinkedList<String>();
+        for (Enumeration<String> e = m_modulesAvailableModel.elements(); e.hasMoreElements();) {
+          availableModules.add(e.nextElement());
+        }
+        List<String> enabledModules =  new LinkedList<String>();
+        for (Enumeration<String> e = m_modulesEnabledModel.elements(); e.hasMoreElements();) {
+          enabledModules.add(e.nextElement());
+        }
 
-        m_ruianModuleEnabled = ruianCheckBox.isSelected();
-        Main.pref.put(KEY_RUIANENABLED, m_ruianModuleEnabled);
-
-        m_ruianLandsModuleEnabled = ruianLandsCheckBox.isSelected();
-        Main.pref.put(KEY_RUIANLANDSENABLED, m_ruianLandsModuleEnabled);
-
-        m_lpisModuleEnabled = lpisCheckBox.isSelected();
-        Main.pref.put(KEY_LPISENABLED, m_lpisModuleEnabled);
+        Main.pref.putCollection(KEY_MODULESAVAILABLE, availableModules);
+        Main.pref.putCollection(KEY_MODULESENABLED, enabledModules);
 
         // Tracer
-        m_customTracerUrl = tracerUrlCheckBox.isSelected();
+        m_customTracerUrl = TracerUrlCheckBox.isSelected();
         Main.pref.put(KEY_TRACERURL, m_customTracerUrl);
 
-        m_customTracerUrlText = tracerUrlValueField.getText();
+        m_customTracerUrlText = TracerUrlValueField.getText();
         Main.pref.put(KEY_TRACERURLVALUE, m_customTracerUrlText);
 
-        m_tracerAdjustPosition = tracerAdjustCheckBox.isSelected();
+        m_tracerAdjustPosition = TracerAdjustCheckBox.isSelected();
         Main.pref.put(KEY_TRACERADJUSTPOSITION, m_tracerAdjustPosition);
 
-        m_tracerAdjustPositionLatVal = (Integer) tracerAdjustLatSpinner.getValue();
+        m_tracerAdjustPositionLatVal = (Integer) TracerAdjustLatSpinner.getValue();
         Main.pref.put(KEY_TRACERADJUSTPOSITIONLAT, Integer.toString(m_tracerAdjustPositionLatVal));
 
-        m_tracerAdjustPositionLonVal = (Integer) tracerAdjustLonSpinner.getValue();
+        m_tracerAdjustPositionLonVal = (Integer) TracerAdjustLonSpinner.getValue();
         Main.pref.put(KEY_TRACERADJUSTPOSITIONLON, Integer.toString(m_tracerAdjustPositionLonVal));
 
-        m_tracerAdjustPositionLatSign = tracerLatSignComboBox.getSelectedIndex();
+        m_tracerAdjustPositionLatSign = TracerLatSignComboBox.getSelectedIndex();
         Main.pref.putInteger(KEY_TRACERADJUSTPOSITIONLATSIGN, m_tracerAdjustPositionLatSign);
 
-        m_tracerAdjustPositionLonSign = tracerLonSignComboBox.getSelectedIndex();
+        m_tracerAdjustPositionLonSign = TracerLonSignComboBox.getSelectedIndex();
         Main.pref.putInteger(KEY_TRACERADJUSTPOSITIONLONSIGN, m_tracerAdjustPositionLonSign);
 
         // RUIAN
-        m_customRuianUrl = ruianUrlCheckBox.isSelected();
+        m_customRuianUrl = RuianUrlCheckBox.isSelected();
         Main.pref.put(KEY_RUIANURL, m_customRuianUrl);
 
-        m_customRuianUrlText = ruianUrlValueField.getText();
+        m_customRuianUrlText = RuianUrlValueField.getText();
         Main.pref.put(KEY_RUIANURLVALUE, m_customRuianUrlText);
 
-        m_ruianAdjustPosition = ruianAdjustCheckBox.isSelected();
+        m_ruianAdjustPosition = RuianAdjustCheckBox.isSelected();
         Main.pref.put(KEY_RUIANADJUSTPOSITION, m_ruianAdjustPosition);
 
-        m_ruianAdjustPositionLatVal = (Integer) ruianAdjustLatSpinner.getValue();
+        m_ruianAdjustPositionLatVal = (Integer) RuianAdjustLatSpinner.getValue();
         Main.pref.put(KEY_RUIANADJUSTPOSITIONLAT, Integer.toString(m_ruianAdjustPositionLatVal));
 
-        m_ruianAdjustPositionLonVal = (Integer) ruianAdjustLonSpinner.getValue();
+        m_ruianAdjustPositionLonVal = (Integer) RuianAdjustLonSpinner.getValue();
         Main.pref.put(KEY_RUIANADJUSTPOSITIONLON, Integer.toString(m_ruianAdjustPositionLonVal));
 
-        m_ruianAdjustPositionLatSign = ruianLatSignComboBox.getSelectedIndex();
+        m_ruianAdjustPositionLatSign = RuianLatSignComboBox.getSelectedIndex();
         Main.pref.putInteger(KEY_RUIANADJUSTPOSITIONLATSIGN, m_ruianAdjustPositionLatSign);
 
-        m_ruianAdjustPositionLonSign = ruianLonSignComboBox.getSelectedIndex();
+        m_ruianAdjustPositionLonSign = RuianLonSignComboBox.getSelectedIndex();
         Main.pref.putInteger(KEY_RUIANADJUSTPOSITIONLONSIGN, m_ruianAdjustPositionLonSign);
 
         setLatLonAdjust();
