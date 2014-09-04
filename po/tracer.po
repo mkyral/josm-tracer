@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-08-08 22:50+0200\n"
+"POT-Creation-Date: 2014-09-03 22:51+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,139 +17,6 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:78
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:233
-msgid "LPIS"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:115
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:110
-msgid "Data not available."
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:188
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:964
-msgid "Trace object"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:189
-msgid "Tracer(LPIS): add an area"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:191
-#, java-format
-msgid " with {0} inner."
-msgid_plural " with {0} inners."
-msgstr[0] ""
-msgstr[1] ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:70
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:228
-msgid "Classic"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:130
-#, java-format
-msgid "Tracer: add a way with {0} point"
-msgid_plural "Tracer: add a way with {0} points"
-msgstr[0] ""
-msgstr[1] ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:132
-#, java-format
-msgid "Tracer: modify way to {0} point"
-msgid_plural "Tracer: modify way to {0} points"
-msgstr[0] ""
-msgstr[1] ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:74
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:231
-msgid "RUIAN"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:144
-msgid "Nothing changed."
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:156
-#, java-format
-msgid "Tracer(RUIAN): add a way with {0} point"
-msgid_plural "Tracer(RUIAN): add a way with {0} points"
-msgstr[0] ""
-msgstr[1] ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:158
-#, java-format
-msgid "Tracer(RUIAN): modify way to {0} point"
-msgid_plural "Tracer(RUIAN): modify way to {0} points"
-msgstr[0] ""
-msgstr[1] ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:131
-msgid "Tracer plugin settings"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:132
-msgid "Customize Tracer plugin behaviour"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:226
-msgid "Enabled modules:"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:235
-msgid "Select modules available for switching"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:236
-msgid "Use Classic (the original) tracer module"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:237
-msgid "Use RUIAN Tracer module"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:238
-msgid "Use LPIS Tracer module"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:241
-msgid "Custom Classic Tracer server - requires TracerServer (.NET or Mono)"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:252
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:293
-msgid "Adjust traced object position"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:260
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:301
-msgid "Lat:"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:261
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:302
-msgid "Lon:"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:275
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:315
-msgid "Set Lat adjustment. Interval <0;999>"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:279
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:319
-msgid "Set Lon adjustment. Interval <0;999>"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:283
-msgid "Custom Ruian server url"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerException.java:27
-msgid "An unknown error has occurred"
-msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
 msgid "Tracer"
@@ -184,22 +51,177 @@ msgstr ""
 msgid "Tracing"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:927
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:284
 msgid "Trace"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:934
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:292
 msgid "Remove Fully covered ways"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:941
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:300
 msgid "Connect to other ways"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:948
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:307
 msgid "Fix overlaped ways"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays.java:955
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:315
 msgid "Remove spare nodes"
 msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:323
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:219
+msgid "Trace object"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerException.java:27
+msgid "An unknown error has occurred"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:147
+msgid "Tracer plugin settings"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:148
+msgid "Customize Tracer plugin behaviour"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:254
+msgid "Available modules:"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:282
+msgid "Up"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:290
+msgid "Down"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:298
+msgid "Enabled modules:"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:362
+msgid "Custom Classic Tracer server - requires TracerServer (.NET or Mono)"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:373
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:486
+msgid "Adjust traced object position"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:380
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:493
+msgid "Lat:"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:381
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:494
+msgid "Lon:"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:395
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:507
+msgid "Set Lat adjustment. Interval <0;999>"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:399
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:511
+msgid "Set Lon adjustment. Interval <0;999>"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:476
+msgid "Custom Ruian server url"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:76
+msgid "RUIAN-Lands"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:112
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:115
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:110
+msgid "Data not available."
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:147
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:199
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:144
+msgid "Nothing changed."
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:159
+#, java-format
+msgid "Tracer(RUIAN-Lands): add a way with {0} point"
+msgid_plural "Tracer(RUIAN-Lands): add a way with {0} points"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:161
+#, java-format
+msgid "Tracer(RUIAN-Lands): modify way to {0} point"
+msgid_plural "Tracer(RUIAN-Lands): modify way to {0} points"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:70
+msgid "Classic"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:130
+#, java-format
+msgid "Tracer: add a way with {0} point"
+msgid_plural "Tracer: add a way with {0} points"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:132
+#, java-format
+msgid "Tracer: modify way to {0} point"
+msgid_plural "Tracer: modify way to {0} points"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:151
+msgid "Tracer: Not mapped value found: "
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:151
+msgid "Please report it to @talk-cz"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:78
+msgid "LPIS"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:210
+msgid "Tracer(LPIS): add an area"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:212
+#, java-format
+msgid " with {0} inner."
+msgid_plural " with {0} inners."
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:74
+msgid "RUIAN"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:156
+#, java-format
+msgid "Tracer(RUIAN): add a way with {0} point"
+msgid_plural "Tracer(RUIAN): add a way with {0} points"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:158
+#, java-format
+msgid "Tracer(RUIAN): modify way to {0} point"
+msgid_plural "Tracer(RUIAN): modify way to {0} points"
+msgstr[0] ""
+msgstr[1] ""
