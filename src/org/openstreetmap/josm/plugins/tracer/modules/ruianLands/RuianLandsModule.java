@@ -23,15 +23,19 @@ import java.awt.Cursor;
 import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
+
+import javax.swing.JOptionPane;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
 import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
+import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
@@ -39,6 +43,7 @@ import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.Notification;
+import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
@@ -114,6 +119,7 @@ class RuianLandsModule implements TracerModule {
             }
 
             // make nodes a way
+            List<Bounds> dsBounds = Main.main.getCurrentDataSet().getDataSourceBounds();
             Way way = new Way();
             Node firstNode = null;
             // record.getCoorCount() - 1 - ommit last node
@@ -128,6 +134,23 @@ class RuianLandsModule implements TracerModule {
                 }
                 if (firstNode == null) {
                     firstNode = node;
+                }
+                // Check. whether traced node is inside downloaded area
+                int insideCnt = 0;
+                for (Bounds b: dsBounds) {
+                  if (b.contains(node.getCoor())) {
+                    insideCnt++;
+                  }
+                }
+                if (insideCnt == 0) {
+                  ExtendedDialog ed = new ExtendedDialog(
+                          Main.parent, tr("Way is outside downloaded area"),
+                          new String[] {tr("Ok")});
+                  ed.setButtonIcons(new String[] {"ok"});
+                  ed.setIcon(JOptionPane.ERROR_MESSAGE);
+                  ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
+                  ed.showDialog();
+                  return;
                 }
                 commands.add(new AddCommand(node));
                 way.addNode(node);

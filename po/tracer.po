@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-03 22:51+0200\n"
+"POT-Creation-Date: 2014-09-04 22:42+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -72,7 +72,7 @@ msgid "Remove spare nodes"
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:323
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:219
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:242
 msgid "Trace object"
 msgstr ""
 
@@ -137,48 +137,72 @@ msgstr ""
 msgid "Custom Ruian server url"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:76
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:81
 msgid "RUIAN-Lands"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:112
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:115
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:110
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:117
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:120
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:114
 msgid "Data not available."
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:147
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:199
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:132
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:152
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:144
+msgid "Way is outside downloaded area"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:148
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:133
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:153
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:145
+msgid "Ok"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:151
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:136
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:156
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:148
+msgid ""
+"Sorry.\n"
+"The traced way (or part of the way) is outside of the downloaded area.\n"
+"Please download area around the way and try again."
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:170
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:222
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:166
 msgid "Nothing changed."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:159
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:182
 #, java-format
 msgid "Tracer(RUIAN-Lands): add a way with {0} point"
 msgid_plural "Tracer(RUIAN-Lands): add a way with {0} points"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:161
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:184
 #, java-format
 msgid "Tracer(RUIAN-Lands): modify way to {0} point"
 msgid_plural "Tracer(RUIAN-Lands): modify way to {0} points"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:70
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:75
 msgid "Classic"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:130
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:153
 #, java-format
 msgid "Tracer: add a way with {0} point"
 msgid_plural "Tracer: add a way with {0} points"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:132
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:155
 #, java-format
 msgid "Tracer: modify way to {0} point"
 msgid_plural "Tracer: modify way to {0} points"
@@ -193,33 +217,33 @@ msgstr ""
 msgid "Please report it to @talk-cz"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:78
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:83
 msgid "LPIS"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:210
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:233
 msgid "Tracer(LPIS): add an area"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:212
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:235
 #, java-format
 msgid " with {0} inner."
 msgid_plural " with {0} inners."
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:74
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:78
 msgid "RUIAN"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:156
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:178
 #, java-format
 msgid "Tracer(RUIAN): add a way with {0} point"
 msgid_plural "Tracer(RUIAN): add a way with {0} points"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:158
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:180
 #, java-format
 msgid "Tracer(RUIAN): modify way to {0} point"
 msgid_plural "Tracer(RUIAN): modify way to {0} points"
