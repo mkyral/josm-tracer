@@ -307,14 +307,14 @@ public class ConnectWays {
           cmds.add(new SequenceCommand(tr("Fix overlaped ways"), xcmds));
         }
 
-        if (wayType == BUILDING) {
-          debugMsg("");
-          debugMsg("-----------------------------------------");
-          xcmds = new LinkedList<Command>(removeSpareNodes());
-          if (xcmds.size() > 0) {
-            cmds.add(new SequenceCommand(tr("Remove spare nodes"), xcmds));
-          }
-        }
+//         if (wayType == BUILDING) {
+//           debugMsg("");
+//           debugMsg("-----------------------------------------");
+//           xcmds = new LinkedList<Command>(removeSpareNodes());
+//           if (xcmds.size() > 0) {
+//             cmds.add(new SequenceCommand(tr("Remove spare nodes"), xcmds));
+//           }
+//         }
 
         debugMsg("-----------------------------------------");
 
