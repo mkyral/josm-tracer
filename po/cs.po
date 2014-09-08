@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-04 22:42+0200\n"
-"PO-Revision-Date: 2014-09-04 22:43+0200\n"
+"POT-Creation-Date: 2014-09-08 19:36+0200\n"
+"PO-Revision-Date: 2014-09-08 19:37+0200\n"
 "Last-Translator: Marian Kyral <mkyral@email.cz>\n"
 "Language-Team: Czech <kde-i18n-doc@kde.org>\n"
 "Language: cs\n"
@@ -17,69 +17,149 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Lokalize 1.5\n"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
-msgid "Tracer"
-msgstr "Trasovač"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
-msgid "Tracer."
-msgstr "Trasovač."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
-#, java-format
-msgid "Tool: {0}"
-msgstr "Nástroje: {0}"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:74
-msgid ""
-"Tracer: No active module found!\n"
-"Please enable some in configuration."
-msgstr ""
-"Trasovač: Žádný aktivní modul nebyl nalezen!\n"
-"Povolte prosím nějaký v konfiguraci."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:83
-#, java-format
-msgid "Tracer: Module {0} activated."
-msgstr "Trasovač: Modul {0} byl aktivován."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:114
-#, java-format
-msgid "Tracer: Switched to {0} module."
-msgstr "Trasovač: Přepnuto na modul {0}."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:131
-msgid "Tracing"
-msgstr "Trasuji"
-
 #: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:284
 msgid "Trace"
 msgstr "Trasovač"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:292
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:293
 msgid "Remove Fully covered ways"
 msgstr "Odstranění pohlcených ploch"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:300
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:301
 msgid "Connect to other ways"
 msgstr "Připojení na ostatní cesty"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:307
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:308
 msgid "Fix overlaped ways"
 msgstr "Oprava překrývajících se cest"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:315
-msgid "Remove spare nodes"
-msgstr "Odstranění nadbytečných uzlů"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:323
+#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:325
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:242
 msgid "Trace object"
 msgstr "Trasování objektu"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerException.java:27
-msgid "An unknown error has occurred"
-msgstr "Vyskytla se neznámá chyba"
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:83
+msgid "LPIS"
+msgstr "LPIS"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:120
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:117
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:114
+msgid "Data not available."
+msgstr "Data nejsou dostupná."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:152
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:132
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:147
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:144
+msgid "Way is outside downloaded area"
+msgstr "Cesta je mimo staženou oblast"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:153
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:133
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:148
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:145
+msgid "Ok"
+msgstr "Ok"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:156
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:136
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:151
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:148
+msgid ""
+"Sorry.\n"
+"The traced way (or part of the way) is outside of the downloaded area.\n"
+"Please download area around the way and try again."
+msgstr ""
+"Lituji\n"
+"Získaná cesta (nebo její část) je mimo staženou oblast.\n"
+"Stáhněte prosím oblast okolo cesty a zkuste to znovu."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:222
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:170
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:166
+msgid "Nothing changed."
+msgstr "Beze změny."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:233
+msgid "Tracer(LPIS): add an area"
+msgstr "Trasovač(LPIS): přidána plocha"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:235
+#, java-format
+msgid " with {0} inner."
+msgid_plural " with {0} inners."
+msgstr[0] " obsahující {0} vnitřní člen."
+msgstr[1] " obsahující {0} vnitřní členy."
+msgstr[2] " obsahující {0} vnitřních členů."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:151
+msgid "Tracer: Not mapped value found: "
+msgstr "Tracer: Chybí mapování pro: "
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:151
+msgid "Please report it to @talk-cz"
+msgstr "Zašlete prosím zprávu na @talk-cz"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:75
+msgid "Classic"
+msgstr "Klasický"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:153
+#, java-format
+msgid "Tracer: add a way with {0} point"
+msgid_plural "Tracer: add a way with {0} points"
+msgstr[0] "Trasovač: přidána cesta tvořená {0} bodem"
+msgstr[1] "Trasovač: přidána cesta tvořená {0} body"
+msgstr[2] "Trasovač: přidána cesta tvořená {0} body"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:155
+#, java-format
+msgid "Tracer: modify way to {0} point"
+msgid_plural "Tracer: modify way to {0} points"
+msgstr[0] "Trasovač: cesta upravena na {0} bod"
+msgstr[1] "Trasovač: cesta upravena na {0} body"
+msgstr[2] "Trasovač: cesta upravena na {0} bodů"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:81
+msgid "RUIAN-Lands"
+msgstr "RUIAN-Parcely"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:182
+#, java-format
+msgid "Tracer(RUIAN-Lands): add a way with {0} point"
+msgid_plural "Tracer(RUIAN-Lands): add a way with {0} points"
+msgstr[0] "Trasovač(RUIAN-Parcely): přidána cesta tvořená {0} bodem"
+msgstr[1] "Trasovač(RUIAN-Parcely): přidána cesta tvořená {0} body"
+msgstr[2] "Trasovač(RUIAN)-Parcely: přidána cesta tvořená {0} body"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:184
+#, java-format
+msgid "Tracer(RUIAN-Lands): modify way to {0} point"
+msgid_plural "Tracer(RUIAN-Lands): modify way to {0} points"
+msgstr[0] "Trasovač(RUIAN-Parcely): cesta upravena na {0} bod"
+msgstr[1] "Trasovač(RUIAN-Parcely): cesta upravena na {0} body"
+msgstr[2] "Trasovač(RUIAN-Parcely): cesta upravena na {0} bodů"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:78
+msgid "RUIAN"
+msgstr "RUIAN"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:178
+#, java-format
+msgid "Tracer(RUIAN): add a way with {0} point"
+msgid_plural "Tracer(RUIAN): add a way with {0} points"
+msgstr[0] "Trasovač(RUIAN): přidána cesta tvořená {0} bodem"
+msgstr[1] "Trasovač(RUIAN): přidána cesta tvořená {0} body"
+msgstr[2] "Trasovač(RUIAN): přidána cesta tvořená {0} body"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:180
+#, java-format
+msgid "Tracer(RUIAN): modify way to {0} point"
+msgid_plural "Tracer(RUIAN): modify way to {0} points"
+msgstr[0] "Trasovač(RUIAN): cesta upravena na {0} bod"
+msgstr[1] "Trasovač(RUIAN): cesta upravena na {0} body"
+msgstr[2] "Trasovač(RUIAN): cesta upravena na {0} bodů"
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:147
 msgid "Tracer plugin settings"
@@ -140,128 +220,47 @@ msgstr "Nastavte posun pro Lon. Rozmezí <0-999>"
 msgid "Custom Ruian server url"
 msgstr "Vlastní url RUIAN serveru"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:81
-msgid "RUIAN-Lands"
-msgstr "RUIAN-Parcely"
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerException.java:27
+msgid "An unknown error has occurred"
+msgstr "Vyskytla se neznámá chyba"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:117
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:120
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:114
-msgid "Data not available."
-msgstr "Data nejsou dostupná."
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
+msgid "Tracer"
+msgstr "Trasovač"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:147
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:132
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:152
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:144
-msgid "Way is outside downloaded area"
-msgstr "Cesta je mimo staženou oblast"
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
+msgid "Tracer."
+msgstr "Trasovač."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:148
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:133
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:153
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:145
-msgid "Ok"
-msgstr "Ok"
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
+#, java-format
+msgid "Tool: {0}"
+msgstr "Nástroje: {0}"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:151
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:136
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:156
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:148
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:74
 msgid ""
-"Sorry.\n"
-"The traced way (or part of the way) is outside of the downloaded area.\n"
-"Please download area around the way and try again."
+"Tracer: No active module found!\n"
+"Please enable some in configuration."
 msgstr ""
-"Litujeme.\n"
-"Získaná cesta (nebo její část) je mimo staženou oblast.\n"
-"Stáhněte prosím oblast okolo cesty a zkuste to znovu."
+"Trasovač: Žádný aktivní modul nebyl nalezen!\n"
+"Povolte prosím nějaký v konfiguraci."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:170
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:222
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:166
-msgid "Nothing changed."
-msgstr "Beze změny."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:182
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:83
 #, java-format
-msgid "Tracer(RUIAN-Lands): add a way with {0} point"
-msgid_plural "Tracer(RUIAN-Lands): add a way with {0} points"
-msgstr[0] "Trasovač(RUIAN-Parcely): přidána cesta tvořená {0} bodem"
-msgstr[1] "Trasovač(RUIAN-Parcely): přidána cesta tvořená {0} body"
-msgstr[2] "Trasovač(RUIAN)-Parcely: přidána cesta tvořená {0} body"
+msgid "Tracer: Module {0} activated."
+msgstr "Trasovač: Modul {0} byl aktivován."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:184
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:114
 #, java-format
-msgid "Tracer(RUIAN-Lands): modify way to {0} point"
-msgid_plural "Tracer(RUIAN-Lands): modify way to {0} points"
-msgstr[0] "Trasovač(RUIAN-Parcely): cesta upravena na {0} bod"
-msgstr[1] "Trasovač(RUIAN-Parcely): cesta upravena na {0} body"
-msgstr[2] "Trasovač(RUIAN-Parcely): cesta upravena na {0} bodů"
+msgid "Tracer: Switched to {0} module."
+msgstr "Trasovač: Přepnuto na modul {0}."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:75
-msgid "Classic"
-msgstr "Klasický"
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:131
+msgid "Tracing"
+msgstr "Trasuji"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:153
-#, java-format
-msgid "Tracer: add a way with {0} point"
-msgid_plural "Tracer: add a way with {0} points"
-msgstr[0] "Trasovač: přidána cesta tvořená {0} bodem"
-msgstr[1] "Trasovač: přidána cesta tvořená {0} body"
-msgstr[2] "Trasovač: přidána cesta tvořená {0} body"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:155
-#, java-format
-msgid "Tracer: modify way to {0} point"
-msgid_plural "Tracer: modify way to {0} points"
-msgstr[0] "Trasovač: cesta upravena na {0} bod"
-msgstr[1] "Trasovač: cesta upravena na {0} body"
-msgstr[2] "Trasovač: cesta upravena na {0} bodů"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:151
-msgid "Tracer: Not mapped value found: "
-msgstr "Tracer: Chybí mapování pro: "
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:151
-msgid "Please report it to @talk-cz"
-msgstr "Zašlete prosím zprávu na @talk-cz"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:83
-msgid "LPIS"
-msgstr "LPIS"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:233
-msgid "Tracer(LPIS): add an area"
-msgstr "Trasovač(LPIS): přidána plocha"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:235
-#, java-format
-msgid " with {0} inner."
-msgid_plural " with {0} inners."
-msgstr[0] " obsahující {0} vnitřní člen."
-msgstr[1] " obsahující {0} vnitřní členy."
-msgstr[2] " obsahující {0} vnitřních členů."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:78
-msgid "RUIAN"
-msgstr "RUIAN"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:178
-#, java-format
-msgid "Tracer(RUIAN): add a way with {0} point"
-msgid_plural "Tracer(RUIAN): add a way with {0} points"
-msgstr[0] "Trasovač(RUIAN): přidána cesta tvořená {0} bodem"
-msgstr[1] "Trasovač(RUIAN): přidána cesta tvořená {0} body"
-msgstr[2] "Trasovač(RUIAN): přidána cesta tvořená {0} body"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:180
-#, java-format
-msgid "Tracer(RUIAN): modify way to {0} point"
-msgid_plural "Tracer(RUIAN): modify way to {0} points"
-msgstr[0] "Trasovač(RUIAN): cesta upravena na {0} bod"
-msgstr[1] "Trasovač(RUIAN): cesta upravena na {0} body"
-msgstr[2] "Trasovač(RUIAN): cesta upravena na {0} bodů"
+#~ msgid "Remove spare nodes"
+#~ msgstr "Odstranění nadbytečných uzlů"
 
 #~ msgid "Select modules available for switching"
 #~ msgstr "Vyberte moduly pro přepínání"
