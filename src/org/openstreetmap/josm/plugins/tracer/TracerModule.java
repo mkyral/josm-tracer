@@ -64,6 +64,6 @@ public interface TracerModule {
      *  @param pos position to trase
      *  @param progressMonitor - the progressMonitor object
      */
-    void trace(LatLon pos, ProgressMonitor progressMonitor);
+    void trace(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor);
 }
 

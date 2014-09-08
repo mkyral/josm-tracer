@@ -56,9 +56,6 @@ class LpisModule implements TracerModule  {
     private static final long serialVersionUID = 1L;
 
     protected boolean cancel;
-    private boolean ctrl;
-    private boolean alt;
-    private boolean shift;
     private boolean moduleEnabled;
     private String  source = "lpis";
     private static  LpisRecord record;
@@ -91,7 +88,7 @@ class LpisModule implements TracerModule  {
       moduleEnabled = enabled;
     };
 
-    public void trace(LatLon pos, ProgressMonitor progressMonitor) {
+    public void trace(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor) {
         Collection<Command> commands = new LinkedList<Command>();
         TracerPreferences pref = TracerPreferences.getInstance();
 

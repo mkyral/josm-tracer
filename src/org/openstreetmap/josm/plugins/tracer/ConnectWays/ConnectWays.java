@@ -106,7 +106,7 @@ public class ConnectWays {
      * Try connect way to other way with the same key.
      * @param newWay The traced way that should replace the old way and connect to neighbour ways.
      * @param pos Position where way was traced
-     * @param ctrl Obsolete - Original meaning: Dont't connect to neighbour ways.
+     * @param ctrl Dont't connect to neighbour ways.
      * @param alt Obsolete - Original meaning: Dont't add building tag.
      * @param source The content of the source tag to be added.
      * @return Commands.
@@ -120,7 +120,7 @@ public class ConnectWays {
      * @param newWay The traced way that should replace the old way and connect to neighbour ways.
      * @param wayRelation Relation which way is outer member
      * @param pos Position where way was traced
-     * @param ctrl Obsolete - Original meaning: Dont't connect to neighbour ways.
+     * @param ctrl Dont't connect to neighbour ways.
      * @param alt Obsolete - Original meaning: Dont't add building tag.
      * @param source The content of the source tag to be added.
      * @return Commands.
@@ -283,38 +283,40 @@ public class ConnectWays {
 
         cmds.add(new SequenceCommand(tr("Trace"), xcmds));
 
-        // Modify the way
-         if (wayType == BUILDING) {
+        if (! ctrl) {
+          // Modify the way
+          if (wayType == BUILDING) {
+            debugMsg("");
+            debugMsg("-----------------------------------------");
+            xcmds = new LinkedList<Command>(removeFullyCoveredWays());
+            if (xcmds.size() > 0) {
+              cmds.add(new SequenceCommand(tr("Remove Fully covered ways"), xcmds));
+            }
+          }
+
           debugMsg("");
           debugMsg("-----------------------------------------");
-          xcmds = new LinkedList<Command>(removeFullyCoveredWays());
+          xcmds = new LinkedList<Command>(mergeWithExistingNodes());
           if (xcmds.size() > 0) {
-            cmds.add(new SequenceCommand(tr("Remove Fully covered ways"), xcmds));
+            cmds.add(new SequenceCommand(tr("Connect to other ways"), xcmds));
           }
-         }
 
-        debugMsg("");
-        debugMsg("-----------------------------------------");
-        xcmds = new LinkedList<Command>(mergeWithExistingNodes());
-        if (xcmds.size() > 0) {
-          cmds.add(new SequenceCommand(tr("Connect to other ways"), xcmds));
+          debugMsg("");
+          debugMsg("-----------------------------------------");
+          xcmds = new LinkedList<Command>(fixOverlapedWays());
+          if (xcmds.size() > 0) {
+            cmds.add(new SequenceCommand(tr("Fix overlaped ways"), xcmds));
+          }
+
+  //         if (wayType == BUILDING) {
+  //           debugMsg("");
+  //           debugMsg("-----------------------------------------");
+  //           xcmds = new LinkedList<Command>(removeSpareNodes());
+  //           if (xcmds.size() > 0) {
+  //             cmds.add(new SequenceCommand(tr("Remove spare nodes"), xcmds));
+  //           }
+  //         }
         }
-
-        debugMsg("");
-        debugMsg("-----------------------------------------");
-        xcmds = new LinkedList<Command>(fixOverlapedWays());
-        if (xcmds.size() > 0) {
-          cmds.add(new SequenceCommand(tr("Fix overlaped ways"), xcmds));
-        }
-
-//         if (wayType == BUILDING) {
-//           debugMsg("");
-//           debugMsg("-----------------------------------------");
-//           xcmds = new LinkedList<Command>(removeSpareNodes());
-//           if (xcmds.size() > 0) {
-//             cmds.add(new SequenceCommand(tr("Remove spare nodes"), xcmds));
-//           }
-//         }
 
         debugMsg("-----------------------------------------");
 

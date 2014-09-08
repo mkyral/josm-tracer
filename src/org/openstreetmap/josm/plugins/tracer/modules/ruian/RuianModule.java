@@ -86,7 +86,7 @@ class RuianModule implements TracerModule {
       moduleEnabled = enabled;
     };
 
-    public void trace(LatLon pos, ProgressMonitor progressMonitor) {
+    public void trace(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor) {
         Collection<Command> commands = new LinkedList<Command>();
         TracerPreferences pref = TracerPreferences.getInstance();
 

@@ -132,7 +132,7 @@ class TracerAction extends MapMode implements MouseListener, KeyListener{
 
                 @Override
                 protected void realRun() throws SAXException {
-                    m_modules.getActiveModule().trace(pos, progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
+                    m_modules.getActiveModule().trace(pos, ctrl, alt, shift, progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
                 }
 
                 @Override
