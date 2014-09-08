@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="Tracer-testing" default="dist" basedir=".">
+    <!-- enter the SVN commit message -->
+    <property name="commit.message" value="Added RUIAN support. Added ability to modify existing way from Tracer2 plugin"/>
+    <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
+    <property name="plugin.main.version" value="7001"/>
+
+    <property name="plugin.author" value="Jan Bilak, Petr Dlouhý, Marián Kyral"/>
+    <property name="plugin.class" value="org.openstreetmap.josm.plugins.tracer.TracerPlugin"/>
+    <property name="plugin.description" value="This is an testing version of the improved original Tracer plugin developed at https://github.com/mkyral/josm-tracer"/>
+    <property name="plugin.icon" value="images/mapmode/tracer-sml.png"/>
+    <property name="plugin.link" value="http://wiki.openstreetmap.org/wiki/JOSM/Plugins/Tracer"/>
+    <property name="plugin.requires" value="jts;geotools"/>
+
+    <!-- ** include targets that all plugins have in common ** -->
+    <import file="../build-common.xml"/>
+
+    <property name="jts" location="${plugin.dist.dir}/jts.jar"/>
+    <property name="geotools" location="${plugin.dist.dir}/geotools.jar"/>
+
+    <!--
+    **********************************************************
+    ** compile - compiles the source tree
+    **********************************************************
+    -->
+    <target name="compile" depends="init">
+        <echo message="compiling sources for  ${plugin.jar} ... "/>
+        <javac srcdir="src" debug="true" destdir="${plugin.build.dir}" includeAntRuntime="false" encoding="UTF-8">
+            <classpath>
+                    <pathelement path="${plugin.build.dir}"/>
+                <pathelement location="${josm}"/>
+                <pathelement location="${jts}"/>
+                <pathelement location="${geotools}"/>
+            </classpath>
+            <compilerarg value="-Xlint:deprecation"/>
+            <compilerarg value="-Xlint:unchecked"/>
+        </javac>
+    </target>
+
+</project>
