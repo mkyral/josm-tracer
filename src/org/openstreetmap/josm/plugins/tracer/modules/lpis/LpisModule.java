@@ -53,14 +53,15 @@ import org.xml.sax.SAXException;
 
 class LpisModule implements TracerModule  {
 
-    private static final long serialVersionUID = 1L;
+    private final long serialVersionUID = 1L;
 
     protected boolean cancel;
     private boolean moduleEnabled;
     private String  source = "lpis";
-    private static  LpisRecord record;
+    private LpisRecord record;
 
-    private static StringBuilder msg = new StringBuilder();
+    private StringBuilder msg = new StringBuilder();
+    private ConnectWays connectWays = new ConnectWays();
 
     protected LpisServer server = new LpisServer();
 
@@ -208,9 +209,9 @@ class LpisModule implements TracerModule  {
             // connect to other landuse or modify existing landuse
             Command connCmd;
             if (record.hasInners()) {
-              connCmd = ConnectWays.connect(outer, rel, pos, ctrl, alt, source);
+              connCmd = connectWays.connect(outer, rel, pos, ctrl, alt, source);
             } else {
-              connCmd = ConnectWays.connect(outer, pos, ctrl, alt, source);
+              connCmd = connectWays.connect(outer, pos, ctrl, alt, source);
             }
 
             String s[] = connCmd.getDescriptionText().split(": ");
@@ -239,9 +240,9 @@ class LpisModule implements TracerModule  {
                   Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
 
                   if (shift) {
-                    Main.main.getCurrentDataSet().addSelected(record.hasInners()?rel:ConnectWays.getWay());
+                    Main.main.getCurrentDataSet().addSelected(record.hasInners()?rel:connectWays.getWay());
                   } else {
-                    Main.main.getCurrentDataSet().setSelected(record.hasInners()?rel:ConnectWays.getWay());
+                    Main.main.getCurrentDataSet().setSelected(record.hasInners()?rel:connectWays.getWay());
                   }
                 } else {
                     System.out.println("Failed");

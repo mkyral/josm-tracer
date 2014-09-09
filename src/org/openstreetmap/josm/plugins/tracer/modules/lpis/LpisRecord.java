@@ -54,8 +54,8 @@ import org.w3c.dom.NodeList;
  */
 
 class geom {
-  private static ArrayList <LatLon> m_outer;
-  private static ArrayList <ArrayList<LatLon>> m_inners = new ArrayList<ArrayList<LatLon>>();
+  private ArrayList <LatLon> m_outer;
+  private ArrayList <ArrayList<LatLon>> m_inners = new ArrayList<ArrayList<LatLon>>();
 
   public void setOuter (ArrayList <LatLon> o) {
     m_outer = o;
@@ -96,10 +96,10 @@ class geom {
 
 public class LpisRecord {
 
-    private static long     m_lpis_id;
-    private static geom     m_geometry;
-    private static String   m_usage;
-    private static Map <String, String> m_usageOsm;
+    private long     m_lpis_id;
+    private geom     m_geometry;
+    private String   m_usage;
+    private Map <String, String> m_usageOsm;
 
 
     /**
@@ -114,7 +114,7 @@ public class LpisRecord {
     * Initialization
     *
     */
-    public static void init () {
+    public void init () {
 
       m_lpis_id = -1;
       m_usage = "";
@@ -124,7 +124,7 @@ public class LpisRecord {
 
     }
 
-    private static void mapToOsm () {
+    private void mapToOsm () {
       switch (m_usage) {
         case "orná půda": m_usageOsm.put("landuse", "farmland"); break;
         case "chmelnice": m_usageOsm.put("landuse", "farmland");
@@ -152,7 +152,7 @@ public class LpisRecord {
       }
     }
 
-    private static ArrayList<LatLon> parseGeometry (String geometry) {
+    private ArrayList<LatLon> parseGeometry (String geometry) {
 
       try {
         ArrayList<LatLon> arrList = new ArrayList<LatLon>();
@@ -182,7 +182,7 @@ public class LpisRecord {
     *  @param xmlStr - data for parsing
     *
     */
-    public static void parseXML (String action, String xmlStr) {
+    public void parseXML (String action, String xmlStr) {
 
     System.out.println("");
     System.out.println("parseXML() - Start");

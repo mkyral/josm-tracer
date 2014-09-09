@@ -32,9 +32,9 @@ import java.util.*;
  */
 
 public class WaysList {
-  private static ArrayList <Way>  m_orig_ways;   // Stores original ways
-  private static ArrayList <Way>  m_updated_ways; // Stores working ways
-  private static ArrayList <Boolean>  m_was_connected; // Way was connected to the first way
+  private ArrayList <Way>  m_orig_ways;   // Stores original ways
+  private ArrayList <Way>  m_updated_ways; // Stores working ways
+  private ArrayList <Boolean>  m_was_connected; // Way was connected to the first way
 
   public WaysList () {
     init();

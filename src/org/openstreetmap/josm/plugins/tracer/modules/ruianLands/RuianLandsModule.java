@@ -53,7 +53,7 @@ import org.xml.sax.SAXException;
 
 class RuianLandsModule implements TracerModule {
 
-    private static final long serialVersionUID = 1L;
+    private final long serialVersionUID = 1L;
 
     protected boolean cancel;
     private boolean ctrl;
@@ -61,8 +61,9 @@ class RuianLandsModule implements TracerModule {
     private boolean shift;
     private boolean moduleEnabled;
     private String source = "cuzk:ruian";
-    private static RuianLandsRecord record;
+    private RuianLandsRecord record;
 
+    private ConnectWays connectWays = new ConnectWays();
     protected RuianLandsServer server = new RuianLandsServer();
 
     public RuianLandsModule(boolean enabled) {
@@ -162,35 +163,35 @@ class RuianLandsModule implements TracerModule {
             tagLand(way);
 
             // connect to other buildings or modify existing building
-            Command connCmd = ConnectWays.connect(way, pos, ctrl, alt, source);
+            Command connCmd = connectWays.connect(way, pos, ctrl, alt, source);
 
             String s[] = connCmd.getDescriptionText().split(": ");
 
             if (s[1].equals("Nothing")) {
               TracerUtils.showNotification(tr("Nothing changed."), "info");
               if (shift) {
-                Main.main.getCurrentDataSet().addSelected(ConnectWays.getWay());
+                Main.main.getCurrentDataSet().addSelected(connectWays.getWay());
               } else {
-                Main.main.getCurrentDataSet().setSelected(ConnectWays.getWay());
+                Main.main.getCurrentDataSet().setSelected(connectWays.getWay());
               }
             } else {
                 commands.add(connCmd);
 
                 if (!commands.isEmpty()) {
                   String strCommand;
-                  if (ConnectWays.s_bAddNewWay == true) {
-                    strCommand = trn("Tracer(RUIAN-Lands): add a way with {0} point", "Tracer(RUIAN-Lands): add a way with {0} points", ConnectWays.getWay().getRealNodesCount(), ConnectWays.getWay().getRealNodesCount());
+                  if (connectWays.isNewWay()) {
+                    strCommand = trn("Tracer(RUIAN-Lands): add a way with {0} point", "Tracer(RUIAN-Lands): add a way with {0} points", connectWays.getWay().getRealNodesCount(), connectWays.getWay().getRealNodesCount());
                   } else {
-                    strCommand = trn("Tracer(RUIAN-Lands): modify way to {0} point", "Tracer(RUIAN-Lands): modify way to {0} points", ConnectWays.getWay().getRealNodesCount(), ConnectWays.getWay().getRealNodesCount());
+                    strCommand = trn("Tracer(RUIAN-Lands): modify way to {0} point", "Tracer(RUIAN-Lands): modify way to {0} points", connectWays.getWay().getRealNodesCount(), connectWays.getWay().getRealNodesCount());
                   }
                   Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
 
 //                   TracerUtils.showNotification(strCommand, "info");
 
                   if (shift) {
-                    Main.main.getCurrentDataSet().addSelected(ConnectWays.getWay());
+                    Main.main.getCurrentDataSet().addSelected(connectWays.getWay());
                   } else {
-                    Main.main.getCurrentDataSet().setSelected(ConnectWays.getWay());
+                    Main.main.getCurrentDataSet().setSelected(connectWays.getWay());
                   }
                 } else {
                     System.out.println("Failed");

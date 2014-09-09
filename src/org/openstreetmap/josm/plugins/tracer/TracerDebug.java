@@ -32,7 +32,7 @@ import org.openstreetmap.josm.data.osm.Way;
 
 public class TracerDebug {
 
-    public static String FormatPrimitive(String strIn) {
+    public String FormatPrimitive(String strIn) {
     	while (strIn.contains("{")) {
     		strIn = strIn.replace("{", "xxxxx");
     	}

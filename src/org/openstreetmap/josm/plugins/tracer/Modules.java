@@ -26,10 +26,10 @@ import java.util.*;
  */
 
 public class Modules {
-    private static Map<String, TracerModule> m_modules; // map of all modules
-    private static Map.Entry<String, TracerModule> m_active_module; // active module
+    private Map<String, TracerModule> m_modules; // map of all modules
+    private Map.Entry<String, TracerModule> m_active_module; // active module
 
-    private static Iterator<Map.Entry<String, TracerModule>>  m_it; // holds current iterator
+    private Iterator<Map.Entry<String, TracerModule>>  m_it; // holds current iterator
 
     private int m_activeModulesCount = 0;
 

@@ -45,15 +45,15 @@ import org.openstreetmap.josm.plugins.tracer.TracerUtils.*;
 
 public class RuianLandsRecord {
 
-    private static LatLon   m_coor;
-    private static String   m_source;
-    private static long     m_ruian_id;
-    private static String   m_druh_pozemku;
-    private static String   m_zpusob_vyuziti;
-    private static String   m_plati_od;
-    private static Map <String, String> m_keys;
+    private LatLon   m_coor;
+    private String   m_source;
+    private long     m_ruian_id;
+    private String   m_druh_pozemku;
+    private String   m_zpusob_vyuziti;
+    private String   m_plati_od;
+    private Map <String, String> m_keys;
 
-    private static ArrayList <LatLon> m_geometry;
+    private ArrayList <LatLon> m_geometry;
 
     /**
     * Constructor
@@ -67,7 +67,7 @@ public class RuianLandsRecord {
     * Initialization
     *
     */
-    private static void init () {
+    private void init () {
 
       m_coor = null;
       m_source = "";
@@ -85,7 +85,7 @@ public class RuianLandsRecord {
     * natural or leisure key
     *
     */
-    private static void mapKeys () {
+    private void mapKeys () {
       if (m_druh_pozemku.equals("orná půda")){
         m_keys.put("landuse", "farmland");
 
@@ -250,7 +250,7 @@ public class RuianLandsRecord {
     * Parse given JSON string and fill variables with RUIAN data
     *
     */
-    public static void parseJSON (String jsonStr) {
+    public void parseJSON (String jsonStr) {
 
 
     init();

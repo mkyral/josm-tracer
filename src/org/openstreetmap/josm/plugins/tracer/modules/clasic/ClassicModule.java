@@ -48,7 +48,7 @@ import org.xml.sax.SAXException;
 
 class ClassicModule implements TracerModule {
 
-    private static final long serialVersionUID = 1L;
+    private final long serialVersionUID = 1L;
 
     protected boolean cancel;
     private boolean ctrl;
@@ -56,7 +56,9 @@ class ClassicModule implements TracerModule {
     private boolean shift;
     private boolean moduleEnabled;
     private String source = "cuzk:km";
+    private ConnectWays connectWays = new ConnectWays();
     protected ClassicServer server = new ClassicServer();
+
 
     public ClassicModule(boolean enabled) {
       moduleEnabled = enabled;
@@ -145,11 +147,11 @@ class ClassicModule implements TracerModule {
             tagBuilding(way);
 
             // connect to other buildings or modify existing building
-            commands.add(ConnectWays.connect(way, pos, ctrl, alt, source));
+            commands.add(connectWays.connect(way, pos, ctrl, alt, source));
 
             if (!commands.isEmpty()) {
               String strCommand;
-              if (ConnectWays.s_bAddNewWay == true) {
+              if (connectWays.isNewWay()) {
                 strCommand = trn("Tracer: add a way with {0} point", "Tracer: add a way with {0} points", coordList.size(), coordList.size());
               } else {
                 strCommand = trn("Tracer: modify way to {0} point", "Tracer: modify way to {0} points", coordList.size(), coordList.size());
@@ -159,9 +161,9 @@ class ClassicModule implements TracerModule {
               TracerUtils.showNotification(strCommand, "info");
 
               if (shift) {
-                Main.main.getCurrentDataSet().addSelected(ConnectWays.getWay());
+                Main.main.getCurrentDataSet().addSelected(connectWays.getWay());
               } else {
-                Main.main.getCurrentDataSet().setSelected(ConnectWays.getWay());
+                Main.main.getCurrentDataSet().setSelected(connectWays.getWay());
               }
             } else {
                 System.out.println("Failed");

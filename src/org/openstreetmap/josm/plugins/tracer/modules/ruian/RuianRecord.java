@@ -45,19 +45,19 @@ import org.openstreetmap.josm.plugins.tracer.TracerUtils.*;
 
 public class RuianRecord {
 
-    private static double   m_coor_lat, m_coor_lon;
-    private static String   m_source;
-    private static long     m_ruian_id;
-    private static int      m_levels;
-    private static int      m_flats;
-    private static String   m_usage_code;
-    private static String   m_usage_key;
-    private static String   m_usage_val;
-    private static String   m_finished;
-    private static String   m_valid_from;
+    private double   m_coor_lat, m_coor_lon;
+    private String   m_source;
+    private long     m_ruian_id;
+    private int      m_levels;
+    private int      m_flats;
+    private String   m_usage_code;
+    private String   m_usage_key;
+    private String   m_usage_val;
+    private String   m_finished;
+    private String   m_valid_from;
 
-    private static ArrayList <LatLon> m_geometry;
-    private static ArrayList <Address> m_address_places;
+    private ArrayList <LatLon> m_geometry;
+    private ArrayList <Address> m_address_places;
 
     /**
     * Constructor
@@ -71,7 +71,7 @@ public class RuianRecord {
     * Initialization
     *
     */
-    private static void init () {
+    private void init () {
 
       m_coor_lat = 0;
       m_coor_lon = 0;
@@ -93,7 +93,7 @@ public class RuianRecord {
     * Parse given JSON string and fill variables with RUIAN data
     *
     */
-    public static void parseJSON (String jsonStr) {
+    public void parseJSON (String jsonStr) {
 
 
     init();

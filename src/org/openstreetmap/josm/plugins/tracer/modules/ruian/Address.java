@@ -31,18 +31,18 @@ import java.util.*;
  */
 
 public class Address {
-    private static long    m_ruian_id;
-    private static String  m_conscriptionnumber; // cislo popisne
-    private static String  m_provisionalnumber; // cislo popisne
-    private static String  m_streetnumber; // cislo orientacni
-    private static String  m_street; // ulice
-    private static String  m_place; // Mistni cast
-    private static String  m_suburb; // Mestska cas
-    private static String  m_city; // Obec nebo mesto
-    private static String  m_district; // okres
-    private static String  m_region; // kraj
-    private static String  m_postcode; // PSC
-    private static String  m_countrycode; // kod zeme
+    private long    m_ruian_id;
+    private String  m_conscriptionnumber; // cislo popisne
+    private String  m_provisionalnumber; // cislo popisne
+    private String  m_streetnumber; // cislo orientacni
+    private String  m_street; // ulice
+    private String  m_place; // Mistni cast
+    private String  m_suburb; // Mestska cas
+    private String  m_city; // Obec nebo mesto
+    private String  m_district; // okres
+    private String  m_region; // kraj
+    private String  m_postcode; // PSC
+    private String  m_countrycode; // kod zeme
 
     public Address () {
       init();

@@ -54,40 +54,40 @@ import org.openstreetmap.josm.plugins.tracer.WaysList;
 public class ConnectWays {
 
 // Distance constants
-    static double s_dDoubleDiff       = 0.0000001; // Maximal difference for double comparison
-    static double s_dMinDistance      = 0.0000005; // Minimal distance, for objects
-    static double s_dMinDistanceN2N   = 0.0000005;  // Minimal distance, when nodes are merged
-    static double s_dMinDistanceN2oW  = 0.000001;  // Minimal distance, when node is connected to other way
-    static double s_dMaxDistanceN2W  = 0.0005;  // Maximal distance to search ways in the near neighbourhood
+    private double s_dDoubleDiff       = 0.0000001; // Maximal difference for double comparison
+    private double s_dMinDistance      = 0.0000005; // Minimal distance, for objects
+    private double s_dMinDistanceN2N   = 0.0000005;  // Minimal distance, when nodes are merged
+    private double s_dMinDistanceN2oW  = 0.000001;  // Minimal distance, when node is connected to other way
+    private double s_dMaxDistanceN2W  = 0.0005;  // Maximal distance to search ways in the near neighbourhood
 
-    static WaysList s_Ways = new WaysList(); // New or updated way
-//     static List<Way>  s_oWays; // List of all ways we will work with
-    static List<Node> s_oNodes; // List of all nodes we will work with
-    static List<Node> sharedNodes; // List of nodes that are part of more ways
+    private WaysList s_Ways = new WaysList(); // New or updated way
+//     List<Way>  s_oWays; // List of all ways we will work with
+    private List<Node> s_oNodes; // List of all nodes we will work with
+    private List<Node> sharedNodes; // List of nodes that are part of more ways
 
-    static List<Way>  secondaryWays; // List of ways connected to connected ways (and are not myWay)
-    static List<Node> secondarydNodes; // List of nodes of ways connected to connected ways ;-)
+    private List<Way>  secondaryWays; // List of ways connected to connected ways (and are not myWay)
+    private List<Node> secondarydNodes; // List of nodes of ways connected to connected ways ;-)
 
-    static List<Way>  s_overlapWays; // List of ways that overlap traced way (s_oWay)
+    private List<Way>  s_overlapWays; // List of ways that overlap traced way (s_oWay)
 
 // Obsolete
-//     static ServerParam s_oParam;
-//     static boolean s_bCtrl;
-//     static boolean s_bAlt;
+//     ServerParam s_oParam;
+//     boolean s_bCtrl;
+//     boolean s_bAlt;
 
-    static int maxDebugLevel = 0;
+    private int maxDebugLevel = 0;
 
-    static boolean s_bAddNewWay;
+    private boolean s_bAddNewWay;
 
-    static Relation parentRelation;
+    private Relation parentRelation;
 
-    final static int BUILDING = 1;
-    final static int LANDUSE = 2;
-    final static int LANDUSE_RUAIN = 3;
-    final static int UNKNOWN = -1;
+    private final int BUILDING = 1;
+    private final int LANDUSE = 2;
+    private final int LANDUSE_RUAIN = 3;
+    private final int UNKNOWN = -1;
 
-    private static int wayType; // Type of the way - building or landuse
-    private static boolean wayIsForest;  // True if way has key landuse=forest
+    private int wayType; // Type of the way - building or landuse
+    private boolean wayIsForest;  // True if way has key landuse=forest
 
 
 // -----------------------------------------------------------------------------------------------------
@@ -98,10 +98,17 @@ public class ConnectWays {
      * Return connected way.
      * @return Connected Way.
      */
-    public static Way getWay() {
+    public Way getWay() {
       return s_Ways.get(0);
     }
 
+    /**
+     * Return whether traced way is created as new, or replaced already existing way
+     * @return True/False - way is new or replaced existing way.
+     */
+    public boolean isNewWay() {
+      return s_bAddNewWay;
+    }
     /**
      * Try connect way to other way with the same key.
      * @param newWay The traced way that should replace the old way and connect to neighbour ways.
@@ -111,7 +118,7 @@ public class ConnectWays {
      * @param source The content of the source tag to be added.
      * @return Commands.
      */
-    public static Command connect(Way newWay, LatLon pos, boolean ctrl, boolean alt, String source) {
+    public Command connect(Way newWay, LatLon pos, boolean ctrl, boolean alt, String source) {
       return connect(newWay, (Relation) null, pos, ctrl, alt, source);
     }
 
@@ -125,7 +132,7 @@ public class ConnectWays {
      * @param source The content of the source tag to be added.
      * @return Commands.
      */
-    public static Command connect(Way newWay, Relation wayRelation, LatLon pos, boolean ctrl, boolean alt, String source) {
+    public Command connect(Way newWay, Relation wayRelation, LatLon pos, boolean ctrl, boolean alt, String source) {
         debugMsg("-- connect() --");
 
         LinkedList<Command> cmds = new LinkedList<Command>();
@@ -335,11 +342,11 @@ public class ConnectWays {
      *  Print debug messages - default level is zero
      *  @param msg mesage
      */
-    private static void debugMsg(String msg) {
+    private void debugMsg(String msg) {
       debugMsg(msg, 0);
     }
 
-    private static void listWays() {
+    private void listWays() {
 
       debugMsg("");
       debugMsg("  --> List of ways: ");
@@ -356,7 +363,7 @@ public class ConnectWays {
      *  @param msg mesage
      *  @param level debug level of the message - From 0 - important to up
      */
-    private static void debugMsg(String msg, int level) {
+    private void debugMsg(String msg, int level) {
       if (level <= maxDebugLevel) {
         System.out.println(msg);
       }
@@ -367,7 +374,7 @@ public class ConnectWays {
      *  @param oldWay way to be replaced
      *  @param newWay way to replace
      */
-    private static void replaceWayInList(Way oldWay, Way newWay) {
+    private void replaceWayInList(Way oldWay, Way newWay) {
       debugMsg("  -- replaceWayInList() --");
 //       debugMsg("     oldWay: " + oldWay);
 //       debugMsg("     newWay: " + newWay);
@@ -380,7 +387,7 @@ public class ConnectWays {
      *  @param oldNode way to be replaced
      *  @param newNode way to replace
      */
-    private static void replaceNodeInList(Node oldNode, Node newNode) {
+    private void replaceNodeInList(Node oldNode, Node newNode) {
       s_oNodes.remove(oldNode);
       s_oNodes.add(newNode);
     }
@@ -388,7 +395,7 @@ public class ConnectWays {
     /**
      *  Calculate minimal distances
      */
-    private static void calcDistance()
+    private void calcDistance()
     {
 //        double dTileSize = Double.parseDouble(s_oParam.getTileSize());
 //        double dResolution = Double.parseDouble(s_oParam.getResolution());
@@ -407,7 +414,7 @@ public class ConnectWays {
      *  Get ways close to the way
      *  @param way Way
      */
-    private static void getWays(Way way) {
+    private void getWays(Way way) {
       debugMsg("-- getWays() --");
 //       s_Ways = new WaysList();
       BBox bbox = new BBox(way);
@@ -443,7 +450,7 @@ public class ConnectWays {
      *  Get nodes close to the way
      *  @param way Way
      */
-    private static void getNodes(Way way) {
+    private void getNodes(Way way) {
       debugMsg("-- getNodes() --");
 
       s_oNodes = new LinkedList<Node>();
@@ -462,7 +469,7 @@ public class ConnectWays {
      *  @param node Node
      *  @return connected ways
      */
-    private static List<Way> getWaysOfNode(Node node) {
+    private List<Way> getWaysOfNode(Node node) {
       debugMsg("-- getWaysOfNode() --");
       debugMsg("   param: Node = " + node.getUniqueId());
 
@@ -486,7 +493,7 @@ public class ConnectWays {
      *  Get list of nodes shared with another way (connected node)
      *  @param way Way
      */
-    private static void getSharedNodes(Way way) {
+    private void getSharedNodes(Way way) {
       debugMsg("-- getSharedNodes() --");
       if (way == null) {
         return;
@@ -508,7 +515,7 @@ public class ConnectWays {
      *  @param n   Node
      *  @return deltaAlpha
      */
-    private static double calcAlpha(LatLon oP1, Node n) {
+    private double calcAlpha(LatLon oP1, Node n) {
       debugMsg("-- calcAlpha() --", 1);
       LatLon oP2 = n.getCoor();
 
@@ -521,7 +528,7 @@ public class ConnectWays {
      *  @param dAlpha delta Alpha
      *  @return deltaAlpha
      */
-    private static Double checkAlpha(Double dAlpha) {
+    private Double checkAlpha(Double dAlpha) {
       debugMsg("-- checkAlpha() --", 1);
         if (dAlpha > 180) {
             return dAlpha - 360;
@@ -538,7 +545,7 @@ public class ConnectWays {
      *  @param way way
      *  @return Return True when all way nodes are around the position (sum of angles to all way nodes is 360 deg)
      */
-    private static boolean isNodeInsideWay(LatLon pos, Way way) {
+    private boolean isNodeInsideWay(LatLon pos, Way way) {
       debugMsg("-- isNodeInsideWay() --");
       List<Node> listNode = way.getNodes();
 
@@ -563,7 +570,7 @@ public class ConnectWays {
      *  @param way way
      *  @return Return True when point is on way border
      */
-    private static boolean isOnBorder(LatLon pos, Way way) {
+    private boolean isOnBorder(LatLon pos, Way way) {
       debugMsg("-- isOnBorder() --");
 
       for (int i = 0; i < way.getNodesCount() - 2; i++) {
@@ -581,7 +588,7 @@ public class ConnectWays {
      *  @param way way
      *  @return Return list of way segments closest to the position
      */
-    private static List<WaySegment> getClosestWaySegments(LatLon pos, Way way) {
+    private List<WaySegment> getClosestWaySegments(LatLon pos, Way way) {
       debugMsg("-- getClosestWaySegments() --");
 
       List<WaySegment> ws = new LinkedList<WaySegment>();
@@ -616,7 +623,7 @@ public class ConnectWays {
      *  @param pos position
      *  @return way
      */
-    private static Way getOldWay(LatLon pos) {
+    private Way getOldWay(LatLon pos) {
       debugMsg("-- getOldWay() --");
       int i;
 
@@ -653,7 +660,7 @@ public class ConnectWays {
      *  @param w1 second way
      *  @return True when ways are overlaped
      */
-    private static Boolean areWaysOverlaped(Way w1, Way w2) {
+    private Boolean areWaysOverlaped(Way w1, Way w2) {
 
       debugMsg("-- areWaysOverlaped() --");
       debugMsg("    w1: " + w1.getUniqueId() + "; w2: " + w2.getUniqueId());
@@ -686,7 +693,7 @@ public class ConnectWays {
      * @param y Second point
      * @return Distance between points
      */
-    private static double distance(LatLon x, LatLon y) {
+    private double distance(LatLon x, LatLon y) {
 //       debugMsg("    distance()");
       if (x != null && y != null) {
 //         debugMsg("x: " + x + " / y: " +y);
@@ -702,7 +709,7 @@ public class ConnectWays {
      * @param y Second point of line
      * @return True when point is on line
      */
-    private static boolean pointIsOnLine(LatLon p, LatLon x, LatLon y) {
+    private boolean pointIsOnLine(LatLon p, LatLon x, LatLon y) {
 
       // Distance xy should equal to sum of distance xp and yp
       if (Math.abs((distance (x, y) - (distance (x, p) + distance (y, p)))) > s_dDoubleDiff) {
@@ -718,7 +725,7 @@ public class ConnectWays {
      * @param y Second point of line
      * @return True when point is on line
      */
-    private static boolean pointIsCloseToLine(LatLon p, LatLon x, LatLon y) {
+    private boolean pointIsCloseToLine(LatLon p, LatLon x, LatLon y) {
 
       // Distance xy should be close to the sum of distance xp and yp
       if (Math.abs((distance (x, y) - (distance (x, p) + distance (y, p)))) > s_dMinDistanceN2oW) {
@@ -732,7 +739,7 @@ public class ConnectWays {
      * @param p position
      * @return Existing node if found or null
      */
-    private static Node getNodeOnPosition(LatLon pos) {
+    private Node getNodeOnPosition(LatLon pos) {
       for (Node n : s_oNodes ) {
         if (distance(n.getCoor(), pos) <= s_dMinDistanceN2N) {
           return n;
@@ -748,7 +755,7 @@ public class ConnectWays {
      *  @param p2 - second point coordinates
      *  @return middle point
      */
-     private static LatLon getMiddlePoint (LatLon p1, LatLon p2) {
+     private LatLon getMiddlePoint (LatLon p1, LatLon p2) {
       return new LatLon(LatLon.roundToOsmPrecision((p1.lat() + p2.lat())/2),
                         LatLon.roundToOsmPrecision((p1.lon() + p2.lon())/2));
      }
@@ -759,7 +766,7 @@ public class ConnectWays {
      * @param ws2 way segment 2
      * @return Node with intersection coordinates
      */
-    private static Node getIntersectionNode(WaySegment ws1, WaySegment ws2) {
+    private Node getIntersectionNode(WaySegment ws1, WaySegment ws2) {
 
       StraightLine oStraightLine1 = new StraightLine(
             new Point2D.Double(ws1.getFirstNode().getCoor().getX(), ws1.getFirstNode().getCoor().getY()),
@@ -781,7 +788,7 @@ public class ConnectWays {
      * @param ws2 way segment 2
      * @return True when one segment overlap other one
      */
-    private static boolean segmentOnSegment(WaySegment ws1, WaySegment ws2) {
+    private boolean segmentOnSegment(WaySegment ws1, WaySegment ws2) {
       if (pointIsOnLine(ws2.getFirstNode().getCoor(),  ws1.getFirstNode().getCoor(), ws1.getSecondNode().getCoor()) ||
           pointIsOnLine(ws2.getSecondNode().getCoor(), ws1.getFirstNode().getCoor(), ws1.getSecondNode().getCoor())
          ) {
@@ -797,7 +804,7 @@ public class ConnectWays {
      * @param rel relation
      * @return True when way is outer in the relation
      */
-    private static boolean isOuter(Way way, Relation rel) {
+    private boolean isOuter(Way way, Relation rel) {
       for (RelationMember rm : rel.getMembers()) {
         if ( rm.hasRole("outer") && rm.refersTo((Way) way))
           return true;
@@ -811,7 +818,7 @@ public class ConnectWays {
      * @param way overlaped way
      * @return List of Commands.
      */
-    private static List<Command> correctOverlaping(Way way) {
+    private List<Command> correctOverlaping(Way way) {
 
       debugMsg("-- correctOverlaping() --");
       debugMsg("    Overlaped way" + way.getUniqueId());
@@ -1152,7 +1159,7 @@ public class ConnectWays {
      * @param otherNode Node that will replace myNode
      * @return List of Commands.
      */
-    private static List<Command> mergeNodes(Node myNode, Node otherNode){
+    private List<Command> mergeNodes(Node myNode, Node otherNode){
       debugMsg("-- mergeNodes() --");
 
       List<Command> cmds = new LinkedList<Command>();
@@ -1205,7 +1212,7 @@ public class ConnectWays {
      * @param otherNode Node that will replace myNode
      * @return destination way
      */
-    private static Way updateKeys(Way d_way, Way s_way, String newSource) {
+    private Way updateKeys(Way d_way, Way s_way, String newSource) {
       debugMsg("-- updateKeys() --");
 
         d_way.put("source", newSource);
@@ -1287,7 +1294,7 @@ public class ConnectWays {
      *  Check whether there is a building fully covered by traced building
      *  @return List of commands
      */
-    private static  List<Command> mergeWithExistingNodes() {
+    private  List<Command> mergeWithExistingNodes() {
       debugMsg("-- mergeWithExistingNodes() --");
 
       LinkedList<Command> cmds  = new LinkedList<Command>();
@@ -1345,7 +1352,7 @@ public class ConnectWays {
      *  Check whether there is a building fully covered by traced building
      *  @return List of commands
      */
-    private static  List<Command> removeFullyCoveredWays() {
+    private  List<Command> removeFullyCoveredWays() {
       debugMsg("-- removeFullyCoveredWays() --");
 
       LinkedList<Command> cmds = new LinkedList<Command>();
@@ -1385,7 +1392,7 @@ public class ConnectWays {
      *  @param way
      *  @return List of commands
      */
-    private static  List<Command>  fixOverlapedWays () {
+    private  List<Command>  fixOverlapedWays () {
       debugMsg("-- fixOverlapedWays() --");
 
       LinkedList<Command> cmds = new LinkedList<Command>();
@@ -1405,7 +1412,7 @@ public class ConnectWays {
      *  Remove spare nodes - nodes on straight line that are not needed anymore
      *  @return List of commands
      */
-    private static  List<Command>  removeSpareNodes () {
+    private  List<Command>  removeSpareNodes () {
       debugMsg("-- removeSpareNodes() --");
 
       LinkedList<Command> cmds  = new LinkedList<Command>();
@@ -1464,7 +1471,7 @@ public class ConnectWays {
      * @param n The node to be tested
      * @return True if building key is set and different from no,entrance
      */
-    private static boolean isInSameTag(Node n) {
+    private boolean isInSameTag(Node n) {
         debugMsg("-- isInSameTag() --");
         for (OsmPrimitive op : n.getReferrers()) {
             if (op instanceof Way) {
@@ -1483,7 +1490,7 @@ public class ConnectWays {
      * @param wType Type of the way - building or landuse
      * @return True if building key is set and different from no (entrance for building)
      */
-    protected static final boolean isSameTag(Way w, int wType) {
+    protected final boolean isSameTag(Way w, int wType) {
       debugMsg("-- isSameTag() --");
       if (wType == LANDUSE) {
         debugMsg("-- isSameTag(): landuse");

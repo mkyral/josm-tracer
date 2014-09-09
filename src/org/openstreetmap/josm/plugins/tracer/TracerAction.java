@@ -57,6 +57,7 @@ class TracerAction extends MapMode implements MouseListener, KeyListener{
     private boolean shift;
 
     private Modules m_modules = new Modules();
+//     private TracerUtils tu = new TracerUtils();
 
     public TracerAction(MapFrame mapFrame) {
         super(tr("Tracer"), "tracer-sml", tr("Tracer."), Shortcut.registerShortcut("tools:tracer", tr("Tool: {0}", tr("Tracer")), KeyEvent.VK_T, Shortcut.DIRECT), mapFrame, null);
