@@ -56,7 +56,7 @@ import org.openstreetmap.josm.plugins.tracer.connectways.ConnectWays;
 
 import org.xml.sax.SAXException;
 
-class LpisModule implements TracerModule  {
+public class LpisModule implements TracerModule  {
 
     private final long serialVersionUID = 1L;
 

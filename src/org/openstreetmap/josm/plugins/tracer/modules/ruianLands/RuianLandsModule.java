@@ -56,7 +56,7 @@ import org.openstreetmap.josm.plugins.tracer.connectways.ConnectWays;
 
 import org.xml.sax.SAXException;
 
-class RuianLandsModule implements TracerModule {
+public class RuianLandsModule implements TracerModule {
 
     private final long serialVersionUID = 1L;
 

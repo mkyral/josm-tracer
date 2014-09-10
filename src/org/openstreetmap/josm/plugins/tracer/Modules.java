@@ -20,6 +20,11 @@ package org.openstreetmap.josm.plugins.tracer;
 
 import java.util.*;
 
+import org.openstreetmap.josm.plugins.tracer.modules.classic.*;
+import org.openstreetmap.josm.plugins.tracer.modules.lpis.*;
+import org.openstreetmap.josm.plugins.tracer.modules.ruian.*;
+import org.openstreetmap.josm.plugins.tracer.modules.ruianLands.*;
+
 /**
  * Private class to store modules
  *

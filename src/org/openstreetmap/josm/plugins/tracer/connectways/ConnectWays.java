@@ -49,7 +49,7 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.tools.Pair;
 
 import org.openstreetmap.josm.plugins.tracer.TracerDebug;
-import org.openstreetmap.josm.plugins.tracer.WaysList;
+import org.openstreetmap.josm.plugins.tracer.connectways.WaysList;
 
 public class ConnectWays {
 
