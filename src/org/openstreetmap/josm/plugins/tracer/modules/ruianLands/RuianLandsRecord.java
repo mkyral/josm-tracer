@@ -16,7 +16,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-package org.openstreetmap.josm.plugins.tracer;
+package org.openstreetmap.josm.plugins.tracer.modules.ruianLands;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;

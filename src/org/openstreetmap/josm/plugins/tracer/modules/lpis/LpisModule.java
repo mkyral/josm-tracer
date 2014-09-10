@@ -16,7 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package org.openstreetmap.josm.plugins.tracer;
+package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
 import static org.openstreetmap.josm.tools.I18n.*;
 import java.awt.Cursor;
@@ -46,7 +46,11 @@ import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
+
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
+import org.openstreetmap.josm.plugins.tracer.TracerModule;
+import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+import org.openstreetmap.josm.plugins.tracer.connectways.ConnectWays;
 
 // import org.openstreetmap.josm.plugins.tracer.modules.lpis.LpisRecord;
 

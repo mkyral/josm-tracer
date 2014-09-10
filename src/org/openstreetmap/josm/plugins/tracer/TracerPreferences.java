@@ -68,7 +68,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
     private String KEY_TRACERADJUSTPOSITIONLATSIGN = "tracer.adjustpositionlatvaluesign";
     private String KEY_TRACERADJUSTPOSITIONLONSIGN = "tracer.adjustpositionlonvaluesign";
 
-    boolean  m_customRuianUrl;
+    public boolean  m_customRuianUrl;
     String   m_customRuianUrlText;
 
     private String KEY_RUIANURL = "tracer.customruianurl";
@@ -793,6 +793,87 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
       }
       return false;
     }
+
+    /**
+     *  Return whether custom classic url is enabled
+     *  @return True if custom classic url is enabled
+     */
+    public boolean isCustomTracerUrlEnabled() {
+      return m_customTracerUrl;
+    }
+
+    /**
+     *  Return custom Classic url
+     *  @return Custom Classic url
+     */
+    public String getCustomTracerUrl() {
+      return m_customTracerUrlText;
+    }
+
+    /**
+     *  Return whether custom Ruian url is enabled
+     *  @return True if custom Ruian url is enabled
+     */
+    public boolean isCustomRuainUrlEnabled() {
+      return m_customRuianUrl;
+    }
+
+    /**
+     *  Return custom Ruian url
+     *  @return Custom Ruian url
+     */
+    public String getCustomRuainUrl() {
+      return m_customRuianUrlText;
+    }
+
+    /**
+     *  Return whether Classic Tracer adjust position is enabled
+     *  @return True if Classic Tracer adjust position is enabled
+     */
+    public boolean isTracerAdjustPositionEnabled() {
+      return m_tracerAdjustPosition;
+    }
+
+    /**
+     *  Return Classic module Lon position adjust
+     *  @return Classic module Lon position adjust
+     */
+    public double getTracerAdjustPositionLon() {
+      return m_tracerAdjustPositionLon;
+    }
+
+    /**
+     *  Return Classic module Lat position adjust
+     *  @return Classic module Lat position adjust
+     */
+    public double getTracerAdjustPositionLat() {
+      return m_tracerAdjustPositionLat;
+    }
+
+    /**
+     *  Return whether Ruian adjust position is enabled
+     *  @return True if Ruian adjust position is enabled
+     */
+    public boolean isRuianAdjustPositionEnabled() {
+      return m_ruianAdjustPosition;
+    }
+
+    /**
+     *  Return Ruian module Lon position adjust
+     *  @return Ruian module Lon position adjust
+     */
+    public double getRuianAdjustPositionLon() {
+      return m_ruianAdjustPositionLon;
+    }
+
+    /**
+     *  Return Ruian module Lat position adjust
+     *  @return Ruian module Lat position adjust
+     */
+    public double getRuianAdjustPositionLat() {
+      return m_ruianAdjustPositionLat;
+    }
+
 
     public void addGui(PreferenceTabbedPane gui) {
         createPreferenceTabWithScrollPane(gui, MainConfigPanel);

@@ -16,7 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-package org.openstreetmap.josm.plugins.tracer;
+package org.openstreetmap.josm.plugins.tracer.modules.classic;
 
 import static org.openstreetmap.josm.tools.I18n.*;
 import java.awt.Cursor;
@@ -46,6 +46,11 @@ import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.xml.sax.SAXException;
+
+import org.openstreetmap.josm.plugins.tracer.TracerModule;
+import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+import org.openstreetmap.josm.plugins.tracer.connectways.ConnectWays;
+
 
 class ClassicModule implements TracerModule {
 
@@ -98,12 +103,12 @@ class ClassicModule implements TracerModule {
         String sUrl = "http://localhost:5050/";
         double dAdjX = 0, dAdjY = 0;
 
-        if (pref.m_customTracerUrl)
-          sUrl = pref.m_customTracerUrlText;
+        if (pref.isCustomTracerUrlEnabled())
+          sUrl = pref.getCustomTracerUrl();
 
-        if (pref.m_tracerAdjustPosition) {
-          dAdjX = pref.m_tracerAdjustPositionLat;
-          dAdjY = pref.m_tracerAdjustPositionLon;
+        if (pref.isTracerAdjustPositionEnabled()) {
+          dAdjX = pref.getTracerAdjustPositionLat();
+          dAdjY = pref.getTracerAdjustPositionLon();
         }
 
         progressMonitor.beginTask(null, 3);
