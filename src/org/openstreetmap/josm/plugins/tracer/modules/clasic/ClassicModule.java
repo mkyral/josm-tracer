@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
@@ -91,7 +92,7 @@ class ClassicModule implements TracerModule {
     }
 
     public void trace(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor) {
-        Collection<Command> commands = new LinkedList<Command>();
+        final Collection<Command> commands = new LinkedList<Command>();
         TracerPreferences pref = TracerPreferences.getInstance();
 
         String sUrl = "http://localhost:5050/";
@@ -150,13 +151,18 @@ class ClassicModule implements TracerModule {
             commands.add(connectWays.connect(way, pos, ctrl, alt, source));
 
             if (!commands.isEmpty()) {
-              String strCommand;
+              final String strCommand;
               if (connectWays.isNewWay()) {
                 strCommand = trn("Tracer: add a way with {0} point", "Tracer: add a way with {0} points", coordList.size(), coordList.size());
               } else {
                 strCommand = trn("Tracer: modify way to {0} point", "Tracer: modify way to {0} points", coordList.size(), coordList.size());
               }
-              Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
+              SwingUtilities.invokeLater(new Runnable() {
+                public void run() {
+                  Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
+                }
+              } );
+
 
               TracerUtils.showNotification(strCommand, "info");
 

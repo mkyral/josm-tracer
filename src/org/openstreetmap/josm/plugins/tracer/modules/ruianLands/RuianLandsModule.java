@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.HashMap;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
@@ -91,7 +92,7 @@ class RuianLandsModule implements TracerModule {
     };
 
     public void trace(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor) {
-        Collection<Command> commands = new LinkedList<Command>();
+        final Collection<Command> commands = new LinkedList<Command>();
         TracerPreferences pref = TracerPreferences.getInstance();
 
         String sUrl = "http://josm.poloha.net";
@@ -178,15 +179,17 @@ class RuianLandsModule implements TracerModule {
                 commands.add(connCmd);
 
                 if (!commands.isEmpty()) {
-                  String strCommand;
+                  final String strCommand;
                   if (connectWays.isNewWay()) {
                     strCommand = trn("Tracer(RUIAN-Lands): add a way with {0} point", "Tracer(RUIAN-Lands): add a way with {0} points", connectWays.getWay().getRealNodesCount(), connectWays.getWay().getRealNodesCount());
                   } else {
                     strCommand = trn("Tracer(RUIAN-Lands): modify way to {0} point", "Tracer(RUIAN-Lands): modify way to {0} points", connectWays.getWay().getRealNodesCount(), connectWays.getWay().getRealNodesCount());
                   }
-                  Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
-
-//                   TracerUtils.showNotification(strCommand, "info");
+                  SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                      Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
+                    }
+                  } );
 
                   if (shift) {
                     Main.main.getCurrentDataSet().addSelected(connectWays.getWay());

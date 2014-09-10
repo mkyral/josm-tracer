@@ -26,6 +26,7 @@ import java.lang.StringBuilder;
 import java.util.List;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
@@ -90,7 +91,7 @@ class LpisModule implements TracerModule  {
     };
 
     public void trace(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor) {
-        Collection<Command> commands = new LinkedList<Command>();
+        final Collection<Command> commands = new LinkedList<Command>();
         TracerPreferences pref = TracerPreferences.getInstance();
 
         String sUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
@@ -236,8 +237,11 @@ class LpisModule implements TracerModule  {
                   }
 
                   TracerUtils.showNotification(msg, "info");
-
-                  Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
+                  SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                      Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
+                    }
+                  } );
 
                   if (shift) {
                     Main.main.getCurrentDataSet().addSelected(record.hasInners()?rel:connectWays.getWay());
