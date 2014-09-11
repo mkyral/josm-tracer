@@ -145,8 +145,7 @@ class TracerAction extends MapMode implements MouseListener, KeyListener{
                     TracerAction.this.cancel();
                 }
             };
-            Thread executeTraceThread = new Thread(tracerTask);
-            executeTraceThread.start();
+            Main.worker.submit (tracerTask);
         } catch (Exception e) {
             e.printStackTrace();
         }
