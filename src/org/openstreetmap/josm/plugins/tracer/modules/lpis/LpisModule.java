@@ -63,7 +63,6 @@ public class LpisModule implements TracerModule  {
     protected boolean cancel;
     private boolean moduleEnabled;
     private String  source = "lpis";
-    private LpisRecord record;
 
     private StringBuilder msg = new StringBuilder();
     private ConnectWays connectWays = new ConnectWays();
@@ -115,6 +114,9 @@ public class LpisModule implements TracerModule  {
         System.out.println("-----------------");
         System.out.println("");
         progressMonitor.beginTask(null, 3);
+
+        LpisRecord record;
+
         try {
               record = server.getElementBasicData(pos, sUrl);
               System.out.println("  LPIS ID: " + record.getLpisID());
@@ -168,7 +170,7 @@ public class LpisModule implements TracerModule  {
 
             System.out.println("TracedWay: " + outer.toString());
             if (! record.hasInners()) {
-              tagOuterWay(outer);
+              tagOuterWay(record, outer);
             }
 
             commands.add(new AddCommand(outer));
@@ -207,7 +209,7 @@ public class LpisModule implements TracerModule  {
 
                 }
                 // Add relation
-                tagMultipolygon(rel);
+                tagMultipolygon(record, rel);
                 commands.add(new AddCommand(rel));
               }
 
@@ -261,7 +263,7 @@ public class LpisModule implements TracerModule  {
         }
     }
 
-    private void tagMultipolygon (Relation rel) {
+    private void tagMultipolygon (LpisRecord record, Relation rel) {
       Map <String, String> map = new HashMap <String, String> (record.getUsageOsm());
       map.put("type", "multipolygon");
       map.put("source", source);
@@ -269,7 +271,7 @@ public class LpisModule implements TracerModule  {
       rel.setKeys(map);
     }
 
-    private void tagOuterWay (Way way) {
+    private void tagOuterWay (LpisRecord record, Way way) {
       Map <String, String> map = new HashMap <String, String> (record.getUsageOsm());
       map.put("source", source);
       map.put("ref", Long.toString(record.getLpisID()));
