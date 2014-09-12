@@ -96,7 +96,7 @@ public class LpisServer {
      */
     public LpisRecord getElementExtraData(LpisRecord lpisElement, String url) {
         try {
-            String request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_01&&featureID=LPIS_FB4_01."+lpisElement.getLpisID()+"&SRSNAME=EPSG:102067";
+            String request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpisElement.getLpisID()+"&SRSNAME=EPSG:102067";
 
             System.out.println("Request: " + request);
             String content = callServer(request);

@@ -231,7 +231,7 @@ public class LpisRecord {
           System.out.println("parseXML(basic) - Inner("+i+"): " + m_geometry.getInner(i));
         }
       } else {
-        String expUsage = "//*[name()='ms:LPIS_FB4_01'][1]/*[name()='ms:kultura']";
+        String expUsage = "//*[name()='ms:LPIS_FB4'][1]/*[name()='ms:kultura']";
         NodeList nodeList;
 
         System.out.println("parseXML(extra) - expUsage: " + expUsage);
