@@ -60,10 +60,10 @@ public interface TracerModule {
     void setModuleIsEnabled(boolean enabled);
 
     /**
-     *  The main function that extracts the object for given position
+     *  Returns a tracer task that extracts the object for given position
      *  @param pos position to trase
      *  @param progressMonitor - the progressMonitor object
      */
-    void trace(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor);
+    PleaseWaitRunnable trace(LatLon pos, boolean ctrl, boolean alt, boolean shift);
 }
 

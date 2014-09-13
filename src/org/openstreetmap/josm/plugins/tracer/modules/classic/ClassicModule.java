@@ -96,7 +96,24 @@ public class ClassicModule implements TracerModule {
         way.put("source", source);
     }
 
-    public void trace(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor) {
+    public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift)
+    {
+        return new PleaseWaitRunnable(tr("Tracing")) {
+            protected void realRun() throws SAXException {
+                ClassicModule.this.traceImpl(pos, ctrl, alt, shift, 
+                    progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
+            }
+
+            protected void finish() {
+            }
+
+            protected void cancel() {
+                // #### FIXME - resolve cancellation
+            }
+        };
+    }
+
+    private void traceImpl(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor) {
         final Collection<Command> commands = new LinkedList<Command>();
         TracerPreferences pref = TracerPreferences.getInstance();
 

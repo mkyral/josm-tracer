@@ -129,7 +129,7 @@ class TracerAction extends MapMode implements MouseListener, KeyListener{
         final LatLon pos = Main.map.mapView.getLatLon(clickPoint.x, clickPoint.y);
 
         try {
-            PleaseWaitRunnable tracerTask = new PleaseWaitRunnable(tr("Tracing")) {
+/*            PleaseWaitRunnable tracerTask = new PleaseWaitRunnable(tr("Tracing")) {
 
                 @Override
                 protected void realRun() throws SAXException {
@@ -145,6 +145,8 @@ class TracerAction extends MapMode implements MouseListener, KeyListener{
                     TracerAction.this.cancel();
                 }
             };
+            Main.worker.submit (tracerTask);*/
+            PleaseWaitRunnable tracerTask = m_modules.getActiveModule().trace(pos, ctrl, alt, shift);
             Main.worker.submit (tracerTask);
         } catch (Exception e) {
             e.printStackTrace();
