@@ -63,7 +63,6 @@ public class RuianModule implements TracerModule {
     private boolean shift;
     private boolean moduleEnabled;
     private String source = "cuzk:ruian";
-    private RuianRecord record;
 
     private ConnectWays connectWays = new ConnectWays();
     protected RuianServer server = new RuianServer();
@@ -114,7 +113,7 @@ public class RuianModule implements TracerModule {
         System.out.println("");
         progressMonitor.beginTask(null, 3);
         try {
-              record = server.trace(pos, sUrl);
+              RuianRecord record = server.trace(pos, sUrl);
 
               if (record.getCoorCount() == 0) {
                   TracerUtils.showNotification(tr("Data not available.")+ "\n(" + pos.toDisplayString() + ")", "warning");
@@ -162,7 +161,7 @@ public class RuianModule implements TracerModule {
             way.addNode(firstNode);
 
             System.out.println("TracedWay: " + way.toString());
-            tagBuilding(way);
+            tagBuilding(record, way);
             // connect to other buildings or modify existing building
             Command connCmd = connectWays.connect(way, pos, ctrl, alt, source);
 
@@ -207,7 +206,7 @@ public class RuianModule implements TracerModule {
     }
 
 // ---------------------------------------------------------------------------
-    private void tagBuilding(Way way) {
+    private void tagBuilding(RuianRecord record, Way way) {
         if(!alt) {
           if ( record.getBuildingTagKey().equals("building") &&
                record.getBuildingTagValue().length() > 0) {
