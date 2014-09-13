@@ -99,6 +99,7 @@ public class LpisModule implements TracerModule  {
 
         private LpisRecord m_record;
         private Exception m_asyncException;
+        private boolean m_cancelled;
 
         LpisTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (tr("Tracing"));
@@ -108,6 +109,7 @@ public class LpisModule implements TracerModule  {
             this.m_shift = shift;
             this.m_record = null;
             this.m_asyncException = null;
+            this.m_cancelled = false;
         }
 
         protected void realRun() throws SAXException {
@@ -140,6 +142,11 @@ public class LpisModule implements TracerModule  {
             if (m_asyncException != null) {
                 m_asyncException.printStackTrace();
                 TracerUtils.showNotification(tr("LPIS download failed.") + "\n(" + m_pos.toDisplayString() + ")", "error");
+                return;
+            }
+
+            // Cancelled by user?
+            if (m_cancelled) {
                 return;
             }
 
@@ -288,7 +295,8 @@ public class LpisModule implements TracerModule  {
         }
 
         protected void cancel() {
-            // #### FIXME - resolve cancellation
+            m_cancelled = true;
+            // #### TODO: break the connection to remote LPIS server
         }
 
         private void tagMultipolygon (Relation rel) {
