@@ -55,24 +55,17 @@ import org.xml.sax.SAXException;
 
 public class RuianModule implements TracerModule {
 
-    private final long serialVersionUID = 1L;
-
-    protected boolean cancel;
-    private boolean ctrl;
-    private boolean alt;
-    private boolean shift;
     private boolean moduleEnabled;
-    private String source = "cuzk:ruian";
 
-    private ConnectWays connectWays = new ConnectWays();
-    protected RuianServer server = new RuianServer();
+    private final String source = "cuzk:ruian";
+    private final String ruianUrl = "http://josm.poloha.net";
+
 
     public RuianModule(boolean enabled) {
-      moduleEnabled = enabled;
+        moduleEnabled = enabled;
     }
 
     public void init() {
-
     }
 
     public Cursor getCursor() {
@@ -84,72 +77,128 @@ public class RuianModule implements TracerModule {
     }
 
     public boolean moduleIsEnabled() {
-      return moduleEnabled;
+        return moduleEnabled;
     };
 
-    public void setModuleIsEnabled(boolean enabled){
-      moduleEnabled = enabled;
+    public void setModuleIsEnabled(boolean enabled) {
+        moduleEnabled = enabled;
     };
 
-    public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift)
+
+
+    public PleaseWaitRunnable trace(LatLon pos, boolean ctrl, boolean alt, boolean shift)
     {
-        return new PleaseWaitRunnable(tr("Tracing")) {
-            protected void realRun() throws SAXException {
-                RuianModule.this.traceImpl(pos, ctrl, alt, shift,
-                    progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
-            }
-
-            protected void finish() {
-            }
-
-            protected void cancel() {
-                // #### FIXME - resolve cancellation
-            }
-        };
+        return new RuianTracerTask (pos, ctrl, alt, shift);
     }
 
-    private void traceImpl(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor) {
-        final Collection<Command> commands = new LinkedList<Command>();
-        TracerPreferences pref = TracerPreferences.getInstance();
+    class RuianTracerTask extends PleaseWaitRunnable {
 
-        String sUrl = "http://josm.poloha.net";
-        double dAdjX = 0, dAdjY = 0;
+        private final LatLon m_pos;
+        private final boolean m_ctrl;
+        private final boolean m_alt;
+        private final boolean m_shift;
+        private final String m_url;
 
-        if (pref.isCustomRuainUrlEnabled())
-          sUrl = pref.getCustomRuainUrl();
+        private RuianRecord m_record;
+        private Exception m_asyncException;
+        private boolean m_cancelled;
 
-        if (pref.isRuianAdjustPositionEnabled()) {
-          dAdjX = pref.getRuianAdjustPositionLat();
-          dAdjY = pref.getRuianAdjustPositionLon();
+        RuianTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
+            super (tr("Tracing"));
+            this.m_pos = pos;
+            this.m_ctrl = ctrl;
+            this.m_alt = alt;
+            this.m_shift = shift;
+            this.m_record = null;
+            this.m_asyncException = null;
+            this.m_cancelled = false;
+
+            TracerPreferences pref = TracerPreferences.getInstance();
+
+            this.m_url = pref.isCustomRuainUrlEnabled() ? pref.getCustomRuainUrl() : ruianUrl;
         }
 
-        System.out.println("");
-        System.out.println("-----------------");
-        System.out.println("----- Trace -----");
-        System.out.println("-----------------");
-        System.out.println("");
-        progressMonitor.beginTask(null, 3);
-        try {
-              RuianRecord record = server.trace(pos, sUrl);
+        protected void realRun() throws SAXException {
+            ProgressMonitor pm = progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false);
 
-              if (record.getCoorCount() == 0) {
-                  TracerUtils.showNotification(tr("Data not available.")+ "\n(" + pos.toDisplayString() + ")", "warning");
+            System.out.println("");
+            System.out.println("-----------------");
+            System.out.println("----- Trace -----");
+            System.out.println("-----------------");
+            System.out.println("");
+            pm.beginTask(null, 3);
+
+            try {
+                RuianServer server = new RuianServer();
+                m_record = server.trace(m_pos, m_url);
+            }
+            catch (Exception e) {
+                m_asyncException = e;
+            }
+            finally {
+                pm.finishTask ();
+            }
+        }
+
+        protected void finish() {
+
+            // Note: finish() is guaranteed to run on EDT, after realRun() succeeded.
+
+            // Async download failed?
+            if (m_asyncException != null) {
+                m_asyncException.printStackTrace();
+                TracerUtils.showNotification(tr("RUIAN download failed.") + "\n(" + m_pos.toDisplayString() + ")", "error");
+                return;
+            }
+
+            // Cancelled by user?
+            if (m_cancelled) {
+                return;
+            }
+
+            // No data available?
+            if (m_record.getCoorCount() == 0) {
+                  TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
                   return;
             }
 
+            try {
+                createTracedPolygon ();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                throw e;
+            }
+        }
+
+        private void createTracedPolygon() {
+
+            // Note: must be called from finish() only
+
+            TracerPreferences pref = TracerPreferences.getInstance();
+            double dAdjX = 0, dAdjY = 0;
+
+            if (pref.isRuianAdjustPositionEnabled()) {
+                dAdjX = pref.getRuianAdjustPositionLat();
+                dAdjY = pref.getRuianAdjustPositionLon();
+            }
+
+            final List<Bounds> dsBounds = Main.main.getCurrentDataSet().getDataSourceBounds();
+            final Collection<Command> commands = new LinkedList<Command>();
+
             // make nodes a way
-            List<Bounds> dsBounds = Main.main.getCurrentDataSet().getDataSourceBounds();
             Way way = new Way();
             Node firstNode = null;
-            // record.getCoorCount() - 1 - ommit last node
-            for (int i = 0; i < record.getCoorCount() - 1; i++) {
+            // record.getCoorCount() - 1 - omit last node
+            for (int i = 0; i < m_record.getCoorCount() - 1; i++) {
                 Node node;
+
                 // Apply corrections to node coordinates
                 if (!pref.isRuianAdjustPositionEnabled()) {
-                  node = new Node(record.getCoor(i));
+                  node = new Node(m_record.getCoor(i));
                 } else {
-                  node = new Node(new LatLon(LatLon.roundToOsmPrecision(record.getCoor(i).lat()+dAdjX),
-                                             LatLon.roundToOsmPrecision(record.getCoor(i).lon()+dAdjY)));
+                  node = new Node(new LatLon(LatLon.roundToOsmPrecision(m_record.getCoor(i).lat()+dAdjX),
+                                             LatLon.roundToOsmPrecision(m_record.getCoor(i).lon()+dAdjY)));
                 }
                 if (firstNode == null) {
                     firstNode = node;
@@ -157,108 +206,111 @@ public class RuianModule implements TracerModule {
                 // Check. whether traced node is inside downloaded area
                 int insideCnt = 0;
                 for (Bounds b: dsBounds) {
-                  if (b.contains(node.getCoor())) {
-                    insideCnt++;
-                  }
+                    if (b.contains(node.getCoor())) {
+                        insideCnt++;
+                    }
                 }
                 if (insideCnt == 0) {
-                  ExtendedDialog ed = new ExtendedDialog(
-                          Main.parent, tr("Way is outside downloaded area"),
-                          new String[] {tr("Ok")});
-                  ed.setButtonIcons(new String[] {"ok"});
-                  ed.setIcon(JOptionPane.ERROR_MESSAGE);
-                  ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
-                  ed.showDialog();
-                  return;
+                    ExtendedDialog ed = new ExtendedDialog(
+                        Main.parent, tr("Way is outside downloaded area"),
+                            new String[] {tr("Ok")});
+                    ed.setButtonIcons(new String[] {"ok"});
+                    ed.setIcon(JOptionPane.ERROR_MESSAGE);
+                    ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
+                    ed.showDialog();
+                    return;
                 }
                 commands.add(new AddCommand(node));
                 way.addNode(node);
             }
+
             // Insert first node again - close the polygon.
             way.addNode(firstNode);
 
             System.out.println("TracedWay: " + way.toString());
-            tagBuilding(record, way);
+            tagBuilding(way);
+
             // connect to other buildings or modify existing building
-            Command connCmd = connectWays.connect(way, pos, ctrl, alt, source);
+            ConnectWays connectWays = new ConnectWays();
+            Command connCmd = connectWays.connect(way, m_pos, m_ctrl, m_alt, source);
 
+            // Nothing changed?
             String s[] = connCmd.getDescriptionText().split(": ");
-
             if (s[1].equals("Nothing")) {
-              TracerUtils.showNotification(tr("Nothing changed."), "info");
-              if (shift) {
-                Main.main.getCurrentDataSet().addSelected(connectWays.getWay());
-              } else {
-                Main.main.getCurrentDataSet().setSelected(connectWays.getWay());
-              }
-            } else {
-                commands.add(connCmd);
-
-                if (!commands.isEmpty()) {
-                  final String strCommand;
-                  if (connectWays.isNewWay()) {
-                    strCommand = trn("Tracer(RUIAN): add a way with {0} point", "Tracer(RUIAN): add a way with {0} points", connectWays.getWay().getRealNodesCount(), connectWays.getWay().getRealNodesCount());
-                  } else {
-                    strCommand = trn("Tracer(RUIAN): modify way to {0} point", "Tracer(RUIAN): modify way to {0} points", connectWays.getWay().getRealNodesCount(), connectWays.getWay().getRealNodesCount());
-                  }
-
-                  SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                      Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
-                    }
-                  } );
-
-                  if (shift) {
+                TracerUtils.showNotification(tr("Nothing changed."), "info");
+                if (m_shift) {
                     Main.main.getCurrentDataSet().addSelected(connectWays.getWay());
-                  } else {
-                    Main.main.getCurrentDataSet().setSelected(connectWays.getWay());
-                  }
                 } else {
-                    System.out.println("Failed");
+                    Main.main.getCurrentDataSet().setSelected(connectWays.getWay());
+                }
+                return;
+            }
+
+            commands.add(connCmd);
+
+            if (!commands.isEmpty()) {
+                String strCommand;
+                if (connectWays.isNewWay()) {
+                    strCommand = trn("Tracer(RUIAN): add a way with {0} point", "Tracer(RUIAN): add a way with {0} points", connectWays.getWay().getRealNodesCount(), connectWays.getWay().getRealNodesCount());
+                } else {
+                    strCommand = trn("Tracer(RUIAN): modify way to {0} point", "Tracer(RUIAN): modify way to {0} points", connectWays.getWay().getRealNodesCount(), connectWays.getWay().getRealNodesCount());
+                }
+
+                Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
+
+                if (m_shift) {
+                    Main.main.getCurrentDataSet().addSelected(connectWays.getWay());
+                } else {
+                    Main.main.getCurrentDataSet().setSelected(connectWays.getWay());
+                }
+            } else {
+                System.out.println("Failed");
+            }
+        }
+
+        protected void cancel() {
+            m_cancelled = true;
+            // #### TODO: break the connection to RUIAN server
+        }
+
+        private void tagBuilding(Way way) {
+
+            if(!m_alt) {
+                if (m_record.getBuildingTagKey().equals("building") &&
+                    m_record.getBuildingTagValue().length() > 0) {
+                    way.put("building", m_record.getBuildingTagValue());
+                }
+                else {
+                    way.put("building", "yes");
                 }
             }
-        } finally {
-            progressMonitor.finishTask();
-        }
-    }
 
-// ---------------------------------------------------------------------------
-    private void tagBuilding(RuianRecord record, Way way) {
-        if(!alt) {
-          if ( record.getBuildingTagKey().equals("building") &&
-               record.getBuildingTagValue().length() > 0) {
-            way.put("building", record.getBuildingTagValue());
-          }
-          else {
-            way.put("building", "yes");
-          }
-        }
+            if (m_record.getBuildingID() > 0 ) {
+                way.put("ref:ruian:building", Long.toString(m_record.getBuildingID()));
+            }
 
-        if (record.getBuildingID() > 0 ) {
-          way.put("ref:ruian:building", Long.toString(record.getBuildingID()));
-        }
+            if (m_record.getBuildingUsageCode().length() > 0) {
+                way.put("building:ruian:type", m_record.getBuildingUsageCode());
+            }
 
-        if (record.getBuildingUsageCode().length() > 0) {
-          way.put("building:ruian:type", record.getBuildingUsageCode());
-        }
+            if (m_record.getBuildingLevels().length() > 0) {
+                way.put("building:levels", m_record.getBuildingLevels());
+            }
 
-        if (record.getBuildingLevels().length() > 0) {
-          way.put("building:levels", record.getBuildingLevels());
-        }
+            if (m_record.getBuildingFlats().length() > 0) {
+                way.put("building:flats", m_record.getBuildingFlats());
+            }
 
-        if (record.getBuildingFlats().length() > 0) {
-          way.put("building:flats", record.getBuildingFlats());
-        }
+            if (m_record.getBuildingFinished().length() > 0) {
+                way.put("start_date", m_record.getBuildingFinished());
+            }
 
-        if (record.getBuildingFinished().length() > 0) {
-          way.put("start_date", record.getBuildingFinished());
-        }
-
-        if (record.getSource().length() > 0) {
-          way.put("source", record.getSource());
-        }
-        else {
-          way.put("source", source);
+            if (m_record.getSource().length() > 0) {
+                way.put("source", m_record.getSource());
+            }
+            else {
+                way.put("source", source);
+            }
         }
     }
 }
