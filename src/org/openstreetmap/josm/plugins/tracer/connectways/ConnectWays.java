@@ -133,11 +133,14 @@ public class ConnectWays {
      * @return Commands.
      */
     public Command connect(Way newWay, Relation wayRelation, LatLon pos, boolean ctrl, boolean alt, String source) {
+        debugMsg("-- ========= --");
         debugMsg("-- connect() --");
+        debugMsg("-- ========= --");
 
         LinkedList<Command> cmds = new LinkedList<Command>();
         LinkedList<Command> cmds2 = new LinkedList<Command>();
         LinkedList<Command> xcmds = new LinkedList<Command>();
+        List<Node> deletedNodes   = new LinkedList<Node> ();
 
         Way s_oWay = new Way();
         Way s_oWayOld = new Way();
@@ -273,10 +276,14 @@ public class ConnectWays {
             for (int i = 0; i < s_oWayOld.getNodesCount() - 1; i++) {
               Node nd = s_oWayOld.getNode(i);
               List<Way> ways = getWaysOfNode(nd);
-              if (ways.size() == 0 && ! nd.isOutsideDownloadArea() && ! nd.isConnectionNode()) {
+              if (ways.size() == 0 &&
+                  deletedNodes.indexOf(nd) < 0 &&
+                  ! nd.isOutsideDownloadArea() &&
+                  ! nd.isConnectionNode()) {
                   debugMsg("    Delete node: " + nd);
                   cmds2.add(new DeleteCommand(nd));
                   s_oNodes.remove(nd);
+                  deletedNodes.add(nd);
               }
 
             }
@@ -835,6 +842,7 @@ public class ConnectWays {
       Way overlapedWay = new Way(way);
 
       Node iNode;
+      List<Node> deletedNodes   = new LinkedList<Node> ();
 
       // Go through all myWay segments
       // Check an intersection way segment with waysegment of the overlaped way
@@ -1097,10 +1105,14 @@ public class ConnectWays {
               overlapedWay.addNode(overlapedWay.getNodesCount(), overlapedWay.getNode(0));
               }
               replaceWayInList(tmpWay, overlapedWay);
-              if (getWaysOfNode(in).size() == 0 && ! in.hasKeys() && ! in.isOutsideDownloadArea() ) {
+              if (getWaysOfNode(in).size() == 0 &&
+                  deletedNodes.indexOf(in) < 0 &&
+                  ! in.hasKeys() &&
+                  ! in.isOutsideDownloadArea() ) {
                   debugMsg("      Delete node: " + in.getUniqueId());
                   cmds2.add(new DeleteCommand(in));
                   s_oNodes.remove(in);
+                  deletedNodes.add(in);
               }
               in = overlapedWF.getNextInnerNode();
             }
@@ -1164,6 +1176,7 @@ public class ConnectWays {
 
       List<Command> cmds = new LinkedList<Command>();
       Way myWay = s_Ways.get(0);
+      List<Node> deletedNodes   = new LinkedList<Node> ();
 
       debugMsg("   myNode: " + myNode + ", otherNode: " + otherNode);
       debugMsg("   myWay: " + myWay);
@@ -1194,10 +1207,13 @@ public class ConnectWays {
 
       replaceWayInList(tmpWay, myWay);
 
-      if (getWaysOfNode(myNode).size() == 0 && ! myNode.isOutsideDownloadArea()) {
+      if (getWaysOfNode(myNode).size() == 0 &&
+          deletedNodes.indexOf(myNode) < 0 &&
+          ! myNode.isOutsideDownloadArea()) {
           debugMsg("    Delete node: " + myNode);
           cmds.add(new DeleteCommand(myNode));
           s_oNodes.remove(myNode);
+          deletedNodes.add(myNode);
       }
 
       debugMsg("   updated myWay: " + myWay);
@@ -1357,6 +1373,7 @@ public class ConnectWays {
 
       LinkedList<Command> cmds = new LinkedList<Command>();
       List<Way> tmpWaysList = new LinkedList<Way> (s_Ways.getWays());
+      List<Node> deletedNodes   = new LinkedList<Node> ();
 
       for (Way w : tmpWaysList) {
         if (!w.isUsable() || !isSameTag(w, wayType) || w.equals(s_Ways.get(0))) {
@@ -1376,10 +1393,13 @@ public class ConnectWays {
               continue;
             }
 
-            if ( getWaysOfNode(nd).size() == 0 && ! nd.isOutsideDownloadArea() ) {
+            if ( getWaysOfNode(nd).size() == 0 &&
+                 deletedNodes.indexOf(nd) < 0 &&
+                 ! nd.isOutsideDownloadArea() ) {
                 debugMsg("    Delete node: " + nd);
                 cmds.add(new DeleteCommand(nd));
                 s_oNodes.remove(nd);
+                deletedNodes.add(nd);
             }
           }
         }
@@ -1417,6 +1437,7 @@ public class ConnectWays {
 
       LinkedList<Command> cmds  = new LinkedList<Command>();
       LinkedList<Command> cmds2 = new LinkedList<Command>();
+      List<Node> deletedNodes   = new LinkedList<Node> ();
 
       for (Way w : new LinkedList<Way>(s_Ways.getWays())) {
         if (!w.equals(s_Ways.get(0)) && isSameTag(w, wayType)) {
@@ -1445,10 +1466,13 @@ public class ConnectWays {
                   }
 
                   replaceWayInList(bckWay, w);
-                  if (getWaysOfNode(middleNode).size() == 0 && ! middleNode.isOutsideDownloadArea()) {
+                  if (getWaysOfNode(middleNode).size() == 0 &&
+                      deletedNodes.indexOf(middleNode) < 0 &&
+                      ! middleNode.isOutsideDownloadArea()) {
                     debugMsg("    -> Node: Delete command");
                     cmds2.add(new DeleteCommand(middleNode));
                     s_oNodes.remove(middleNode);
+                    deletedNodes.add(middleNode);
                   }
                   break;
                 }
