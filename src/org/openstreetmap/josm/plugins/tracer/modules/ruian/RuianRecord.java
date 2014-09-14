@@ -247,13 +247,13 @@ public class RuianRecord {
         }
 
         try {
-          m_finished = building.getString("plati_od");
+          m_valid_from = building.getString("plati_od");
         } catch (Exception e) {
           System.out.println("stavebni_objekt.plati_od: " + e.getMessage());
         }
 
         try {
-          m_valid_from = building.getString("dokonceni");
+          m_finished = building.getString("dokonceni");
         } catch (Exception e) {
           System.out.println("stavebni_objekt.dokonceni: " + e.getMessage());
         }
