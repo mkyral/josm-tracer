@@ -13,7 +13,7 @@
     <property name="plugin.requires" value="jts;geotools"/>
 
     <!-- ** include targets that all plugins have in common ** -->
-    <import file="../build-common.xml"/>
+    <import file="./build-common.xml.testing"/>
 
     <property name="jts" location="${plugin.dist.dir}/jts.jar"/>
     <property name="geotools" location="${plugin.dist.dir}/geotools.jar"/>
