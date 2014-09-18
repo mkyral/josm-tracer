@@ -322,14 +322,14 @@ public class ConnectWays {
             cmds.add(new SequenceCommand(tr("Fix overlaped ways"), xcmds));
           }
 
-  //         if (wayType == BUILDING) {
-  //           debugMsg("");
-  //           debugMsg("-----------------------------------------");
-  //           xcmds = new LinkedList<Command>(removeSpareNodes());
-  //           if (xcmds.size() > 0) {
-  //             cmds.add(new SequenceCommand(tr("Remove spare nodes"), xcmds));
-  //           }
-  //         }
+          if (wayType == BUILDING) {
+            debugMsg("");
+            debugMsg("-----------------------------------------");
+            xcmds = new LinkedList<Command>(removeSpareNodes());
+            if (xcmds.size() > 0) {
+              cmds.add(new SequenceCommand(tr("Remove spare nodes"), xcmds));
+            }
+          }
         }
 
         debugMsg("-----------------------------------------");
@@ -1439,7 +1439,7 @@ public class ConnectWays {
       LinkedList<Command> cmds2 = new LinkedList<Command>();
       List<Node> deletedNodes   = new LinkedList<Node> ();
 
-      for (Way w : new LinkedList<Way>(s_Ways.getWays())) {
+      for (Way w : new LinkedList<Way>(s_Ways.getConnectedWays())) {
         if (!w.equals(s_Ways.getMasterWay()) && isSameTag(w, wayType)) {
           Way bckWay = new Way(w);
           cmds2 = new LinkedList<Command>();
@@ -1448,9 +1448,13 @@ public class ConnectWays {
           debugMsg("    Processed way: " + w);
           while (wayChanged) {
             debugMsg ("     Loop: " + x++);
-            for (int i = 0; i < w.getRealNodesCount(); i++) {
-              Node middleNode = w.getNode(i);
-              wayChanged = false;
+            wayChanged = false;
+            for (Node middleNode: s_Ways.getSharedNodes(w)) {
+              if (deletedNodes.indexOf(middleNode) >= 0) {
+                // skip deleted nodes
+                continue;
+              }
+              int i = w.getNodes().indexOf(middleNode);
 
               if (getWaysOfNode(middleNode).size() == 1 && secondarydNodes.indexOf(middleNode) < 0) {
                 Node prevNode = w.getNode(i == 0 ? w.getRealNodesCount() -1 : i - 1);

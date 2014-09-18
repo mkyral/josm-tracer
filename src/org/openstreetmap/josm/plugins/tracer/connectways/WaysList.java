@@ -34,7 +34,8 @@ import java.util.*;
 public class WaysList {
   private ArrayList <Way>  m_orig_ways;   // Stores original ways
   private ArrayList <Way>  m_updated_ways; // Stores working ways
-  private ArrayList <Boolean>  m_was_connected; // Way was connected to the first way
+  private ArrayList <Boolean>  m_has_shared_nodes; // Way was connected to the master (first) way
+  private ArrayList <ArrayList<Node>> m_shared_nodes;  // Nodes shared with master way
 
   public WaysList () {
     init();
@@ -43,7 +44,8 @@ public class WaysList {
   private void init () {
     m_orig_ways = new ArrayList <Way> ();
     m_updated_ways = new  ArrayList <Way> ();
-    m_was_connected  = new  ArrayList <Boolean> ();
+    m_has_shared_nodes  = new  ArrayList <Boolean> ();
+    m_shared_nodes = new  ArrayList <ArrayList<Node>> ();
   }
 
 // ----------------------------------------------------
@@ -57,9 +59,10 @@ public class WaysList {
     {
       m_orig_ways.add(w);
       m_updated_ways.add(w);
-      m_was_connected.add(false);
+      m_has_shared_nodes.add(false);
+      m_shared_nodes.add(new ArrayList<Node>());
+      checkSharedNodes(m_orig_ways.indexOf(w));
     }
-    // TODO: m_was_connected.add(is_connected(w));
   }
 
  /**
@@ -78,7 +81,8 @@ public class WaysList {
     if (i >= 0) {
       m_orig_ways.remove(i);
       m_updated_ways.remove(i);
-      m_was_connected.remove(i);
+      m_has_shared_nodes.remove(i);
+      m_shared_nodes.remove(i);
     }
   }
 
@@ -91,8 +95,12 @@ public class WaysList {
     if ( i > 0) {
       m_orig_ways.set(0, m_orig_ways.get(i));
       m_updated_ways.set(0, m_updated_ways.get(i));
-      m_was_connected.set(0, false);
+      m_has_shared_nodes.set(0, false);
+      m_shared_nodes.set(0, new ArrayList<Node>());
       remove(i);
+      for (int idx = 1; idx < m_updated_ways.size(); idx++) {
+        checkSharedNodes(idx);
+      }
     }
   }
 
@@ -153,7 +161,7 @@ public class WaysList {
     return m_updated_ways.get(0);
   }
 
-/**
+ /**
   *  Returns list of ways
   *  @return list List of ways
   */
@@ -168,10 +176,52 @@ public class WaysList {
   public ArrayList <Way> getConnectedWays () {
     ArrayList <Way> r = new ArrayList <Way> ();
     for (int i = 0; i < m_updated_ways.size(); i++) {
-      if (m_was_connected.get(i)) {
+      if (m_has_shared_nodes.get(i)) {
         r.add(m_updated_ways.get(i));
       }
     }
     return r;
   }
+
+ /**
+  *  Returns list of nodes originaly shared between given way and master way
+  *  @param  Updated way
+  *  @return List of shared nodes
+  */
+  public ArrayList <Node> getSharedNodes (Way w) {
+    ArrayList <Node> sharedNodes = new ArrayList <Node> ();
+    int idx = m_updated_ways.indexOf(w);
+
+    if (idx >= 0) {
+      for (Node n: m_shared_nodes.get(idx)) {
+        if (m_updated_ways.get(idx).getNodes().indexOf(n) >= 0) {
+          sharedNodes.add(n);
+        }
+      }
+    }
+    return sharedNodes;
+  }
+
+ /**
+  *  Check whether way shares nodes with master way
+  *  @param index of way to check
+  */
+  private void checkSharedNodes (int idx) {
+    if (idx == 0) {
+      return;
+    }
+
+    ArrayList<Node> sharedNodes = new ArrayList<Node>();
+    for (Node n: m_orig_ways.get(idx).getNodes()) {
+      if (m_orig_ways.get(0).getNodes().indexOf(n) >= 0) {
+        sharedNodes.add(n);
+      }
+    }
+
+    if (sharedNodes.size() > 0) {
+      m_has_shared_nodes.set(idx, true);
+      m_shared_nodes.set(idx, sharedNodes);
+    }
+  }
+
 }
