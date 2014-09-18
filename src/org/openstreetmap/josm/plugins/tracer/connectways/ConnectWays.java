@@ -65,7 +65,7 @@ public class ConnectWays {
     private List<Node> s_oNodes; // List of all nodes we will work with
     private List<Node> sharedNodes; // List of nodes that are part of more ways
 
-    private List<Way>  secondaryWays; // List of ways connected to connected ways (and are not myWay)
+    private List<Way>  secondaryWays; // List of ways connected to connected ways (and are not masterWay)
     private List<Node> secondarydNodes; // List of nodes of ways connected to connected ways ;-)
 
     private List<Way>  s_overlapWays; // List of ways that overlap traced way (s_oWay)
@@ -99,7 +99,7 @@ public class ConnectWays {
      * @return Connected Way.
      */
     public Way getWay() {
-      return s_Ways.get(0);
+      return s_Ways.getMasterWay();
     }
 
     /**
@@ -204,7 +204,7 @@ public class ConnectWays {
         Way oldWay = getOldWay(pos);
         if (oldWay != null && s_Ways.indexOf(oldWay) > 0) {
           s_oWayOld = new Way (oldWay);
-          s_Ways.setAsMyWay(s_oWayOld);
+          s_Ways.setAsMasterWay(s_oWayOld);
         } else {
           s_oWayOld = null;
         }
@@ -838,42 +838,42 @@ public class ConnectWays {
       List<Command> cmds = new LinkedList<Command>();
       List<Command> cmds2 = new LinkedList<Command>();
 
-      Way myWay = new Way(s_Ways.get(0));
+      Way masterWay = new Way(s_Ways.getMasterWay());
       Way overlapedWay = new Way(way);
 
       Node iNode;
       List<Node> deletedNodes   = new LinkedList<Node> ();
 
-      // Go through all myWay segments
+      // Go through all masterWay segments
       // Check an intersection way segment with waysegment of the overlaped way
       // If intersection is found - incorporate the node into both ways
-      // Remove all nodes from otherWay that are inside myWay
-      // Incorporate all nodes from myWay that are inside otherWay to otherWay border
+      // Remove all nodes from otherWay that are inside masterWay
+      // Incorporate all nodes from masterWay that are inside otherWay to otherWay border
 
       // 1) Collect list of intersections
       debugMsg("    --> 1) Collect list of intersections");
       List<Node> intNodes = new LinkedList<Node>();
-      for (int i = 0; i < s_Ways.get(0).getNodesCount()-1; i++) {
-        WaySegment myWaySegment = new WaySegment(s_Ways.get(0), i);
-        if (way.getNodes().indexOf(myWaySegment.getFirstNode()) >= 0 &&
-            way.getNodes().indexOf(myWaySegment.getSecondNode()) >= 0) {
+      for (int i = 0; i < s_Ways.getMasterWay().getNodesCount()-1; i++) {
+        WaySegment masterWaySegment = new WaySegment(s_Ways.getMasterWay(), i);
+        if (way.getNodes().indexOf(masterWaySegment.getFirstNode()) >= 0 &&
+            way.getNodes().indexOf(masterWaySegment.getSecondNode()) >= 0) {
           continue;
         }
         for (int j = 0; j < way.getNodesCount()-1; j++) {
           WaySegment overlapedWaySegment = new WaySegment(way, j);
-          if (! myWaySegment.intersects(overlapedWaySegment) && !segmentOnSegment(myWaySegment, overlapedWaySegment)) {
+          if (! masterWaySegment.intersects(overlapedWaySegment) && !segmentOnSegment(masterWaySegment, overlapedWaySegment)) {
             continue;
           }
 
           // segments are intersected
-          iNode = getIntersectionNode(myWaySegment, overlapedWaySegment);
+          iNode = getIntersectionNode(masterWaySegment, overlapedWaySegment);
           debugMsg("    --------------------------------");
-          debugMsg("    myWaySegment:      " + myWaySegment);
-          debugMsg("                       " + myWaySegment.getFirstNode() + ", " + myWaySegment.getSecondNode());
+          debugMsg("    masterWaySegment:  " + masterWaySegment);
+          debugMsg("                       " + masterWaySegment.getFirstNode() + ", " + masterWaySegment.getSecondNode());
           debugMsg("    overlapedWaySegment: " + overlapedWaySegment);
           debugMsg("                       " + overlapedWaySegment.getFirstNode() + ", " + overlapedWaySegment.getSecondNode());
 
-          if (pointIsCloseToLine(iNode.getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor()) &&
+          if (pointIsCloseToLine(iNode.getCoor(), masterWaySegment.getFirstNode().getCoor(), masterWaySegment.getSecondNode().getCoor()) &&
               pointIsCloseToLine(iNode.getCoor(), overlapedWaySegment.getFirstNode().getCoor(), overlapedWaySegment.getSecondNode().getCoor())) {
             debugMsg("    Intersection node: " + iNode);
 
@@ -900,14 +900,14 @@ public class ConnectWays {
               }
             }
           } else {
-            if (pointIsCloseToLine(overlapedWaySegment.getFirstNode().getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
+            if (pointIsCloseToLine(overlapedWaySegment.getFirstNode().getCoor(), masterWaySegment.getFirstNode().getCoor(), masterWaySegment.getSecondNode().getCoor())) {
               debugMsg("    Intersection node: " + overlapedWaySegment.getFirstNode());
               // Add intersection to both ways
               if (intNodes.indexOf(overlapedWaySegment.getFirstNode()) == -1) {
                 intNodes.add(overlapedWaySegment.getFirstNode());
               }
             }
-            if (pointIsCloseToLine(overlapedWaySegment.getSecondNode().getCoor(), myWaySegment.getFirstNode().getCoor(), myWaySegment.getSecondNode().getCoor())) {
+            if (pointIsCloseToLine(overlapedWaySegment.getSecondNode().getCoor(), masterWaySegment.getFirstNode().getCoor(), masterWaySegment.getSecondNode().getCoor())) {
               debugMsg("    Intersection node: " + overlapedWaySegment.getSecondNode());
               // Add intersection to both ways
               if (intNodes.indexOf(overlapedWaySegment.getSecondNode()) == -1) {
@@ -928,17 +928,17 @@ public class ConnectWays {
       debugMsg("    --------------------------------");
       debugMsg("    --> 2) Integrate intersection nodes into ways");
       for (Node intNode : intNodes) {
-        // my Way
-        if (myWay.getNodes().indexOf(intNode) >= 0) {
-          debugMsg("    Node is already in myWay: " + intNode.getUniqueId());
+        // Master Way
+        if (masterWay.getNodes().indexOf(intNode) >= 0) {
+          debugMsg("    Node is already in masterWay: " + intNode.getUniqueId());
         } else {
-          for (int i = 0; i < myWay.getNodesCount()-1; i++) {
-            if (pointIsOnLine(intNode.getCoor(), myWay.getNode(i).getCoor(), myWay.getNode(i+1).getCoor())) {
-              debugMsg("    --myWay: ");
+          for (int i = 0; i < masterWay.getNodesCount()-1; i++) {
+            if (pointIsOnLine(intNode.getCoor(), masterWay.getNode(i).getCoor(), masterWay.getNode(i+1).getCoor())) {
+              debugMsg("    --masterWay: ");
               debugMsg("      Add node       : "+ intNode.getUniqueId());
-              debugMsg("        between nodes: (" + i + ")" + myWay.getNode(i).getUniqueId());
-              debugMsg("                     : (" + (i+1) + ")"+ myWay.getNode(i+1).getUniqueId());
-              myWay.addNode((i + 1), intNode);
+              debugMsg("        between nodes: (" + i + ")" + masterWay.getNode(i).getUniqueId());
+              debugMsg("                     : (" + (i+1) + ")"+ masterWay.getNode(i+1).getUniqueId());
+              masterWay.addNode((i + 1), intNode);
               break;
              }
           }
@@ -961,12 +961,12 @@ public class ConnectWays {
         }
       }
 
-      replaceWayInList(s_Ways.get(0), myWay);
+      replaceWayInList(s_Ways.getMasterWay(), masterWay);
       replaceWayInList(way, overlapedWay);
 
       /* Go trough way fragments between intersection nodes
-       * If fragment is inside myWay, delete all middle nodes
-       * in overlaped way frogment and incorporate myWay nodes
+       * If fragment is inside masterWay, delete all middle nodes
+       * in overlaped way frogment and incorporate masterWay nodes
        * into the overlaped Way.
        */
 
@@ -985,7 +985,7 @@ public class ConnectWays {
 
       Way tmpWay;
       WayFragment overlapedWF;
-      WayFragment myWF;
+      WayFragment masterWF;
 
       System.out.println("  --------------------------------");
       System.out.println("         Intersection nodes: " + intNodes);
@@ -995,7 +995,7 @@ public class ConnectWays {
         System.out.println("  ---- New Fragment("+ idx +") ----");
 
         overlapedWF = null;;
-        myWF = null;
+        masterWF = null;
 
         // First test the overlapedWay segment
         System.out.println("   == Overlaped Way ==");
@@ -1020,28 +1020,28 @@ public class ConnectWays {
           overlapedWF.resetInnerIndex();
           Node n = overlapedWF.getNextInnerNode();
           System.out.println("  Tested node: " + n.getUniqueId());
-          if (! isNodeInsideWay(n.getCoor(), myWay)) {
-            // Node is not inside myWay - skip this way fragment
+          if (! isNodeInsideWay(n.getCoor(), masterWay)) {
+            // Node is not inside masterWay - skip this way fragment
             continue;
           }
         } else {
-          // when no inner nodes, check whether way segment is crossing the myWay
-          // (middle point of the segment is inside myWay).
+          // when no inner nodes, check whether way segment is crossing the masterWay
+          // (middle point of the segment is inside masterWay).
           LatLon ll = getMiddlePoint(overlapedWF.getFirstNode().getCoor(),
                                      overlapedWF.getLastNode().getCoor());
-          if (! isNodeInsideWay(ll, myWay) || isOnBorder(ll, myWay)) {
-            // Node is not inside myWay - skip this way fragment
+          if (! isNodeInsideWay(ll, masterWay) || isOnBorder(ll, masterWay)) {
+            // Node is not inside masterWay - skip this way fragment
             continue;
           }
         }
 
-        // Now test the myWay segment.
-        System.out.println("   == My Way ==");
-        startIdx = myWay.getNodes().indexOf(overlapedWF.getFirstNode());
-        endIdx = myWay.getNodes().indexOf(overlapedWF.getLastNode());
+        // Now test the masterWay segment.
+        System.out.println("   == Master Way ==");
+        startIdx = masterWay.getNodes().indexOf(overlapedWF.getFirstNode());
+        endIdx = masterWay.getNodes().indexOf(overlapedWF.getLastNode());
 
         System.out.println("   overlapedWay.startIdx: " + overlapedWay.getNodes().indexOf(overlapedWF.getFirstNode()) + " .endIdx: " + overlapedWay.getNodes().indexOf(overlapedWF.getLastNode()));
-        System.out.println("   myWay.startIdx: " + startIdx + " .endIdx: " + endIdx);
+        System.out.println("   masterWay.startIdx: " + startIdx + " .endIdx: " + endIdx);
 
         if (startIdx == -1 || endIdx == -1) {
           System.out.println("   ERROR: first or last node has index -1!!!");
@@ -1049,17 +1049,17 @@ public class ConnectWays {
         }
 
         if ((endIdx - startIdx) > 1 || (startIdx - endIdx) > 1) {
-          Node nextNode = myWay.getNode(startIdx == myWay.getRealNodesCount() ? 1 : startIdx + 1);
+          Node nextNode = masterWay.getNode(startIdx == masterWay.getRealNodesCount() ? 1 : startIdx + 1);
           System.out.println("  Tested node: " + nextNode.getUniqueId());
           if (isNodeInsideWay(nextNode.getCoor(), overlapedWay)) {
             System.out.println("   -> 1): ");
-            myWF = new WayFragment(myWay, startIdx, endIdx);
+            masterWF = new WayFragment(masterWay, startIdx, endIdx);
           } else {
-            nextNode = myWay.getNode(startIdx == 0 ? myWay.getRealNodesCount() -1 : startIdx - 1);
+            nextNode = masterWay.getNode(startIdx == 0 ? masterWay.getRealNodesCount() -1 : startIdx - 1);
             System.out.println("  Tested node: " + nextNode.getUniqueId());
             if (isNodeInsideWay(nextNode.getCoor(), overlapedWay)) {
               System.out.println("   -> 2): ");
-              myWF = new WayFragment(myWay, endIdx, startIdx);
+              masterWF = new WayFragment(masterWay, endIdx, startIdx);
             }
           }
         } else {
@@ -1067,13 +1067,13 @@ public class ConnectWays {
                                     overlapedWF.getLastNode().getCoor());
           if (isNodeInsideWay(ll, overlapedWay) && ! isOnBorder(ll, overlapedWay)) {
             System.out.println("   -> 3): ");
-            myWF = new WayFragment(myWay, startIdx, endIdx);
+            masterWF = new WayFragment(masterWay, startIdx, endIdx);
           } else {
             ll = getMiddlePoint(overlapedWF.getLastNode().getCoor(),
                                 overlapedWF.getFirstNode().getCoor());
             if (isNodeInsideWay(ll, overlapedWay) && ! isOnBorder(ll, overlapedWay)) {
               System.out.println("   -> 4): ");
-              myWF = new WayFragment(myWay, endIdx, startIdx);
+              masterWF = new WayFragment(masterWay, endIdx, startIdx);
             }
           }
         }
@@ -1082,10 +1082,10 @@ public class ConnectWays {
         // Try to fix overlaping
 
         System.out.println(" Overlaped Way Fragment: " + overlapedWF.toString());
-        if (myWF != null) {
-          System.out.println("        My Way Fragment: " + myWF.toString());
+        if (masterWF != null) {
+          System.out.println("        Master Way Fragment: " + masterWF.toString());
         } else {
-          System.out.println("        My Way Fragment: N/A");
+          System.out.println("        Master Way Fragment: N/A");
         }
 
         if (overlapedWF.hasInnerNodes()) {
@@ -1118,11 +1118,11 @@ public class ConnectWays {
             }
           }
 
-        if (myWF != null) {
-          if (myWF.hasInnerNodes()) {
+        if (masterWF != null) {
+          if (masterWF.hasInnerNodes()) {
             // Incorporate Inner nodes of MayWay into overlapedWay
             debugMsg("    --------------------------------");
-            debugMsg("    --> 4) Incorporate inner nodes from myWayFragment");
+            debugMsg("    --> 4) Incorporate inner nodes from masterWayFragment");
 
             boolean backward;
 
@@ -1130,22 +1130,22 @@ public class ConnectWays {
 
             int startIndex = overlapedWay.getNodes().indexOf(overlapedWF.getFirstNode());
 
-            if (overlapedWF.getFirstNode().getUniqueId() == myWF.getFirstNode().getUniqueId()) {
-              myWF.resetInnerIndex();
+            if (overlapedWF.getFirstNode().getUniqueId() == masterWF.getFirstNode().getUniqueId()) {
+              masterWF.resetInnerIndex();
               backward = false;
             } else {
-              myWF.setMaxInnerIndex();
+              masterWF.setMaxInnerIndex();
               backward = true;
             }
 
-            Node in = backward?myWF.getPreviousInnerNode():myWF.getNextInnerNode();
+            Node in = backward?masterWF.getPreviousInnerNode():masterWF.getNextInnerNode();
 
             while (in != null) {
               startIndex++;
               debugMsg("      Add node into way: " + in);
               debugMsg("      ... at index: " + startIndex);
               overlapedWay.addNode(startIndex , in);
-              in = backward?myWF.getPreviousInnerNode():myWF.getNextInnerNode();
+              in = backward?masterWF.getPreviousInnerNode():masterWF.getNextInnerNode();
             }
             replaceWayInList(tmpWay, overlapedWay);
           }
@@ -1155,10 +1155,10 @@ public class ConnectWays {
 
 
       debugMsg("    -- -- -- -- --");
-      replaceWayInList(s_Ways.get(0), myWay);
+      replaceWayInList(s_Ways.getMasterWay(), masterWay);
       replaceWayInList(way, overlapedWay);
 
-      cmds.add(new ChangeCommand(s_Ways.getOriginalWay(myWay), myWay));
+      cmds.add(new ChangeCommand(s_Ways.getOriginalWay(masterWay), masterWay));
       cmds.add(new ChangeCommand(s_Ways.getOriginalWay(overlapedWay), overlapedWay));
 
       cmds.addAll(cmds2);
@@ -1167,56 +1167,56 @@ public class ConnectWays {
 
     /**
      * Merges two nodes
-     * @param myNode Node to merge
-     * @param otherNode Node that will replace myNode
+     * @param masterNode Node to merge
+     * @param otherNode Node that will replace masterNode
      * @return List of Commands.
      */
-    private List<Command> mergeNodes(Node myNode, Node otherNode){
+    private List<Command> mergeNodes(Node masterNode, Node otherNode){
       debugMsg("-- mergeNodes() --");
 
       List<Command> cmds = new LinkedList<Command>();
-      Way myWay = s_Ways.get(0);
+      Way masterWay = s_Ways.getMasterWay();
       List<Node> deletedNodes   = new LinkedList<Node> ();
 
-      debugMsg("   myNode: " + myNode + ", otherNode: " + otherNode);
-      debugMsg("   myWay: " + myWay);
+      debugMsg("   masterNode: " + masterNode + ", otherNode: " + otherNode);
+      debugMsg("   masterWay: " + masterWay);
 
-      Way tmpWay = new Way(myWay);
-      // myNode is not part of myWay? Should not happen
-      int j = myWay.getNodes().indexOf(myNode);
+      Way tmpWay = new Way(masterWay);
+      // masterNode is not part of masterWay? Should not happen
+      int j = masterWay.getNodes().indexOf(masterNode);
       if (j < 0) {
         return cmds;
       }
 
-      // move otherNode to position of myNode
+      // move otherNode to position of masterNode
       cmds.add(new MoveCommand(otherNode,
-                (myNode.getEastNorth().getX() - otherNode.getEastNorth().getX()),
-                (myNode.getEastNorth().getY() - otherNode.getEastNorth().getY())
+                (masterNode.getEastNorth().getX() - otherNode.getEastNorth().getX()),
+                (masterNode.getEastNorth().getY() - otherNode.getEastNorth().getY())
                 ));
-      otherNode.setCoor(myNode.getCoor());
+      otherNode.setCoor(masterNode.getCoor());
 
-     myWay.addNode(j, otherNode);
+     masterWay.addNode(j, otherNode);
       if (j == 0) {
           // first + last point
-        myWay.addNode(myWay.getNodesCount(), otherNode);
+        masterWay.addNode(masterWay.getNodesCount(), otherNode);
       }
 
-      myWay.removeNode(myNode);
+      masterWay.removeNode(masterNode);
 
-      cmds.add(new ChangeCommand(tmpWay, myWay));
+      cmds.add(new ChangeCommand(tmpWay, masterWay));
 
-      replaceWayInList(tmpWay, myWay);
+      replaceWayInList(tmpWay, masterWay);
 
-      if (getWaysOfNode(myNode).size() == 0 &&
-          deletedNodes.indexOf(myNode) < 0 &&
-          ! myNode.isOutsideDownloadArea()) {
-          debugMsg("    Delete node: " + myNode);
-          cmds.add(new DeleteCommand(myNode));
-          s_oNodes.remove(myNode);
-          deletedNodes.add(myNode);
+      if (getWaysOfNode(masterNode).size() == 0 &&
+          deletedNodes.indexOf(masterNode) < 0 &&
+          ! masterNode.isOutsideDownloadArea()) {
+          debugMsg("    Delete node: " + masterNode);
+          cmds.add(new DeleteCommand(masterNode));
+          s_oNodes.remove(masterNode);
+          deletedNodes.add(masterNode);
       }
 
-      debugMsg("   updated myWay: " + myWay);
+      debugMsg("   updated masterWay: " + masterWay);
       return cmds;
     }
 
@@ -1225,7 +1225,7 @@ public class ConnectWays {
      * @param d_way Destination way
      * @param s_way Source way
      * @param newSource value for source key
-     * @param otherNode Node that will replace myNode
+     * @param otherNode Node that will replace masterNode
      * @return destination way
      */
     private Way updateKeys(Way d_way, Way s_way, String newSource) {
@@ -1317,41 +1317,41 @@ public class ConnectWays {
       LinkedList<Command> cmds2 = new LinkedList<Command>();
       List<Node> tmpNodesList   = new LinkedList<Node> (s_oNodes);
       List<Node> deletedNodes   = new LinkedList<Node> ();
-      Way        s_oWay         = new Way(s_Ways.get(0));
-      Way        tmpWay         = new Way(s_Ways.get(0));
+      Way        s_oWay         = new Way(s_Ways.getMasterWay());
+      Way        tmpWay         = new Way(s_Ways.getMasterWay());
 
 
       for (Node otherNode : tmpNodesList) {
-        if (s_Ways.get(0).getNodes().indexOf(otherNode) >= 0) {
+        if (s_Ways.getMasterWay().getNodes().indexOf(otherNode) >= 0) {
           continue;
         }
 
         for (int i = 0; i < tmpWay.getRealNodesCount(); i++) {
-          Node myNode = tmpWay.getNode(i);
-          if (deletedNodes.indexOf(myNode) < 0 && otherNode.getCoor().distance(myNode.getCoor()) <= s_dMinDistanceN2N) {
-            debugMsg(    "Replace node: " + myNode + " by node: " + otherNode );
+          Node masterNode = tmpWay.getNode(i);
+          if (deletedNodes.indexOf(masterNode) < 0 && otherNode.getCoor().distance(masterNode.getCoor()) <= s_dMinDistanceN2N) {
+            debugMsg(    "Replace node: " + masterNode + " by node: " + otherNode );
             cmds.add(new MoveCommand(otherNode,
-                      (myNode.getEastNorth().getX() - otherNode.getEastNorth().getX()),
-                      (myNode.getEastNorth().getY() - otherNode.getEastNorth().getY())
+                      (masterNode.getEastNorth().getX() - otherNode.getEastNorth().getX()),
+                      (masterNode.getEastNorth().getY() - otherNode.getEastNorth().getY())
                       ));
-            otherNode.setCoor(myNode.getCoor());
-            int myNodeIndex = s_oWay.getNodes().indexOf(myNode);
-            debugMsg(    "Node index: " + myNodeIndex);
-            if (myNodeIndex >= 0) {
-              s_oWay.addNode(myNodeIndex, otherNode);
-              if (myNodeIndex == 0) {
+            otherNode.setCoor(masterNode.getCoor());
+            int masterNodeIndex = s_oWay.getNodes().indexOf(masterNode);
+            debugMsg(    "Node index: " + masterNodeIndex);
+            if (masterNodeIndex >= 0) {
+              s_oWay.addNode(masterNodeIndex, otherNode);
+              if (masterNodeIndex == 0) {
                 // First node - close the way
                 s_oWay.addNode(s_oWay.getNodesCount(), otherNode);
               }
-              s_oWay.removeNode(myNode);
+              s_oWay.removeNode(masterNode);
               replaceWayInList(tmpWay, s_oWay);
 
-              if (deletedNodes.indexOf(myNode) < 0 &&  getWaysOfNode(myNode).size() <= 1 &&
-                  ! myNode.isOutsideDownloadArea()) {
-                debugMsg("    Delete node: " + myNode);
-                s_oNodes.remove(myNode);
-                cmds2.add(new DeleteCommand(myNode));
-                deletedNodes.add(myNode);
+              if (deletedNodes.indexOf(masterNode) < 0 &&  getWaysOfNode(masterNode).size() <= 1 &&
+                  ! masterNode.isOutsideDownloadArea()) {
+                debugMsg("    Delete node: " + masterNode);
+                s_oNodes.remove(masterNode);
+                cmds2.add(new DeleteCommand(masterNode));
+                deletedNodes.add(masterNode);
               }
             }
           }
@@ -1376,13 +1376,13 @@ public class ConnectWays {
       List<Node> deletedNodes   = new LinkedList<Node> ();
 
       for (Way w : tmpWaysList) {
-        if (!w.isUsable() || !isSameTag(w, wayType) || w.equals(s_Ways.get(0))) {
+        if (!w.isUsable() || !isSameTag(w, wayType) || w.equals(s_Ways.getMasterWay())) {
           continue;
         }
 
         Way tmpWay = new Way(w);
-        if (isNodeInsideWay(w.getBBox().getCenter(), s_Ways.get(0)) &&
-            isNodeInsideWay(s_Ways.get(0).getBBox().getCenter(), w)) {
+        if (isNodeInsideWay(w.getBBox().getCenter(), s_Ways.getMasterWay()) &&
+            isNodeInsideWay(s_Ways.getMasterWay().getBBox().getCenter(), w)) {
           debugMsg("   Delete way: " + w);
           cmds.add(new DeleteCommand( w ));
           s_Ways.remove(w);
@@ -1418,12 +1418,12 @@ public class ConnectWays {
       LinkedList<Command> cmds = new LinkedList<Command>();
 
       for (Way w : new LinkedList<Way>(s_Ways.getWays())) {
-        if (!w.equals(s_Ways.get(0)) && isSameTag(w, wayType) && areWaysOverlaped(s_Ways.get(0), w)) {
+        if (!w.equals(s_Ways.getMasterWay()) && isSameTag(w, wayType) && areWaysOverlaped(s_Ways.getMasterWay(), w)) {
           cmds.addAll(correctOverlaping(w));
         }
       }
 
-      debugMsg("    s_oWay: fixOverlapedWays(): " + new TracerDebug().FormatPrimitive(s_Ways.get(0).toString()));
+      debugMsg("    s_oWay: fixOverlapedWays(): " + new TracerDebug().FormatPrimitive(s_Ways.getMasterWay().toString()));
 
       return cmds;
     }
@@ -1440,7 +1440,7 @@ public class ConnectWays {
       List<Node> deletedNodes   = new LinkedList<Node> ();
 
       for (Way w : new LinkedList<Way>(s_Ways.getWays())) {
-        if (!w.equals(s_Ways.get(0)) && isSameTag(w, wayType)) {
+        if (!w.equals(s_Ways.getMasterWay()) && isSameTag(w, wayType)) {
           Way bckWay = new Way(w);
           cmds2 = new LinkedList<Command>();
           boolean wayChanged = true;

@@ -28,7 +28,7 @@ import java.util.*;
 /**
  * Private class to store ways we will working with
  *
- * Note: the first position is special - it holds myWay
+ * Note: the first position is special - it holds master Way
  */
 
 public class WaysList {
@@ -83,10 +83,10 @@ public class WaysList {
   }
 
  /**
-  *  Move given way to the first position
+  *  Set given was as the Master way
   *  @param way way
   */
-  public void setAsMyWay(Way w) {
+  public void setAsMasterWay(Way w) {
     int i = m_updated_ways.indexOf(w);
     if ( i > 0) {
       m_orig_ways.set(0, m_orig_ways.get(i));
@@ -146,6 +146,14 @@ public class WaysList {
   }
 
  /**
+  *  Returns master way
+  *  @return master way
+  */
+  public Way getMasterWay() {
+    return m_updated_ways.get(0);
+  }
+
+/**
   *  Returns list of ways
   *  @return list List of ways
   */
