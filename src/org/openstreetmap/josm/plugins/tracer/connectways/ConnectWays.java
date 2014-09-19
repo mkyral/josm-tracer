@@ -64,9 +64,6 @@ public class ConnectWays {
 //     List<Way>  s_oWays; // List of all ways we will work with
     private List<Node> s_oNodes; // List of all nodes we will work with
 
-    private List<Way>  secondaryWays; // List of ways connected to connected ways (and are not masterWay)
-    private List<Node> secondarydNodes; // List of nodes of ways connected to connected ways ;-)
-
     private List<Way>  s_overlapWays; // List of ways that overlap traced way (s_oWay)
 
 // Obsolete
@@ -428,25 +425,6 @@ public class ConnectWays {
       for (Way w : Main.main.getCurrentDataSet().searchWays(bbox)) {
         if (w.isUsable()) {
           s_Ways.add(w);
-        }
-      }
-
-      // Get secondary ways and secondary Nodes
-//       secondaryWays = new LinkedList<Way>();
-      secondarydNodes = new LinkedList<Node>();
-      for (Way xw : s_Ways.getWays()) {
-        bbox = new BBox(xw);
-        bbox.addPrimitive(xw,s_dMinDistance);
-
-        for (Way w : Main.main.getCurrentDataSet().searchWays(bbox)) {
-          if (w.isUsable() && s_Ways.indexOf(w) < 0) {
-//             secondaryWays.add(w);
-            for (Node n : w.getNodes()) {
-              if (n.isUsable()) {
-                secondarydNodes.add(n);
-              }
-            }
-          }
         }
       }
     }
@@ -1434,7 +1412,7 @@ public class ConnectWays {
               }
               int i = w.getNodes().indexOf(middleNode);
 
-              if (getWaysOfNode(middleNode).size() == 1 && secondarydNodes.indexOf(middleNode) < 0) {
+              if (getWaysOfNode(middleNode).size() == 1) {
                 Node prevNode = w.getNode(i == 0 ? w.getRealNodesCount() -1 : i - 1);
                 Node nextNode = w.getNode(i == w.getNodesCount() ? 1 : i + 1);
 
