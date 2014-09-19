@@ -63,7 +63,6 @@ public class ConnectWays {
     private WaysList s_Ways = new WaysList(); // New or updated way
 //     List<Way>  s_oWays; // List of all ways we will work with
     private List<Node> s_oNodes; // List of all nodes we will work with
-    private List<Node> sharedNodes; // List of nodes that are part of more ways
 
     private List<Way>  secondaryWays; // List of ways connected to connected ways (and are not masterWay)
     private List<Node> secondarydNodes; // List of nodes of ways connected to connected ways ;-)
@@ -209,7 +208,6 @@ public class ConnectWays {
           s_oWayOld = null;
         }
 
-//         getSharedNodes(s_oWayOld);
         if (s_oWayOld == null) {
           s_bAddNewWay = true;
           if (wayType == BUILDING || wayType == LANDUSE_RUAIN) {
@@ -494,26 +492,6 @@ public class ConnectWays {
       }
       debugMsg("<< end of getWaysOfNode()");
       return ways;
-    }
-
-    /**
-     *  Get list of nodes shared with another way (connected node)
-     *  @param way Way
-     */
-    private void getSharedNodes(Way way) {
-      debugMsg("-- getSharedNodes() --");
-      if (way == null) {
-        return;
-      }
-
-      sharedNodes = new LinkedList<Node>();
-
-      for (int i = 0; i < way.getNodesCount(); i++) {
-        if (getWaysOfNode(way.getNode(i)).size() > 1) {
-          sharedNodes.add(way.getNode(i));
-          debugMsg("   Connected node: " + way.getNode(i));
-        }
-      }
     }
 
     /**
