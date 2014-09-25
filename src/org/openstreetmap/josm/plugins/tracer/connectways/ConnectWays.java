@@ -63,6 +63,7 @@ public class ConnectWays {
     private WaysList s_Ways = new WaysList(); // New or updated way
 //     List<Way>  s_oWays; // List of all ways we will work with
     private List<Node> s_oNodes; // List of all nodes we will work with
+    private List<Node> deletedNodes; // List of deleted nodes - do not delete one node more times
 
     private List<Way>  s_overlapWays; // List of ways that overlap traced way (s_oWay)
 
@@ -89,6 +90,13 @@ public class ConnectWays {
 // -----------------------------------------------------------------------------------------------------
 // Public methods
 // -----------------------------------------------------------------------------------------------------
+
+    /**
+     * Constructor
+     */
+    public ConnectWays () {
+      init();
+    }
 
     /**
      * Return connected way.
@@ -136,7 +144,6 @@ public class ConnectWays {
         LinkedList<Command> cmds = new LinkedList<Command>();
         LinkedList<Command> cmds2 = new LinkedList<Command>();
         LinkedList<Command> xcmds = new LinkedList<Command>();
-        List<Node> deletedNodes   = new LinkedList<Node> ();
 
         Way s_oWay = new Way();
         Way s_oWayOld = new Way();
@@ -339,6 +346,13 @@ public class ConnectWays {
 // -----------------------------------------------------------------------------------------------------
 // Private methods
 // -----------------------------------------------------------------------------------------------------
+
+    /**
+     *  Inicialization
+     */
+    private void init() {
+      deletedNodes = new LinkedList<Node> ();
+    }
 
     /**
      *  Print debug messages - default level is zero
@@ -798,7 +812,6 @@ public class ConnectWays {
       Way overlapedWay = new Way(way);
 
       Node iNode;
-      List<Node> deletedNodes   = new LinkedList<Node> ();
 
       // Go through all masterWay segments
       // Check an intersection way segment with waysegment of the overlaped way
@@ -1132,7 +1145,6 @@ public class ConnectWays {
 
       List<Command> cmds = new LinkedList<Command>();
       Way masterWay = s_Ways.getMasterWay();
-      List<Node> deletedNodes   = new LinkedList<Node> ();
 
       debugMsg("   masterNode: " + masterNode + ", otherNode: " + otherNode);
       debugMsg("   masterWay: " + masterWay);
@@ -1272,7 +1284,6 @@ public class ConnectWays {
       LinkedList<Command> cmds  = new LinkedList<Command>();
       LinkedList<Command> cmds2 = new LinkedList<Command>();
       List<Node> tmpNodesList   = new LinkedList<Node> (s_oNodes);
-      List<Node> deletedNodes   = new LinkedList<Node> ();
       Way        s_oWay         = new Way(s_Ways.getMasterWay());
       Way        tmpWay         = new Way(s_Ways.getMasterWay());
 
@@ -1329,7 +1340,6 @@ public class ConnectWays {
 
       LinkedList<Command> cmds = new LinkedList<Command>();
       List<Way> tmpWaysList = new LinkedList<Way> (s_Ways.getWays());
-      List<Node> deletedNodes   = new LinkedList<Node> ();
 
       for (Way w : tmpWaysList) {
         if (!w.isUsable() || !isSameTag(w, wayType) || w.equals(s_Ways.getMasterWay())) {
@@ -1393,7 +1403,6 @@ public class ConnectWays {
 
       LinkedList<Command> cmds  = new LinkedList<Command>();
       LinkedList<Command> cmds2 = new LinkedList<Command>();
-      List<Node> deletedNodes   = new LinkedList<Node> ();
 
       for (Way w : new LinkedList<Way>(s_Ways.getConnectedWays())) {
         if (!w.equals(s_Ways.getMasterWay()) && isSameTag(w, wayType)) {
