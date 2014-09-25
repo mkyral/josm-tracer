@@ -218,6 +218,11 @@ public class ConnectWays {
             cmds.add(new AddCommand(newWay));
           }
           s_oWay = new Way( newWay );
+
+          // Add New nodes
+          for (int i = 0; i < newWay.getNodesCount(); i++) {
+            s_oNodes.add(newWay.getNode(i));
+          }
         } else {
             s_bAddNewWay = false;
             /*
