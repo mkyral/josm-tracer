@@ -113,24 +113,22 @@ public class LpisModule implements TracerModule  {
         }
 
         protected void realRun() throws SAXException {
-            ProgressMonitor pm = progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false);
 
             System.out.println("");
             System.out.println("-----------------");
             System.out.println("----- Trace -----");
             System.out.println("-----------------");
             System.out.println("");
-            pm.beginTask(null, 3);
+
+            progressMonitor.indeterminateSubTask(tr("Downloading LPIS data..."));
 
             try {
                 LpisServer server = new LpisServer();
                 m_record = server.getElementBasicData(m_pos, lpisUrl);
+                progressMonitor.subTask(tr("Creating LPIS polygon..."));
             }
             catch (Exception e) {
                 m_asyncException = e;
-            }
-            finally {
-                pm.finishTask ();
             }
         }
 

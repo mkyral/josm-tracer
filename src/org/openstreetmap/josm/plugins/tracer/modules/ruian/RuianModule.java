@@ -119,24 +119,22 @@ public class RuianModule implements TracerModule {
         }
 
         protected void realRun() throws SAXException {
-            ProgressMonitor pm = progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false);
 
             System.out.println("");
             System.out.println("-----------------");
             System.out.println("----- Trace -----");
             System.out.println("-----------------");
             System.out.println("");
-            pm.beginTask(null, 3);
+
+            progressMonitor.indeterminateSubTask(tr("Downloading RUIAN buidling data..."));
 
             try {
                 RuianServer server = new RuianServer();
                 m_record = server.trace(m_pos, m_url);
+                progressMonitor.subTask(tr("Creating RUIAN building..."));
             }
             catch (Exception e) {
                 m_asyncException = e;
-            }
-            finally {
-                pm.finishTask ();
             }
         }
 

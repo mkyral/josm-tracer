@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-09-08 19:36+0200\n"
+"POT-Creation-Date: 2014-09-27 18:17+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,134 +18,149 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:284
-msgid "Trace"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:293
-msgid "Remove Fully covered ways"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:301
-msgid "Connect to other ways"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:308
-msgid "Fix overlaped ways"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/ConnectWays/ConnectWays.java:325
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:242
-msgid "Trace object"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:83
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:78
 msgid "LPIS"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:120
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:117
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:114
-msgid "Data not available."
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:105
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:99
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:101
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:107
+msgid "Tracing"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:152
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:132
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:147
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:144
-msgid "Way is outside downloaded area"
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:123
+msgid "Downloading LPIS data..."
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:128
+msgid "Creating LPIS polygon..."
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:142
+msgid "LPIS download failed."
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:153
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:133
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:148
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:145
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:139
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:159
+msgid "Data not available."
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:195
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:169
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:157
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:213
+msgid "Way is outside downloaded area"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:196
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:170
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:158
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:214
 msgid "Ok"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:156
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:136
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:151
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:148
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:199
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:173
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:161
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:217
 msgid ""
 "Sorry.\n"
 "The traced way (or part of the way) is outside of the downloaded area.\n"
 "Please download area around the way and try again."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:222
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:170
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:166
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:262
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:192
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:238
 msgid "Nothing changed."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:233
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:274
 msgid "Tracer(LPIS): add an area"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:235
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:276
 #, java-format
 msgid " with {0} inner."
 msgid_plural " with {0} inners."
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:151
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:283
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ConnectWays.java:346
+msgid "Trace object"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:150
 msgid "Tracer: Not mapped value found: "
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:151
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:150
 msgid "Please report it to @talk-cz"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:75
-msgid "Classic"
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:153
-#, java-format
-msgid "Tracer: add a way with {0} point"
-msgid_plural "Tracer: add a way with {0} points"
-msgstr[0] ""
-msgstr[1] ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/clasic/ClassicModule.java:155
-#, java-format
-msgid "Tracer: modify way to {0} point"
-msgid_plural "Tracer: modify way to {0} points"
-msgstr[0] ""
-msgstr[1] ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:81
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:86
 msgid "RUIAN-Lands"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:182
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:204
 #, java-format
 msgid "Tracer(RUIAN-Lands): add a way with {0} point"
 msgid_plural "Tracer(RUIAN-Lands): add a way with {0} points"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:184
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:206
 #, java-format
 msgid "Tracer(RUIAN-Lands): modify way to {0} point"
 msgid_plural "Tracer(RUIAN-Lands): modify way to {0} points"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:78
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:83
+msgid "Classic"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:178
+#, java-format
+msgid "Tracer: add a way with {0} point"
+msgid_plural "Tracer: add a way with {0} points"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:180
+#, java-format
+msgid "Tracer: modify way to {0} point"
+msgid_plural "Tracer: modify way to {0} points"
+msgstr[0] ""
+msgstr[1] ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:76
 msgid "RUIAN"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:178
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:129
+msgid "Downloading RUIAN buidling data..."
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:134
+msgid "Creating RUIAN building..."
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:148
+msgid "RUIAN download failed."
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:252
 #, java-format
 msgid "Tracer(RUIAN): add a way with {0} point"
 msgid_plural "Tracer(RUIAN): add a way with {0} points"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:180
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:254
 #, java-format
 msgid "Tracer(RUIAN): modify way to {0} point"
 msgid_plural "Tracer(RUIAN): modify way to {0} points"
@@ -209,39 +224,55 @@ msgstr ""
 msgid "Custom Ruian server url"
 msgstr ""
 
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ConnectWays.java:305
+msgid "Trace"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ConnectWays.java:314
+msgid "Remove Fully covered ways"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ConnectWays.java:322
+msgid "Connect to other ways"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ConnectWays.java:329
+msgid "Fix overlaped ways"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ConnectWays.java:337
+msgid "Remove spare nodes"
+msgstr ""
+
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerException.java:27
 msgid "An unknown error has occurred"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:63
 msgid "Tracer"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:63
 msgid "Tracer."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:63
 #, java-format
 msgid "Tool: {0}"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:74
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:75
 msgid ""
 "Tracer: No active module found!\n"
 "Please enable some in configuration."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:83
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:84
 #, java-format
 msgid "Tracer: Module {0} activated."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:114
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:115
 #, java-format
 msgid "Tracer: Switched to {0} module."
-msgstr ""
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:131
-msgid "Tracing"
 msgstr ""
