@@ -155,6 +155,7 @@ public class LpisRecord {
 
       try {
         ArrayList<LatLon> arrList = new ArrayList<LatLon>();
+        LatLon prevCoor = null;
 
         String[] coorVal = geometry.split(" ");
         for (int i = 0; i < coorVal.length; i = i + 2) {
@@ -163,7 +164,12 @@ public class LpisRecord {
           krovak k = new krovak();
           LatLon ll = k.krovak2LatLon(x, y);
 
-          arrList.add(ll);
+          // Sometimes, after rouding, two nodes could have the same LatLon coordinates
+          // Skip duplicated coordinate
+          if (prevCoor == null || !ll.equalsEpsilon(prevCoor)) {
+            arrList.add(ll);
+            prevCoor = ll;
+          }
         }
         return arrList;
       } catch (Exception e) {
@@ -213,7 +219,7 @@ public class LpisRecord {
 
         System.out.println("parseXML(basic) - m_lpis_id: " + m_lpis_id);
 
-        System.out.println("parseXML(nasic) - expOuter: " + expOuter);
+        System.out.println("parseXML(basic) - expOuter: " + expOuter);
         nodeList = (NodeList) xPath.compile(expOuter).evaluate(doc, XPathConstants.NODESET);
         String outer = nodeList.item(0).getFirstChild().getNodeValue();
         System.out.println("parseXML(basic) - outer: " + outer);
