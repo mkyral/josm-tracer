@@ -154,12 +154,16 @@ public class LpisModule implements TracerModule  {
                 return;
             }
 
+            Main.main.getCurrentDataSet().beginUpdate();
             try {
                 createTracedPolygon ();
             }
             catch (Exception e) {
                 e.printStackTrace();
                 throw e;
+            }
+            finally {
+                Main.main.getCurrentDataSet().endUpdate();
             }
         }
 
