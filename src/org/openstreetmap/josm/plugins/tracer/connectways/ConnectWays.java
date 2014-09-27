@@ -1040,14 +1040,12 @@ public class ConnectWays {
           LatLon ll = getMiddlePoint(overlapedWF.getFirstNode().getCoor(),
                                     overlapedWF.getLastNode().getCoor());
           if (isNodeInsideWay(ll, overlapedWay) && ! isOnBorder(ll, overlapedWay)) {
-            System.out.println("   -> 3): ");
-            masterWF = new WayFragment(masterWay, startIdx, endIdx);
-          } else {
-            ll = getMiddlePoint(overlapedWF.getLastNode().getCoor(),
-                                overlapedWF.getFirstNode().getCoor());
-            if (isNodeInsideWay(ll, overlapedWay) && ! isOnBorder(ll, overlapedWay)) {
-              System.out.println("   -> 4): ");
-              masterWF = new WayFragment(masterWay, endIdx, startIdx);
+            if ((endIdx == startIdx + 1) || (startIdx == masterWay.getRealNodesCount()-1 && endIdx == 0)) {
+                System.out.println("   -> 3): ");
+                masterWF = new WayFragment(masterWay, startIdx, endIdx);
+            } else {
+                System.out.println("   -> 4): ");
+                masterWF = new WayFragment(masterWay, endIdx, startIdx);
             }
           }
         }
