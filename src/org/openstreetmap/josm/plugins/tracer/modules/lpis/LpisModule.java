@@ -271,14 +271,14 @@ public class LpisModule implements TracerModule  {
             commands.add(connCmd);
 
             if (!commands.isEmpty()) {
-                String msg = tr("Tracer(LPIS): add an area") + " \"" + m_record.getUsage() + "\"";
-                if (m_record.hasInners()) {
-                    msg = msg + trn(" with {0} inner.", " with {0} inners.", m_record.getInnersCount(), m_record.getInnersCount());
-                } else {
-                    msg = msg + ".";
-                }
-
-                TracerUtils.showNotification(msg, "info");
+//                 String msg = tr("Tracer(LPIS): add an area") + " \"" + m_record.getUsage() + "\"";
+//                 if (m_record.hasInners()) {
+//                     msg = msg + trn(" with {0} inner.", " with {0} inners.", m_record.getInnersCount(), m_record.getInnersCount());
+//                 } else {
+//                     msg = msg + ".";
+//                 }
+//
+//                 TracerUtils.showNotification(msg, "info");
 
                 Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
 
