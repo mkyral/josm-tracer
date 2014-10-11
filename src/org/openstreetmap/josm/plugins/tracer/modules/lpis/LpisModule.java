@@ -16,6 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
 package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
 import static org.openstreetmap.josm.tools.I18n.*;
@@ -24,6 +25,7 @@ import java.awt.Point;
 import java.util.*;
 import java.lang.StringBuilder;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
@@ -35,6 +37,7 @@ import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.osm.Relation;
@@ -46,11 +49,15 @@ import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
+import org.openstreetmap.josm.tools.Pair;
+import org.openstreetmap.josm.actions.search.SearchCompiler;
+import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
+import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
-import org.openstreetmap.josm.plugins.tracer.connectways.ConnectWays;
+import org.openstreetmap.josm.plugins.tracer.connectways.*;
 
 // import org.openstreetmap.josm.plugins.tracer.modules.lpis.LpisRecord;
 
@@ -60,11 +67,24 @@ public class LpisModule implements TracerModule  {
 
     private boolean moduleEnabled;
 
-    private final String source = "lpis";
-    private final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
+    private static final String source = "lpis";
+    private static final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
+    private static final String reuseExistingLanduseNodePattern =
+        "((landuse=* -landuse=no) | natural=scrub | natural=wood | natural=grassland | natural=wood | leisure=garden)";
+
+    private static volatile Match m_reuseExistingLanduseNodeMatch;
+
+    static {
+        try {
+            m_reuseExistingLanduseNodeMatch = SearchCompiler.compile(reuseExistingLanduseNodePattern, false, false);
+        } 
+        catch (ParseError e) {
+            throw new AssertionError(tr("Unable to compile pattern"));            
+        }
+    }
 
     public LpisModule(boolean enabled) {
-      moduleEnabled = enabled;
+        moduleEnabled = enabled;
     }
 
     public void init() {
@@ -79,12 +99,12 @@ public class LpisModule implements TracerModule  {
     }
 
     public boolean moduleIsEnabled() {
-      return moduleEnabled;
-    };
+        return moduleEnabled;
+    }
 
-    public void setModuleIsEnabled(boolean enabled){
-      moduleEnabled = enabled;
-    };
+    public void setModuleIsEnabled(boolean enabled) {
+        moduleEnabled = enabled;
+    }
 
     public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
         return new LpisTracerTask (pos, ctrl, alt, shift);
@@ -167,6 +187,16 @@ public class LpisModule implements TracerModule  {
             }
         }
 
+        private void wayIsOutsideDownloadedAreaDialog() {
+            ExtendedDialog ed = new ExtendedDialog(
+                Main.parent, tr("Way is outside downloaded area"),
+                    new String[] {tr("Ok")});
+            ed.setButtonIcons(new String[] {"ok"});
+            ed.setIcon(JOptionPane.ERROR_MESSAGE);
+            ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
+            ed.showDialog();
+        }
+
         private void createTracedPolygon() {
 
             // Note: must be called from finish() only
@@ -174,122 +204,76 @@ public class LpisModule implements TracerModule  {
             System.out.println("  LPIS ID: " + m_record.getLpisID());
             System.out.println("  LPIS usage: " + m_record.getUsage());
 
-            final List<Bounds> dsBounds = Main.main.getCurrentDataSet().getDataSourceBounds();
-            final Collection<Command> commands = new LinkedList<Command>();
+            WayEditor editor = new WayEditor (Main.main.getCurrentDataSet());
 
-            // Create Outer way
-            Way outer = new Way();
-            Node firstNode = null;
+            // Create outer way
+            List<EdNode> outer_nodes = new ArrayList<EdNode> ();
             // m_record.getCoorCount() - 1 - omit last node
             for (int i = 0; i < m_record.getOuter().size() - 1; i++) {
-                Node node = new Node(m_record.getOuter().get(i));
-                if (firstNode == null) {
-                    firstNode = node;
-                }
+                EdNode node = editor.newNode(m_record.getOuter().get(i));
 
-                // Check whether traced node is inside downloaded area
-                int insideCnt = 0;
-                for (Bounds b: dsBounds) {
-                    if (b.contains(node.getCoor())) {
-                        insideCnt++;
-                    }
-                }
-                if (insideCnt == 0) {
-                    ExtendedDialog ed = new ExtendedDialog(
-                        Main.parent, tr("Way is outside downloaded area"),
-                            new String[] {tr("Ok")});
-                    ed.setButtonIcons(new String[] {"ok"});
-                    ed.setIcon(JOptionPane.ERROR_MESSAGE);
-                    ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
-                    ed.showDialog();
+                if (!editor.insideDataSourceBounds(node)) {
+                    wayIsOutsideDownloadedAreaDialog();
                     return;
                 }
-                commands.add(new AddCommand(node));
-                outer.addNode(node);
+                outer_nodes.add(node);
             }
 
-            // Insert first node again - close the polygon.
-            outer.addNode(firstNode);
+            // close way
+            if (outer_nodes.size() > 0)
+                outer_nodes.add(outer_nodes.get(0));
+            EdWay outer_way = editor.newWay(outer_nodes);
 
-            System.out.println("TracedWay: " + outer.toString());
-            if (!m_record.hasInners()) {
-                tagOuterWay(outer);
-            }
+            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
+            outer_way.reuseExistingNodes(reuse_filter);
 
-            commands.add(new AddCommand(outer));
+            // #### If outer way is identical to an existing way, and this way is an untagged inner way of a
+            // landuse-matching multipolygon, and it isn't a member of other relations, then drop new outer_way
+            // and use the existing one.
 
-            // Inners found - create multipolygon
-            Relation rel = null;
+            if (!m_record.hasInners())
+                tagOuterWay(outer_way);
+
+            // Create multipolygon?
+            EdMultipolygon multipolygon = null;
             if (m_record.hasInners()) {
-                rel = new Relation ();
-                rel.addMember(new RelationMember("outer", outer));
+                multipolygon = editor.newMultipolygon();
+                tagMultipolygon(multipolygon);
+                multipolygon.addOuterWay(outer_way);
 
                 for (int i = 0; i < m_record.getInnersCount(); i++) {
                     ArrayList<LatLon> in = m_record.getInner(i);
-                    Way inner = new Way();
-                    firstNode = null;
-                    for (int j = 0; j < in.size() -1 ; j++) {
-                        Node node = new Node(in.get(j));
-                        if (firstNode == null) {
-                            firstNode = node;
-                        }
-                        commands.add(new AddCommand(node));
-                        inner.addNode(node);
+                    List<EdNode> inner_nodes = new ArrayList<EdNode>(in.size());
+                    for (int j = 0; j < in.size() - 1; j++) {
+                        inner_nodes.add(editor.newNode(in.get(j)));
                     }
 
-                    // Insert first node again - close the polygon.
-                    inner.addNode(firstNode);
+                    // close way
+                    if (inner_nodes.size() > 0)
+                        inner_nodes.add(inner_nodes.get(0));
+                    EdWay way = editor.newWay(inner_nodes);
 
-                    System.out.println("Traced Inner Way: " + inner.toString());
+                    way.reuseExistingNodes(reuse_filter);
 
-                    commands.add(new AddCommand(inner));
-                    rel.addMember(new RelationMember("inner", inner));
+                    // #### If inner way is identical to an existing way, and this way is a landuse-matching
+                    // (outer) way, then drop new inner_way and use the existing one.
+
+                    multipolygon.addInnerWay(way);
                 }
-
-                // Add relation
-                tagMultipolygon(rel);
-                commands.add(new AddCommand(rel));
             }
 
-            // connect to other landuse or modify existing landuse
-            ConnectWays connectWays = new ConnectWays();
-            Command connCmd;
-            if (rel != null) {
-                connCmd = connectWays.connect(outer, rel, m_pos, m_ctrl, m_alt, source);
-            } else {
-                connCmd = connectWays.connect(outer, m_pos, m_ctrl, m_alt, source);
-            }
-
-            // nothing changed?
-            String s[] = connCmd.getDescriptionText().split(": ");
-            if (s[1].equals("Nothing")) {
-                TracerUtils.showNotification(tr("Nothing changed."), "info");
-                if (m_shift) {
-                    Main.main.getCurrentDataSet().addSelected(rel != null ? rel : outer);
-                } else {
-                    Main.main.getCurrentDataSet().setSelected(rel != null ? rel : outer);
-                }
-                return;
-            }
-
-            commands.add(connCmd);
+            List<Command> commands = editor.finalizeEdit();
 
             if (!commands.isEmpty()) {
-//                 String msg = tr("Tracer(LPIS): add an area") + " \"" + m_record.getUsage() + "\"";
-//                 if (m_record.hasInners()) {
-//                     msg = msg + trn(" with {0} inner.", " with {0} inners.", m_record.getInnersCount(), m_record.getInnersCount());
-//                 } else {
-//                     msg = msg + ".";
-//                 }
-//
-//                 TracerUtils.showNotification(msg, "info");
-
                 Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
 
+                OsmPrimitive sel = (multipolygon != null ?
+                    multipolygon.finalMultipolygon() : outer_way.finalWay());
+
                 if (m_shift) {
-                    Main.main.getCurrentDataSet().addSelected(rel != null ? rel : connectWays.getWay());
+                    editor.getDataSet().addSelected(sel);
                 } else {
-                    Main.main.getCurrentDataSet().setSelected(rel != null ? rel : connectWays.getWay());
+                    editor.getDataSet().setSelected(sel);
                 }
             } else {
                 System.out.println("Failed");
@@ -301,15 +285,14 @@ public class LpisModule implements TracerModule  {
             // #### TODO: break the connection to remote LPIS server
         }
 
-        private void tagMultipolygon (Relation rel) {
+        private void tagMultipolygon (EdMultipolygon multipolygon) {
             Map <String, String> map = new HashMap <String, String> (m_record.getUsageOsm());
-            map.put("type", "multipolygon");
             map.put("source", source);
             map.put("ref", Long.toString(m_record.getLpisID()));
-            rel.setKeys(map);
+            multipolygon.setKeys(map);
         }
 
-        private void tagOuterWay (Way way) {
+        private void tagOuterWay (EdWay way) {
             Map <String, String> map = new HashMap <String, String> (m_record.getUsageOsm());
             map.put("source", source);
             map.put("ref", Long.toString(m_record.getLpisID()));
