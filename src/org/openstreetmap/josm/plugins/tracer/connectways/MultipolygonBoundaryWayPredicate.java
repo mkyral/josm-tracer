@@ -57,9 +57,15 @@ public final class MultipolygonBoundaryWayPredicate implements IEdWayPredicate {
                 return true;
         }
 
+        boolean way_match = m_filter.match(way);
+
         List<Relation> relations = way.getExternalReferrers(Relation.class);
         for (Relation rel: relations) {
-            if (m_multipolygonMatch.match(rel) && m_filter.match(rel))
+            if (!m_multipolygonMatch.match(rel))
+                continue;
+            if (way_match)
+                return true;
+            if (m_filter.match(rel))
                 return true;
         }
 
@@ -67,9 +73,16 @@ public final class MultipolygonBoundaryWayPredicate implements IEdWayPredicate {
     }
 
     public boolean evaluate(Way way) {
+
+        boolean way_match = m_filter.match(way);
+
         List<Relation> relations = OsmPrimitive.getFilteredList(way.getReferrers(), Relation.class);
         for (Relation rel: relations) {
-            if (m_multipolygonMatch.match(rel) && m_filter.match(rel))
+            if (!m_multipolygonMatch.match(rel))
+                continue;
+            if (way_match)
+                return true;
+            if (m_filter.match(rel))
                 return true;
         }
         return false;
