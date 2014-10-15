@@ -24,11 +24,14 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.data.osm.Relation;
 import java.util.List;
 import java.util.ArrayList;
-import org.openstreetmap.josm.tools.Pair;
+import java.util.HashMap;
 import java.util.Map;
+import org.openstreetmap.josm.tools.Pair;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.BBox;
 
 
 public class EdWay extends EdObject {
@@ -111,6 +114,11 @@ public class EdWay extends EdObject {
         setModified();
     }
 
+    public Map<String,String> getKeys() {
+        checkNotDeleted();
+        return new HashMap<String,String> (m_way.getKeys());
+    }
+
     public int getNodesCount() {
         return m_nodes.size();
     }
@@ -155,6 +163,14 @@ public class EdWay extends EdObject {
         return m_way;
     }
 
+    public BBox getBBox(double dist) {
+        checkEditable(); // #### maybe support finalized ways
+        BBox bbox = new BBox(m_way);
+        for (EdNode n: m_nodes)
+            bbox.add(n.getBBox(dist));
+        return bbox;
+    }
+
     public void reuseExistingNodes(IEdNodePredicate filter) {
         checkEditable ();
         if (filter == null)
@@ -178,6 +194,24 @@ public class EdWay extends EdObject {
                 throw new AssertionError(tr("EdWay.reuseExistingNodes on a closed way created a non-closed way!"));
             setNodes (new_nodes);
         }
+    }
+
+    public boolean isMemberOfAnyMultipolygon() {
+        List<EdMultipolygon> mps = this.getEditorReferrers(EdMultipolygon.class);
+        if (mps.size() > 0)
+            return true;
+
+        List<Relation> relations = this.getExternalReferrers(Relation.class);
+        for (Relation rel: relations)
+            if (MultipolygonMatch.match(rel))
+                return true;
+        
+        return false;
+    }
+
+    public long getUniqueId() {
+        checkNotDeleted();
+        return m_way.getUniqueId();
     }
 }
 

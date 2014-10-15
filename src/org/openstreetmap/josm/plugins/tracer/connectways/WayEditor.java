@@ -116,6 +116,7 @@ public class WayEditor {
 
         en = new EdNode(this, node);
         m_originalNodes.put(node.getUniqueId(), en);
+        m_nodes.add(en);
         return en;
     }
 
@@ -136,6 +137,7 @@ public class WayEditor {
 
         ew = new EdWay(this, way);
         m_originalWays.put(way.getUniqueId(), ew);
+        m_ways.add(ew);
         return ew;
     }
 
@@ -187,7 +189,7 @@ public class WayEditor {
             if (ednd != null) {
                 if (ednd.isDeleted())
                     continue;
-                if (src == ednd || ((ednd.getCoor().equals(src.getCoor())) && filter.evaluate(ednd))) {
+                if (src == ednd || (/*(ednd.getCoor().equals(src.getCoor())) &&*/ filter.evaluate(ednd))) {
                     if (ednode1 == null)
                         ednode1 = ednd;
                     else if (ednd.originalNode().getUniqueId() > ednode1.originalNode().getUniqueId())
@@ -195,7 +197,7 @@ public class WayEditor {
                 }
             }
             else {
-                if ((nd.getCoor().equals(src.getCoor())) && filter.evaluate(nd)) {
+                if (/*(nd.getCoor().equals(src.getCoor())) &&*/ filter.evaluate(nd)) {
                     if (node1 == null)
                         node1 = nd;
                     else if (nd.getUniqueId() > node1.getUniqueId())
@@ -221,7 +223,7 @@ public class WayEditor {
                 continue;
             if (!ednd.hasEditorReferrers())
                 continue;
-            if (src == ednd || ((ednd.getCoor().equals(src.getCoor())) && filter.evaluate(ednd))) {
+            if (src == ednd || (/*(ednd.getCoor().equals(src.getCoor())) &&*/ filter.evaluate(ednd))) {
                 if (ednd.hasOriginal()) {
                     if (ornode2 == null)
                         ornode2 = ednd;
@@ -251,7 +253,9 @@ public class WayEditor {
         for (EdWay w: m_ways) {
             if (w.isDeleted())
                 continue;
+            System.out.println("Considering way: " + Long.toString(w.getUniqueId()));
             if (w.hasEditorReferrers() || w.isTagged() || w.hasExternalReferrers()) {
+                System.out.println(" - required way: " + Long.toString(w.getUniqueId()));
                 required_ways.add(w);
                 for (int i = 0; i < w.getNodesCount(); i++)
                     required_nodes.add(w.getNode(i));
@@ -292,8 +296,10 @@ public class WayEditor {
         for (EdWay w: required_ways) {
             if (!w.hasOriginal() && !w.isDeleted())
                 add_ways.add(w);
-            else if (w.hasOriginal() && !w.isDeleted() && w.isModified())            
+            else if (w.hasOriginal() && !w.isDeleted() && w.isModified()) {
                 change_ways.add(w);
+                System.out.println("Change way: " + Long.toString(w.getUniqueId()));
+            }
         }
 
         // ways to be deleted
@@ -366,6 +372,51 @@ public class WayEditor {
                 return true;
         }
         return false;
+    }
+
+    public List<EdObject> useAllAreasInBBox(BBox bbox, IEdWayPredicate filter) {
+        // #### add multipolygons support!!!
+        // it will need proper handling of incomplete multipolygons in EdMultipolygon!!
+
+        List<EdObject> list = new ArrayList<EdObject>();
+
+        for (EdWay w: m_ways) {
+            if (w.isDeleted())
+                continue;
+            if (!bbox.intersects(w.getBBox(s_dMinDistance)))
+                continue;
+            if (!filter.evaluate(w))
+                continue;
+            if (w.isMemberOfAnyMultipolygon()) // #### multipolygons are skipped now here
+                continue;
+            list.add(w);
+        }
+
+        for (Way w : getDataSet().searchWays(bbox)) {
+            if (!w.isUsable())
+                continue;
+            if (isEdited(w))
+                continue;
+            if (!filter.evaluate(w))
+                continue;            
+
+            // #### multipolygons are skipped now here
+            {
+                List<Relation> relations = OsmPrimitive.getFilteredList(w.getReferrers(), Relation.class);
+                boolean is_member_of_any_multipolygon = false;
+                for (Relation rel: relations) {
+                    if (MultipolygonMatch.match(rel)) {
+                        is_member_of_any_multipolygon = true;
+                        break;
+                    }
+                }
+                if (is_member_of_any_multipolygon)
+                    continue;
+            }
+
+            list.add(useWay(w));
+        }
+        return list;
     }
 }
 

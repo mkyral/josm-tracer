@@ -31,51 +31,19 @@ import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 
+public final class MultipolygonMatch {
+    private static volatile Match m_multipolygonMatch;
 
-public final class MultipolygonBoundaryWayPredicate implements IEdWayPredicate {
-
-    private final Match m_filter;
-
-    public MultipolygonBoundaryWayPredicate(Match filter) {
-        m_filter = filter;
+    static {
+        try {
+            m_multipolygonMatch = SearchCompiler.compile("type=multipolygon", false, false);
+        }
+        catch (ParseError e) {
+            throw new AssertionError(tr("Unable to compile pattern"));
+        }
     }
 
-    public boolean evaluate(EdWay way) {
-        List<EdMultipolygon> mps = way.getEditorReferrers(EdMultipolygon.class);
-        for (EdMultipolygon mp: mps) {
-            if (mp.matches(m_filter))
-                return true;
-        }
-
-        boolean way_match = way.matches(m_filter);
-
-        List<Relation> relations = way.getExternalReferrers(Relation.class);
-        for (Relation rel: relations) {
-            if (!MultipolygonMatch.match(rel))
-                continue;
-            if (way_match)
-                return true;
-            if (m_filter.match(rel))
-                return true;
-        }
-
-        return false;
-    }
-
-    public boolean evaluate(Way way) {
-
-        boolean way_match = m_filter.match(way);
-
-        List<Relation> relations = OsmPrimitive.getFilteredList(way.getReferrers(), Relation.class);
-        for (Relation rel: relations) {
-            if (!MultipolygonMatch.match(rel))
-                continue;
-            if (way_match)
-                return true;
-            if (m_filter.match(rel))
-                return true;
-        }
-        return false;
+    public static boolean match (OsmPrimitive prim) {
+        return m_multipolygonMatch.match(prim);
     }
 }
-

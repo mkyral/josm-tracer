@@ -25,6 +25,7 @@ import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.coor.EastNorth;
 
 
 public class EdNode extends EdObject {
@@ -73,6 +74,10 @@ public class EdNode extends EdObject {
 
     public long getUniqueId() {
         return m_node.getUniqueId();
+    }
+
+    public EastNorth getEastNorth() {
+        return m_node.getEastNorth();
     }
 }
 

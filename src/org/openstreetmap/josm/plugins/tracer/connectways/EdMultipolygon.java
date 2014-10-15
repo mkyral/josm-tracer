@@ -9,7 +9,6 @@ import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.function.Predicate;
 import org.openstreetmap.josm.tools.Pair;
 import java.util.Map;
 import java.util.HashMap;
@@ -95,6 +94,26 @@ public class EdMultipolygon extends EdObject {
         if (type == null)
             m_relation.put("type", "multipolygon");
         setModified();
+    }
+
+    public List<EdWay> outerWays() {
+        checkEditable(); // #### maybe support finalized multipolygons
+        return new ArrayList<EdWay>(m_outerWays);
+    }
+
+    public List<EdWay> innerWays() {
+        checkEditable(); // #### maybe support finalized multipolygons
+        return new ArrayList<EdWay>(m_innerWays);
+    }
+
+    public List<EdWay> allWays() {
+        checkEditable();
+        List<EdWay> list = new ArrayList<EdWay>(m_outerWays.size() + m_innerWays.size());
+        for (EdWay w: m_outerWays)
+            list.add(w);
+        for (EdWay w: m_innerWays)
+            list.add(w);
+        return list;
     }
 
     protected OsmPrimitive currentPrimitive() {

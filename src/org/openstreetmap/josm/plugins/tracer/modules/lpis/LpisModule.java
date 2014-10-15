@@ -27,6 +27,8 @@ import java.lang.StringBuilder;
 import java.util.List;
 import java.util.Map;
 
+import com.seisw.util.geom.*;
+
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
@@ -73,10 +75,12 @@ public class LpisModule implements TracerModule  {
         "((landuse=* -landuse=no) | natural=scrub | natural=wood | natural=grassland | natural=wood | leisure=garden)";
 
     private static volatile Match m_reuseExistingLanduseNodeMatch;
+    private static volatile Match m_clipLanduseWayMatch;
 
     static {
         try {
             m_reuseExistingLanduseNodeMatch = SearchCompiler.compile(reuseExistingLanduseNodePattern, false, false);
+            m_clipLanduseWayMatch = m_reuseExistingLanduseNodeMatch; // use the same 
         } 
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile pattern"));            
@@ -262,6 +266,10 @@ public class LpisModule implements TracerModule  {
                 }
             }
 
+            // Clip other ways
+            // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
+            clipLanduseAreasSimpleClip(editor, outer_way);
+
             List<Command> commands = editor.finalizeEdit();
 
             if (!commands.isEmpty()) {
@@ -298,6 +306,69 @@ public class LpisModule implements TracerModule  {
             map.put("ref", Long.toString(m_record.getLpisID()));
             way.setKeys(map);
         }
+
+        private void clipLanduseAreasSimpleClip(WayEditor editor, EdWay clip_way) {
+
+            AreaBoundaryWayPredicate filter = new AreaBoundaryWayPredicate (m_clipLanduseWayMatch);
+
+            List<EdObject> areas = editor.useAllAreasInBBox(clip_way.getBBox(0.0000005), filter); // #### hardcoded magic
+            for (EdObject obj: areas) {
+                if (!(obj instanceof EdWay))
+                    continue; // #### support multipolygons as a clip subject
+                EdWay subject_way = (EdWay)obj;
+                if (subject_way == clip_way)
+                    continue;
+                clipLanduseAreaSimpleSimple(editor, clip_way, subject_way);
+            }
+        }
+
+        private void clipLanduseAreaSimpleSimple(WayEditor editor, EdWay clip_way, EdWay subject_way) {            
+
+            System.out.println("Computing difference: clip=" + Long.toString(clip_way.getUniqueId()) + ", subject=" + Long.toString(subject_way.getUniqueId()));
+
+            Pair <List<List<EdNode>>, List<List<EdNode>>> res = PolyUtils.polygonDifference(editor, clip_way, subject_way);
+            List<List<EdNode>> outers = res.a;
+            List<List<EdNode>> inners = res.b;
+
+            System.out.println("- result: outers=" + Long.toString(outers.size()) + ", inners=" + Long.toString(inners.size()));
+
+            if (outers.size() == 0 && inners.size() == 0)
+                System.out.println(tr("No result of difference - subject should be removed?!"));
+            else if (outers.size() == 1 && inners.size() == 0)
+                clipLanduseHandleSimpleSimpleSimple(editor, clip_way, subject_way, outers.get(0));
+            else if ((outers.size() + inners.size()) > 1)
+                clipLanduseHandleSimpleSimpleMulti(editor, clip_way, subject_way, outers, inners);
+            else 
+                throw new AssertionError(tr("Clip.difference returned nonsense!"));
+        }
+
+        private void clipLanduseHandleSimpleSimpleSimple(WayEditor editor, EdWay clip_way, EdWay subject_way, List<EdNode> result) {
+            // Easiest case - simple way clipped by a simple way produced a single polygon
+
+            System.out.println(tr("Clip result: simple"));
+
+            // Subject way unchanged?
+            //if (subject_way.hasIdenticalGeometry(reslls))
+            //    return;
+            
+            // #### TEST ONLY - blindly replace subject EdWay, just to see how it works
+            List<EdNode> dnodes = new ArrayList<EdNode>();
+            for (EdNode ll: result) {
+                dnodes.add(ll);
+            }
+            if (dnodes.size() > 0)
+                dnodes.add(dnodes.get(0));
+            subject_way.setNodes(dnodes);            
+            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
+            subject_way.reuseExistingNodes(reuse_filter);
+        }
+
+        private void clipLanduseHandleSimpleSimpleMulti(WayEditor editor, EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers, List<List<EdNode>> inners)
+        {
+            // #### not completed
+            System.out.println(tr("Clip result: multi"));
+        }
+
     }
 }
 

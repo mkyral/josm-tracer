@@ -19,63 +19,40 @@
 
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
-import static org.openstreetmap.josm.tools.I18n.*;
-
 import java.util.List;
 
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
-import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
 
-
-public final class MultipolygonBoundaryWayPredicate implements IEdWayPredicate {
+public final class AreaBoundaryWayPredicate implements IEdWayPredicate {
 
     private final Match m_filter;
+    private final MultipolygonBoundaryWayPredicate m_filterMultipolygon;
 
-    public MultipolygonBoundaryWayPredicate(Match filter) {
+    public AreaBoundaryWayPredicate(Match filter) {
         m_filter = filter;
+        m_filterMultipolygon = new MultipolygonBoundaryWayPredicate(filter);
     }
 
-    public boolean evaluate(EdWay way) {
-        List<EdMultipolygon> mps = way.getEditorReferrers(EdMultipolygon.class);
-        for (EdMultipolygon mp: mps) {
-            if (mp.matches(m_filter))
-                return true;
-        }
-
-        boolean way_match = way.matches(m_filter);
-
-        List<Relation> relations = way.getExternalReferrers(Relation.class);
-        for (Relation rel: relations) {
-            if (!MultipolygonMatch.match(rel))
-                continue;
-            if (way_match)
-                return true;
-            if (m_filter.match(rel))
-                return true;
-        }
-
+    public boolean evaluate(EdWay edway) {
+        if (edway.isClosed() && edway.matches(m_filter))
+            return true;
+        if (m_filterMultipolygon.evaluate(edway))
+            return true;
         return false;
     }
 
     public boolean evaluate(Way way) {
-
-        boolean way_match = m_filter.match(way);
-
-        List<Relation> relations = OsmPrimitive.getFilteredList(way.getReferrers(), Relation.class);
-        for (Relation rel: relations) {
-            if (!MultipolygonMatch.match(rel))
-                continue;
-            if (way_match)
-                return true;
-            if (m_filter.match(rel))
-                return true;
-        }
+        if (way.isClosed() && m_filter.match(way))
+            return true;
+        if (m_filterMultipolygon.evaluate(way))
+            return true;
         return false;
     }
 }
+
 
