@@ -209,9 +209,11 @@ public class LpisModule implements TracerModule  {
             System.out.println("  LPIS usage: " + m_record.getUsage());
 
             WayEditor editor = new WayEditor (Main.main.getCurrentDataSet());
+            GeomUtils geom = new GeomUtils();
 
             // Create outer way
             List<EdNode> outer_nodes = new ArrayList<EdNode> ();
+            LatLon prev_coor = null;
             // m_record.getCoorCount() - 1 - omit last node
             for (int i = 0; i < m_record.getOuter().size() - 1; i++) {
                 EdNode node = editor.newNode(m_record.getOuter().get(i));
@@ -220,7 +222,11 @@ public class LpisModule implements TracerModule  {
                     wayIsOutsideDownloadedAreaDialog();
                     return;
                 }
-                outer_nodes.add(node);
+
+                if (!geom.duplicateNodes(node.getCoor(), prev_coor)) {
+                    outer_nodes.add(node);
+                    prev_coor = node.getCoor();
+                }
             }
 
             // close way
@@ -235,8 +241,6 @@ public class LpisModule implements TracerModule  {
             // landuse-matching multipolygon, and it isn't a member of other relations, then drop new outer_way
             // and use the existing one.
 
-            // #### remove consecutive identical nodes in ways and degenerated tails, if any
-
             if (!m_record.hasInners())
                 tagOuterWay(outer_way);
 
@@ -250,8 +254,13 @@ public class LpisModule implements TracerModule  {
                 for (int i = 0; i < m_record.getInnersCount(); i++) {
                     ArrayList<LatLon> in = m_record.getInner(i);
                     List<EdNode> inner_nodes = new ArrayList<EdNode>(in.size());
+                    prev_coor = null;
                     for (int j = 0; j < in.size() - 1; j++) {
-                        inner_nodes.add(editor.newNode(in.get(j)));
+                        EdNode node = editor.newNode(in.get(j));
+                        if (!geom.duplicateNodes(node.getCoor(), prev_coor)) {
+                            inner_nodes.add(node);
+                            prev_coor = node.getCoor();
+                        }
                     }
 
                     // close way

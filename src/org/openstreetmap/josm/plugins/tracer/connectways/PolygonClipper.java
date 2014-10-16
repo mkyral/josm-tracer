@@ -59,6 +59,7 @@ import com.seisw.util.geom.*;
 public class PolygonClipper {
     
     private final WayEditor m_editor;
+    private final GeomUtils m_geom;
 
     private List<List<EdNode>> m_outerPolygons;
     private List<List<EdNode>> m_innerPolygons;
@@ -67,6 +68,7 @@ public class PolygonClipper {
 
     public PolygonClipper (WayEditor editor) {
         m_editor = editor;
+        m_geom = new GeomUtils();
         m_outerPolygons = null;
         m_outerPolygons = null;
         m_nodesMap = null;
@@ -156,42 +158,57 @@ public class PolygonClipper {
                 System.out.println(" -  + new node " + Long.toString(node.getUniqueId()));
             }
             // avoid two consecutive duplicate nodes ..x,x..
-            if (!equalNodesPos(node.getCoor(), prev_coor)) {
+            if (!m_geom.duplicateNodes(node.getCoor(), prev_coor)) {
                 list.add(node);
                 prev_coor = node.getCoor();
                 System.out.println(" - d: node " + Long.toString(node.getUniqueId()));
             }
         }
 
-        // #### Remove false degnerated tails of the form ..x,y,z.., where either "z" is
-        // on line "xy" or "x" is on line "yz".
-        // Together with true degenerated tails, these two fixes should be repeatedly 
-        // applied as long as something changes.
+        boolean changed;
+        int i;
+        do {
+            changed = false;
+            // Remove false degnerated tails of the form ..x,y,z.., where either "z" is
+            // on line "xy" or "x" is on line "yz".
+            i = 0;
+            while ((list.size() >= 3) && i < list.size ()) {
+                int i1 = (i + 1) % list.size();
+                int i2 = (i + 2) % list.size();
+                if (m_geom.pointOnLine(list.get(i2).getCoor(), list.get(i).getCoor(), list.get(i1).getCoor()) ||
+                    m_geom.pointOnLine(list.get(i).getCoor(), list.get(i1).getCoor(), list.get(i2).getCoor())) {
+                    list.remove(i1);
+                    i = i >= 1 ? i - 1 : 0;
+                    changed = true;
+                }
+                else {
+                    i++;
+                }
+            }
 
-        // remove degenerated tails of the form ..x,y,x..
-        int i = 0;
-        while ((list.size() >= 3) && i < list.size ()) {
-            int i1 = (i + 1) % list.size();
-            int i2 = (i + 2) % list.size();
-            if (equalNodesPos(list.get(i).getCoor(), list.get(i2).getCoor())) {
-                System.out.println(" x d: tail " + Long.toString(list.get(i).getUniqueId()));
-                list.remove(i1);
-                list.remove(i2 > i1 ? i1 : 0);
-                i = i >= 2 ? i - 2 : 0;
+            // Remove degenerated tails of the form ..x,y,x..
+            i = 0;
+            while ((list.size() >= 3) && i < list.size ()) {
+                int i1 = (i + 1) % list.size();
+                int i2 = (i + 2) % list.size();
+                if (m_geom.duplicateNodes(list.get(i).getCoor(), list.get(i2).getCoor())) {
+                    System.out.println(" x d: tail " + Long.toString(list.get(i).getUniqueId()));
+                    list.remove(i1);
+                    list.remove(i2 > i1 ? i1 : 0);
+                    i = i >= 3 ? i - 3 : 0;
+                    changed = true;
+                }
+                else {
+                    i++;
+                }
             }
-            else {
-                i++;
-            }
-        }
+        } while (changed);
+
+        // Polygon degenerated to two or one node
         if (list.size() < 3)
             list.clear();
 
         return list;
-    }
-
-    private static boolean equalNodesPos(LatLon l1, LatLon l2) {
-        return l1 != null && l2 != null && 
-            l1.distance(l2) < 0.0000005;
     }
 }
 
