@@ -56,46 +56,75 @@ import org.openstreetmap.josm.data.coor.EastNorth;
 
 import com.seisw.util.geom.*;
 
-public final class PolyUtils {
+public class PolygonClipper {
     
-    public static Pair<List<List<EdNode>>, List<List<EdNode>>> polygonDifference (WayEditor editor, EdWay clip_way, EdWay subject_way) {
-        Map<EastNorth, EdNode> nodes_map = new HashMap<EastNorth, EdNode>();
+    private final WayEditor m_editor;
 
-        Poly clip = wayToPoly (clip_way, nodes_map);
-        Poly subject = wayToPoly (subject_way, nodes_map);
+    private List<List<EdNode>> m_outerPolygons;
+    private List<List<EdNode>> m_innerPolygons;
+
+    private Map<EastNorth, EdNode> m_nodesMap;
+
+    public PolygonClipper (WayEditor editor) {
+        m_editor = editor;
+        m_outerPolygons = null;
+        m_outerPolygons = null;
+        m_nodesMap = null;
+    }
+
+    public List<List<EdNode>> outerPolygons() {
+        if (m_outerPolygons == null)
+            throw new IllegalStateException();
+        return m_outerPolygons;
+    }
+    
+    public List<List<EdNode>> innerPolygons() {
+        if (m_innerPolygons == null)
+            throw new IllegalStateException();
+        return m_innerPolygons;
+    }
+
+    public void polygonDifference (EdWay clip_way, EdWay subject_way) {
+
+        // convert EdWays to Polys, populate nodes map
+        m_nodesMap = new HashMap<EastNorth, EdNode>();
+        Poly clip = wayToPoly (clip_way);
+        Poly subject = wayToPoly (subject_way);
 
         PolyDefault result = (PolyDefault)Clip.difference (subject, clip);
 
+        m_outerPolygons = new ArrayList<List<EdNode>>();
+        m_innerPolygons = new ArrayList<List<EdNode>>();
+
         if (result.getNumInnerPoly () == 1) {
-            List<EdNode> outer = polyToEdNodes (editor, result, nodes_map);
-            List<List<EdNode>> outers = new ArrayList<List<EdNode>>();
-            outers.add (outer);
-            return new Pair <List<List<EdNode>>, List<List<EdNode>>> (outers, Collections.<List<EdNode>>emptyList());
+            List<EdNode> list = polyToEdNodes (result);
+            if (list.size() >= 3)
+                m_outerPolygons.add (Collections.unmodifiableList(list));
         }
         else {
-            List<List<EdNode>> outers = new ArrayList<List<EdNode>>();
-            List<List<EdNode>> inners = new ArrayList<List<EdNode>>();
             for (int pi = 0; pi < result.getNumInnerPoly (); pi++)
             {
                 Poly p = result.getInnerPoly (pi);
-                List<EdNode> list = polyToEdNodes (editor, p, nodes_map);
+                List<EdNode> list = polyToEdNodes (p);
                 if (list.size() >= 3) {
                     if (p.isHole())
-                        inners.add(list);
+                        m_innerPolygons.add(Collections.unmodifiableList(list));
                     else
-                        outers.add(list);
+                        m_outerPolygons.add(Collections.unmodifiableList(list));
                 }
             }
-            return new Pair <List<List<EdNode>>, List<List<EdNode>>> (outers, inners);
         }
+
+        m_outerPolygons = Collections.unmodifiableList(m_outerPolygons);
+        m_innerPolygons = Collections.unmodifiableList(m_innerPolygons);
     }
 
-    private static Poly wayToPoly (EdWay w, Map<EastNorth, EdNode> nodes_map)
+    private Poly wayToPoly (EdWay w)
     {
-        return wayToPoly (w, nodes_map, false);
+        return wayToPoly (w, false);
     }
 
-    private static Poly wayToPoly (EdWay w, Map<EastNorth, EdNode> nodes_map, boolean hole)
+    private Poly wayToPoly (EdWay w, boolean hole)
     {
         if (!w.isClosed())
             throw new IllegalArgumentException (tr("Way must be closed"));
@@ -106,12 +135,12 @@ public final class PolyUtils {
             EdNode node = w.getNode(i);
             EastNorth east_north = node.getEastNorth();
             p.add (east_north.getX(), east_north.getY());
-            nodes_map.put(east_north, node);
+            m_nodesMap.put(east_north, node);
         }
         return p;
     }
 
-    private static List<EdNode> polyToEdNodes (WayEditor editor, Poly p, Map<EastNorth, EdNode> nodes_map)
+    private List<EdNode> polyToEdNodes (Poly p)
     {
         System.out.println("d: poly:");
         List<EdNode> list = new ArrayList<EdNode> ();
@@ -120,14 +149,14 @@ public final class PolyUtils {
         for (int i = 0; i < p.getNumPoints(); i++)
         {
             EastNorth east_north = new EastNorth(p.getX(i), p.getY(i));
-            EdNode node = nodes_map.get(east_north);
+            EdNode node = m_nodesMap.get(east_north);
             if (node == null) {
                 LatLon ll = Projections.inverseProject(east_north);
-                node = editor.newNode(ll);
+                node = m_editor.newNode(ll);
                 System.out.println(" -  + new node " + Long.toString(node.getUniqueId()));
             }
             // avoid two consecutive duplicate nodes ..x,x..
-            if (!almostEquals(node.getCoor(), prev_coor)) {
+            if (!equalNodesPos(node.getCoor(), prev_coor)) {
                 list.add(node);
                 prev_coor = node.getCoor();
                 System.out.println(" - d: node " + Long.toString(node.getUniqueId()));
@@ -144,7 +173,7 @@ public final class PolyUtils {
         while ((list.size() >= 3) && i < list.size ()) {
             int i1 = (i + 1) % list.size();
             int i2 = (i + 2) % list.size();
-            if (almostEquals(list.get(i).getCoor(), list.get(i2).getCoor())) {
+            if (equalNodesPos(list.get(i).getCoor(), list.get(i2).getCoor())) {
                 System.out.println(" x d: tail " + Long.toString(list.get(i).getUniqueId()));
                 list.remove(i1);
                 list.remove(i2 > i1 ? i1 : 0);
@@ -160,28 +189,9 @@ public final class PolyUtils {
         return list;
     }
 
-    private static boolean almostEquals(LatLon l1, LatLon l2) {
+    private static boolean equalNodesPos(LatLon l1, LatLon l2) {
         return l1 != null && l2 != null && 
             l1.distance(l2) < 0.0000005;
-    }
-
-    private static List<LatLon> polyToSanitizedList (Poly p) {
-        LatLon prev = null;
-        List<LatLon> list = new ArrayList<LatLon> (p.getNumPoints());
-
-        // remove duplicates
-        for (int i = 0; i < p.getNumPoints(); i++)
-        {
-            EastNorth east_north = new EastNorth(p.getX(i), p.getY(i));
-            LatLon ll = Projections.inverseProject(east_north);
-            if (!ll.equals(prev)) {
-                list.add(ll);
-                prev = ll;
-            }
-        }
-
-
-        return list;
     }
 }
 

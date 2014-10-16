@@ -235,6 +235,8 @@ public class LpisModule implements TracerModule  {
             // landuse-matching multipolygon, and it isn't a member of other relations, then drop new outer_way
             // and use the existing one.
 
+            // #### remove consecutive identical nodes in ways and degenerated tails, if any
+
             if (!m_record.hasInners())
                 tagOuterWay(outer_way);
 
@@ -326,9 +328,10 @@ public class LpisModule implements TracerModule  {
 
             System.out.println("Computing difference: clip=" + Long.toString(clip_way.getUniqueId()) + ", subject=" + Long.toString(subject_way.getUniqueId()));
 
-            Pair <List<List<EdNode>>, List<List<EdNode>>> res = PolyUtils.polygonDifference(editor, clip_way, subject_way);
-            List<List<EdNode>> outers = res.a;
-            List<List<EdNode>> inners = res.b;
+            PolygonClipper clipper = new PolygonClipper(editor);
+            clipper.polygonDifference(clip_way, subject_way);
+            List<List<EdNode>> outers = clipper.outerPolygons();
+            List<List<EdNode>> inners = clipper.innerPolygons();
 
             System.out.println("- result: outers=" + Long.toString(outers.size()) + ", inners=" + Long.toString(inners.size()));
 
