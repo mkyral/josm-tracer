@@ -208,8 +208,8 @@ public class LpisModule implements TracerModule  {
             System.out.println("  LPIS ID: " + m_record.getLpisID());
             System.out.println("  LPIS usage: " + m_record.getUsage());
 
-            WayEditor editor = new WayEditor (Main.main.getCurrentDataSet());
             GeomUtils geom = new GeomUtils();
+            WayEditor editor = new WayEditor (Main.main.getCurrentDataSet(), geom);
 
             // Create outer way
             List<EdNode> outer_nodes = new ArrayList<EdNode> ();
@@ -276,6 +276,10 @@ public class LpisModule implements TracerModule  {
                     multipolygon.addInnerWay(way);
                 }
             }
+
+            // #### connect to existing closely touching nodes or way segments
+            // (And make sure that this step elliminates degenerated LPIS tails of the form ..u,v,w,x..
+            // where v and w are very close to each other but still not candidates for duplicate node merging.)
 
             // Clip other ways
             // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
@@ -359,18 +363,25 @@ public class LpisModule implements TracerModule  {
 
             System.out.println(tr("Clip result: simple"));
 
-            // Subject way unchanged?
-            //if (subject_way.hasIdenticalGeometry(reslls))
-            //    return;
-            
-            // #### TEST ONLY - blindly replace subject EdWay, just to see how it works
             List<EdNode> dnodes = new ArrayList<EdNode>();
-            for (EdNode ll: result) {
+            for (EdNode ll: result)
                 dnodes.add(ll);
-            }
             if (dnodes.size() > 0)
                 dnodes.add(dnodes.get(0));
-            subject_way.setNodes(dnodes);            
+
+            // Subject way unchanged?
+            if (subject_way.hasIdenticalEdNodeGeometry(dnodes, true)) {
+                System.out.println(tr(" o subject unchanged"));
+                return;
+            }
+
+            System.out.println(tr(" ! CLIPPING subject " + Long.toString(subject_way.getUniqueId())));
+
+            // Subject way changed, change its geometry
+            subject_way.setNodes(dnodes);
+
+            // #### Mhmm, this reuse seems to be superfluous because PolygonClipper always reuses existing nodes.
+            // But I sometimes get duplicated JOSM nodes where multiple polygons share a corner node...
             IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
             subject_way.reuseExistingNodes(reuse_filter);
         }

@@ -58,7 +58,7 @@ public class WayEditor {
 
     private final long m_idGuard;
     private final DataSet m_dataSet;
-    private final GeomUtils m_geom;
+    private final GeomUtils m_geomUtils;
 
     private final Set<EdNode> m_nodes;
     private final Set<EdWay> m_ways;
@@ -67,16 +67,20 @@ public class WayEditor {
     private final HashMap<Long, EdWay> m_originalWays;
     private final HashMap<Long, EdMultipolygon> m_originalMultipolygons;
 
-    public WayEditor(DataSet dataset) {
+    public WayEditor(DataSet dataset, GeomUtils geom_utils) {
         m_dataSet = dataset;
         m_idGuard = (new Node()).getUniqueId();
-        m_geom = new GeomUtils();
+        m_geomUtils = geom_utils;
         m_nodes = new HashSet<EdNode> ();
         m_ways = new HashSet<EdWay> ();
         m_multipolygons = new HashSet<EdMultipolygon> ();
         m_originalNodes = new HashMap<Long, EdNode> ();
         m_originalWays = new HashMap<Long, EdWay> ();
         m_originalMultipolygons = new HashMap<Long, EdMultipolygon> ();
+    }
+
+    public GeomUtils geomUtils() {
+        return m_geomUtils;
     }
 
     public DataSet getDataSet() {
@@ -191,7 +195,7 @@ public class WayEditor {
             if (ednd != null) {
                 if (ednd.isDeleted())
                     continue;
-                if (src == ednd || ((m_geom.duplicateNodes(ednd.getCoor(), src.getCoor()) && filter.evaluate(ednd)))) {
+                if (src == ednd || ((m_geomUtils.duplicateNodes(ednd.getCoor(), src.getCoor()) && filter.evaluate(ednd)))) {
                     if (ednode1 == null)
                         ednode1 = ednd;
                     else if (ednd.originalNode().getUniqueId() > ednode1.originalNode().getUniqueId())
@@ -199,7 +203,7 @@ public class WayEditor {
                 }
             }
             else {
-                if ((m_geom.duplicateNodes(nd.getCoor(), src.getCoor()) && filter.evaluate(nd))) {
+                if ((m_geomUtils.duplicateNodes(nd.getCoor(), src.getCoor()) && filter.evaluate(nd))) {
                     if (node1 == null)
                         node1 = nd;
                     else if (nd.getUniqueId() > node1.getUniqueId())
@@ -225,7 +229,7 @@ public class WayEditor {
                 continue;
             if (!ednd.hasEditorReferrers())
                 continue;
-            if (src == ednd || ((m_geom.duplicateNodes(ednd.getCoor(), src.getCoor()) && filter.evaluate(ednd)))) {
+            if (src == ednd || ((m_geomUtils.duplicateNodes(ednd.getCoor(), src.getCoor()) && filter.evaluate(ednd)))) {
                 if (ednd.hasOriginal()) {
                     if (ornode2 == null)
                         ornode2 = ednd;

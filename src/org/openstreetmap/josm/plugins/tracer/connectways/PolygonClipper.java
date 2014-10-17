@@ -59,7 +59,6 @@ import com.seisw.util.geom.*;
 public class PolygonClipper {
     
     private final WayEditor m_editor;
-    private final GeomUtils m_geom;
 
     private List<List<EdNode>> m_outerPolygons;
     private List<List<EdNode>> m_innerPolygons;
@@ -68,7 +67,6 @@ public class PolygonClipper {
 
     public PolygonClipper (WayEditor editor) {
         m_editor = editor;
-        m_geom = new GeomUtils();
         m_outerPolygons = null;
         m_outerPolygons = null;
         m_nodesMap = null;
@@ -144,7 +142,7 @@ public class PolygonClipper {
 
     private List<EdNode> polyToEdNodes (Poly p)
     {
-        System.out.println("d: poly:");
+        //System.out.println("d: poly:");
         List<EdNode> list = new ArrayList<EdNode> ();
 
         LatLon prev_coor = null;
@@ -155,13 +153,13 @@ public class PolygonClipper {
             if (node == null) {
                 LatLon ll = Projections.inverseProject(east_north);
                 node = m_editor.newNode(ll);
-                System.out.println(" -  + new node " + Long.toString(node.getUniqueId()));
+                //System.out.println(" -  + new node " + Long.toString(node.getUniqueId()));
             }
             // avoid two consecutive duplicate nodes ..x,x..
-            if (!m_geom.duplicateNodes(node.getCoor(), prev_coor)) {
+            if (!m_editor.geomUtils().duplicateNodes(node.getCoor(), prev_coor)) {
                 list.add(node);
                 prev_coor = node.getCoor();
-                System.out.println(" - d: node " + Long.toString(node.getUniqueId()));
+                //System.out.println(" - d: node " + Long.toString(node.getUniqueId()));
             }
         }
 
@@ -175,8 +173,11 @@ public class PolygonClipper {
             while ((list.size() >= 3) && i < list.size ()) {
                 int i1 = (i + 1) % list.size();
                 int i2 = (i + 2) % list.size();
-                if (m_geom.pointOnLine(list.get(i2).getCoor(), list.get(i).getCoor(), list.get(i1).getCoor()) ||
-                    m_geom.pointOnLine(list.get(i).getCoor(), list.get(i1).getCoor(), list.get(i2).getCoor())) {
+                LatLon p0 = list.get(i).getCoor();
+                LatLon p1 = list.get(i1).getCoor();
+                LatLon p2 = list.get(i2).getCoor();
+                if (m_editor.geomUtils().pointOnLine(p2, p0, p1) ||
+                    m_editor.geomUtils().pointOnLine(p0, p1, p2)) {
                     list.remove(i1);
                     i = i >= 1 ? i - 1 : 0;
                     changed = true;
@@ -191,7 +192,7 @@ public class PolygonClipper {
             while ((list.size() >= 3) && i < list.size ()) {
                 int i1 = (i + 1) % list.size();
                 int i2 = (i + 2) % list.size();
-                if (m_geom.duplicateNodes(list.get(i).getCoor(), list.get(i2).getCoor())) {
+                if (m_editor.geomUtils().duplicateNodes(list.get(i).getCoor(), list.get(i2).getCoor())) {
                     System.out.println(" x d: tail " + Long.toString(list.get(i).getUniqueId()));
                     list.remove(i1);
                     list.remove(i2 > i1 ? i1 : 0);

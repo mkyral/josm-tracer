@@ -74,10 +74,31 @@ public class GeomUtils {
     }
 
     public boolean pointOnLine(LatLon p, LatLon x, LatLon y) {
+
+        // Compare distances
         double xy = x.distance(y);
         double xpy = x.distance(p) + p.distance(y);
         double delta = Math.abs (xpy - xy);
-        return delta < 0.000007; // #### magic
+        if (delta >= 0.0000007) // #### magic
+            return false;
+
+        // Consider angles as well.
+        // Distance test is unreliable if "p" is very close to "x" or "y".
+        double a1 = unorientedAngleBetween(x, y, p);
+        double a2 = unorientedAngleBetween(y, x, p);
+        double limit = Math.PI / 32; // #### magic
+        return (a1 <= limit && a2 <= limit);
+    }
+
+    public double unorientedAngleBetween(LatLon p0, LatLon p1, LatLon p2) {
+        double a1 = p1.heading(p0);
+        double a2 = p1.heading(p2);
+        double angle = Math.abs(a2 - a1) % (2 * Math.PI);
+        if (angle < 0)
+            angle += 2 * Math.PI;
+        if (angle > Math.PI)
+            angle = (2 * Math.PI) - angle;
+        return angle;
     }
 
 }

@@ -213,6 +213,46 @@ public class EdWay extends EdObject {
         checkNotDeleted();
         return m_way.getUniqueId();
     }
+
+    public boolean hasIdenticalEdNodeGeometry(List<EdNode> list, boolean allow_inverted_orientation) {
+        checkEditable(); // #### maybe support finalized ways
+
+        if (list.size() != m_nodes.size())
+            return false;
+
+        if (!isClosed()) {
+            for (int i = 0; i < list.size(); i++)
+                if (list.get(i) != m_nodes.get(i))
+                    return false;
+            return true;
+        }
+
+        int n = list.size() - 1;
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < n; j++) {
+                if (identicalEdNodeGeometryFromOffsets(m_nodes, list, n, i, j, false))
+                    return true;                
+                if (allow_inverted_orientation && 
+                    identicalEdNodeGeometryFromOffsets(m_nodes, list, n, i, j, true))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean identicalEdNodeGeometryFromOffsets(List<EdNode> l1, List<EdNode> l2, int n, int i, int j, boolean inv) {
+        for (int k = 0; k < n; k++) {
+            if (l1.get(i) != l2.get(j))
+                return false;
+            i = (i + 1) % n;
+            if (inv)
+                j = (j - 1 + n) % n;
+            else
+                j = (j + 1) % n;
+        }
+        return true;
+    }
 }
 
 
