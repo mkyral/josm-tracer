@@ -278,10 +278,10 @@ public class LpisModule implements TracerModule  {
             }
 
             // Connect touching nodes of near landuse polygons
-            if (multipolygon != null)
-                connectTouchingNodesMulti(editor, multipolygon);
+            if (multipolygon == null)
+                connectExistingTouchingNodesSimple(editor, outer_way);
             else
-                connectTouchingNodesSimple(editor, outer_way);
+                connectExistingTouchingNodesMulti(editor, multipolygon);
 
             // Clip other ways
             // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
@@ -336,10 +336,11 @@ public class LpisModule implements TracerModule  {
                 if (subject_way == clip_way)
                     continue;
 
-                // First, connectTouchingNodes of subject_way to clip_way. This is necessary because
-                // LPIS polygon series contain very small gaps that need to be elliminated before
-                // clipping is performed.
-                subject_way.connectTouchingNodes(clip_way);
+                // First, connect touching nodes of subject_way to clip_way. This is necessary because
+                // LPIS polygons series contain very small gaps that need to be elliminated before
+                // clipping is performed. Also, there are false joint points on LPIS polygons' edges
+                // where nodes must be added too.
+                subject_way.connectNonIncludedTouchingNodes(clip_way);
 
                 // Perform clipping
                 clipLanduseAreaSimpleSimple(editor, clip_way, subject_way);
@@ -383,9 +384,9 @@ public class LpisModule implements TracerModule  {
             // Subject way changed, change its geometry
             subject_way.setNodes(result);
 
-            // Connect clip_way to subject_way, this step guarantees that intersection
-            // nodes are included in both ways.
-            clip_way.connectTouchingNodes(subject_way);
+            // Connect clip_way to subject_way, this step guarantees that all newly created
+            // intersection nodes will be included in both ways.
+            clip_way.connectNonIncludedTouchingNodes(subject_way);
         }
 
         private void clipLanduseHandleSimpleSimpleMulti(WayEditor editor, EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers, List<List<EdNode>> inners)
@@ -394,12 +395,30 @@ public class LpisModule implements TracerModule  {
             System.out.println(tr("Clip result: multi"));
         }
 
-        private void connectTouchingNodesMulti(WayEditor editor, EdMultipolygon multipolygon) {
-            // #### not completed
+        private void connectExistingTouchingNodesMulti(WayEditor editor, EdMultipolygon multipolygon) {
+            // Setup filters - include landuse nodes only, exclude all nodes of the multipolygon itself
+            IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
+            IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(multipolygon);
+            IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
+
+            // Connect all outer ways
+            List<EdWay> outer_ways = multipolygon.outerWays();
+            for (EdWay way: outer_ways)
+                way.connectExistingTouchingNodes(filter);
+
+            // Connect all inner ways
+            List<EdWay> inner_ways = multipolygon.innerWays();
+            for (EdWay way: inner_ways)
+                way.connectExistingTouchingNodes(filter);
         }
 
-        private void connectTouchingNodesSimple(WayEditor editor, EdWay way) {
-            IEdNodePredicate filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
+        private void connectExistingTouchingNodesSimple(WayEditor editor, EdWay way) {
+            // Setup filters - include landuse nodes only, exclude all nodes of the way itself
+            IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
+            IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(way);
+            IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
+
+            // Connect nodes
             way.connectExistingTouchingNodes(filter);
         }
 
