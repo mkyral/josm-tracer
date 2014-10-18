@@ -130,6 +130,7 @@ public class PolygonClipper {
             throw new IllegalArgumentException (tr("Way must be closed"));
 
         Poly p = new PolyDefault (hole);
+
         for (int i = 0; i < w.getNodesCount() - 1; i++)
         {
             EdNode node = w.getNode(i);
@@ -205,9 +206,14 @@ public class PolygonClipper {
             }
         } while (changed);
 
-        // Polygon degenerated to two or one node
-        if (list.size() < 3)
+        // Polygon degenerated to two or one nodes
+        if (list.size() < 3) {
             list.clear();
+            return list;
+        }
+
+        // Close the polygon
+        list.add(list.get(0));
 
         return list;
     }

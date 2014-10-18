@@ -56,8 +56,14 @@ public class GeomUtils {
 
     private final double m_duplicateNodesPrecision;
 
+    private final double m_pointOnLineTolerance = 0.0000007;     // #### magic
+
     public GeomUtils () {
         m_duplicateNodesPrecision = Main.pref.getDouble("validator.duplicatenodes.precision", 0.);
+    }
+
+    public double pointOnLineTolerance() {
+        return m_pointOnLineTolerance;
     }
 
     public boolean duplicateNodes(LatLon l1, LatLon l2) {
@@ -79,7 +85,7 @@ public class GeomUtils {
         double xy = x.distance(y);
         double xpy = x.distance(p) + p.distance(y);
         double delta = Math.abs (xpy - xy);
-        if (delta >= 0.0000007) // #### magic
+        if (delta >= m_pointOnLineTolerance)
             return false;
 
         // Consider angles as well.

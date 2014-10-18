@@ -191,6 +191,20 @@ public abstract class EdObject {
         return result;
     }
 
+    public boolean isReferredBy(EdObject other) {
+        if (m_refs == null)
+            return false;
+        if (m_refs instanceof EdObject)
+            return ((EdObject)m_refs) == other;
+        
+        EdObject[] refs = (EdObject[])m_refs;
+        for (EdObject obj: refs) {
+            if (obj == other)
+                return true;
+        }
+        return false;
+    }
+
     public <T extends OsmPrimitive> List<T> getExternalReferrers(Class<T> type) {
 
         if (!hasOriginal())
@@ -218,7 +232,7 @@ public abstract class EdObject {
                 return true;
         }
         return false;
-    }
+    }    
 }
 
 

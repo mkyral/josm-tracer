@@ -28,7 +28,11 @@ import org.openstreetmap.josm.data.osm.Relation;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Map;
+import java.util.Collections;
+import java.util.Comparator;
 import org.openstreetmap.josm.tools.Pair;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.BBox;
@@ -106,6 +110,17 @@ public class EdWay extends EdObject {
 
         for (EdNode en: m_nodes)
             en.addRef(this);
+    }
+
+    public void addNode(int offs, EdNode ednode) {
+        checkEditable();
+        if (!this.getEditor().ownedByEditor (ednode))
+            throw new IllegalArgumentException(tr("EdNode(s) from a different WayEditor"));
+
+        m_nodes.add(offs, ednode); // throws exception if offs is out or range
+
+        setModified();
+        ednode.addRef(this);        
     }
 
     public void setKeys(Map<String,String> keys) {
@@ -193,6 +208,98 @@ public class EdWay extends EdObject {
             if (isClosed() && (new_nodes.get(0) != new_nodes.get(new_nodes.size() - 1)))
                 throw new AssertionError(tr("EdWay.reuseExistingNodes on a closed way created a non-closed way!"));
             setNodes (new_nodes);
+        }
+    }
+
+    /**
+     * Add all existing nodes that touch this way (i.e. are very close to a way segment)
+     * and satisfy given predicate.
+     *
+     */
+    public void connectExistingTouchingNodes(IEdNodePredicate filter) {
+        checkEditable();
+        if (filter == null)
+            throw new IllegalArgumentException(tr("No filter specified"));
+
+        int i = 0;
+        while (i < m_nodes.size() - 1) {
+            final LatLon x = m_nodes.get(i).getCoor();
+            final LatLon y = m_nodes.get(i+1).getCoor();
+            Set<EdNode> tn = getEditor().findExistingNodesTouchingWaySegment(x, y, filter);
+            List<EdNode> add_nodes = new ArrayList<EdNode> ();
+            for (EdNode n: tn) {
+                if (n.isReferredBy(this))
+                    continue;
+                if (add_nodes.contains(n))
+                    continue;
+                // #### if EdWay is a member of a multipolygon, node must not be referred by any of
+                // multipolygon ways!
+                add_nodes.add(n);
+            }
+
+            if (add_nodes.size() > 0) {
+                // Sort nodes according to the distance from "x"
+                Collections.sort(add_nodes, new Comparator<EdNode>(){
+                    public int compare(EdNode d1, EdNode d2) {
+                        return Double.compare(x.distance(d1.getCoor()), x.distance(d2.getCoor()));
+                    }
+                });
+                for (EdNode n: add_nodes) {
+                    i++;
+                    System.out.println("Connecting node " + Long.toString(n.getUniqueId()) + " into way " + Long.toString(this.getUniqueId()));
+                    this.addNode(i, n);
+                }
+            }
+            i++;
+        }
+    }
+
+    /**
+     * Add all nodes occurring in "other" EdWay that touch this way.
+     * Nodes are added to the right positions into way segments.
+     *
+     */
+    public void connectTouchingNodes(EdWay other) {
+        checkEditable();
+        other.checkEditable();
+
+        if (this == other)
+            return;
+
+        Set<EdNode> other_nodes = new HashSet<EdNode>(other.m_nodes);
+
+        int i = 0;
+        while (i < m_nodes.size() - 1) {
+            final LatLon x = m_nodes.get(i).getCoor();
+            final LatLon y = m_nodes.get(i+1).getCoor();
+
+            List<EdNode> add_nodes = new ArrayList<EdNode> ();
+            for (EdNode n: other_nodes) {
+                if (!getEditor().geomUtils().pointOnLine(n.getCoor(), x, y))
+                    continue;
+                // disallow touching itself
+                if (n.isReferredBy(this))
+                    continue;
+                // #### if EdWay is a member of a multipolygon, node must not be referred by any of
+                // multipolygon ways!
+                add_nodes.add(n);
+            }
+
+            i++;
+            if (add_nodes.size() <= 0)
+                continue;
+
+            // Sort nodes according to the distance from "x"
+            Collections.sort(add_nodes, new Comparator<EdNode>(){
+                public int compare(EdNode d1, EdNode d2) {
+                    return Double.compare(x.distance(d1.getCoor()), x.distance(d2.getCoor()));
+                }
+            });
+            for (EdNode n: add_nodes) {
+                System.out.println("Connecting node " + Long.toString(n.getUniqueId()) + " into way " + Long.toString(this.getUniqueId()));
+                this.addNode(i, n);
+                i++;
+            }
         }
     }
 

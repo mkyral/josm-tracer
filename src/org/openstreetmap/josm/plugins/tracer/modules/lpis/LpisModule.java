@@ -277,9 +277,11 @@ public class LpisModule implements TracerModule  {
                 }
             }
 
-            // #### connect to existing closely touching nodes or way segments
-            // (And make sure that this step elliminates degenerated LPIS tails of the form ..u,v,w,x..
-            // where v and w are very close to each other but still not candidates for duplicate node merging.)
+            // Connect touching nodes of near landuse polygons
+            if (multipolygon != null)
+                connectTouchingNodesMulti(editor, multipolygon);
+            else
+                connectTouchingNodesSimple(editor, outer_way);
 
             // Clip other ways
             // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
@@ -333,6 +335,13 @@ public class LpisModule implements TracerModule  {
                 EdWay subject_way = (EdWay)obj;
                 if (subject_way == clip_way)
                     continue;
+
+                // First, connectTouchingNodes of subject_way to clip_way. This is necessary because
+                // LPIS polygon series contain very small gaps that need to be elliminated before
+                // clipping is performed.
+                subject_way.connectTouchingNodes(clip_way);
+
+                // Perform clipping
                 clipLanduseAreaSimpleSimple(editor, clip_way, subject_way);
             }
         }
@@ -355,7 +364,7 @@ public class LpisModule implements TracerModule  {
             else if ((outers.size() + inners.size()) > 1)
                 clipLanduseHandleSimpleSimpleMulti(editor, clip_way, subject_way, outers, inners);
             else 
-                throw new AssertionError(tr("Clip.difference returned nonsense!"));
+                throw new AssertionError(tr("PolygonClipper.polygonDifference returned nonsense!"));
         }
 
         private void clipLanduseHandleSimpleSimpleSimple(WayEditor editor, EdWay clip_way, EdWay subject_way, List<EdNode> result) {
@@ -363,14 +372,8 @@ public class LpisModule implements TracerModule  {
 
             System.out.println(tr("Clip result: simple"));
 
-            List<EdNode> dnodes = new ArrayList<EdNode>();
-            for (EdNode ll: result)
-                dnodes.add(ll);
-            if (dnodes.size() > 0)
-                dnodes.add(dnodes.get(0));
-
             // Subject way unchanged?
-            if (subject_way.hasIdenticalEdNodeGeometry(dnodes, true)) {
+            if (subject_way.hasIdenticalEdNodeGeometry(result, true)) {
                 System.out.println(tr(" o subject unchanged"));
                 return;
             }
@@ -378,18 +381,26 @@ public class LpisModule implements TracerModule  {
             System.out.println(tr(" ! CLIPPING subject " + Long.toString(subject_way.getUniqueId())));
 
             // Subject way changed, change its geometry
-            subject_way.setNodes(dnodes);
+            subject_way.setNodes(result);
 
-            // #### Mhmm, this reuse seems to be superfluous because PolygonClipper always reuses existing nodes.
-            // But I sometimes get duplicated JOSM nodes where multiple polygons share a corner node...
-            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
-            subject_way.reuseExistingNodes(reuse_filter);
+            // Connect clip_way to subject_way, this step guarantees that intersection
+            // nodes are included in both ways.
+            clip_way.connectTouchingNodes(subject_way);
         }
 
         private void clipLanduseHandleSimpleSimpleMulti(WayEditor editor, EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers, List<List<EdNode>> inners)
         {
             // #### not completed
             System.out.println(tr("Clip result: multi"));
+        }
+
+        private void connectTouchingNodesMulti(WayEditor editor, EdMultipolygon multipolygon) {
+            // #### not completed
+        }
+
+        private void connectTouchingNodesSimple(WayEditor editor, EdWay way) {
+            IEdNodePredicate filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
+            way.connectExistingTouchingNodes(filter);
         }
 
     }

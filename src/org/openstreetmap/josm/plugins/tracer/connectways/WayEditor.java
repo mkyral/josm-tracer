@@ -178,6 +178,43 @@ public class WayEditor {
         return obj.getEditor() == this;
     }
 
+    Set<EdNode> findExistingNodesTouchingWaySegment(LatLon x, LatLon y, IEdNodePredicate filter) {
+        double oversize = geomUtils().pointOnLineTolerance() * 10;
+        BBox bbox = new BBox (new Node(x));
+        bbox.addPrimitive (new Node(y), oversize);
+        bbox.addPrimitive (new Node(x), oversize);
+
+        Set<EdNode> result = new HashSet<EdNode>();
+
+        // (1) original nodes that are not tracked yet
+        for (Node nd : getDataSet().searchNodes(bbox)) {
+            if (!nd.isUsable() || nd.isOutsideDownloadArea())
+                continue;
+            if (isEdited(nd))
+                continue;
+            if (!filter.evaluate(nd))
+                continue;
+            if (!geomUtils().pointOnLine(nd.getCoor(), x, y))
+                continue;
+            result.add(useNode(nd));
+        }
+
+        // (2) edited nodes
+        for (EdNode ednd: searchEdNodes(bbox)) {
+            if (ednd.isDeleted())
+                continue;
+            if (!ednd.hasEditorReferrers())
+                continue;
+            if (!filter.evaluate(ednd))
+                continue;
+            if (!geomUtils().pointOnLine(ednd.getCoor(), x, y))
+                continue;
+            result.add(ednd);
+        }
+
+        return result;
+    }
+
     EdNode findExistingNodeForDuplicateMerge(EdNode src, IEdNodePredicate filter) {
         if (src == null || src.isDeleted())
             throw new IllegalArgumentException();
