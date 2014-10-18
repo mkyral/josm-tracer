@@ -120,6 +120,7 @@ public class LpisModule implements TracerModule  {
         private final boolean m_ctrl;
         private final boolean m_alt;
         private final boolean m_shift;
+        private final boolean m_performClipping;
 
         private LpisRecord m_record;
         private Exception m_asyncException;
@@ -134,6 +135,8 @@ public class LpisModule implements TracerModule  {
             this.m_record = null;
             this.m_asyncException = null;
             this.m_cancelled = false;
+
+            this.m_performClipping = !m_ctrl;
         }
 
         protected void realRun() throws SAXException {
@@ -277,15 +280,17 @@ public class LpisModule implements TracerModule  {
                 }
             }
 
-            // Connect touching nodes of near landuse polygons
+            // Connect to touching nodes of near landuse polygons            
             if (multipolygon == null)
                 connectExistingTouchingNodesSimple(editor, outer_way);
             else
                 connectExistingTouchingNodesMulti(editor, multipolygon);
 
             // Clip other ways
-            // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
-            clipLanduseAreasSimpleClip(editor, outer_way);
+            if (m_performClipping) {
+                // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
+                clipLanduseAreasSimpleClip(editor, outer_way);
+            }
 
             List<Command> commands = editor.finalizeEdit();
 
