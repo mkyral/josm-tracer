@@ -212,6 +212,11 @@ public class PolygonClipper {
             return list;
         }
 
+        // #### Sometimes, this function produces invalid polygon of the form x1...,xn,...,xn,...x1. That is,
+        // a polygon that contains the same node more than once. Fix it and split the polygon to multiple polygons.
+        // Be careful, there can be more such nodes in one polygon. There can be subareas degenerated to just a line
+        // as well.
+
         // Close the polygon
         list.add(list.get(0));
 
