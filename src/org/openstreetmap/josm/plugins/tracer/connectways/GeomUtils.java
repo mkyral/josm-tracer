@@ -56,7 +56,7 @@ public class GeomUtils {
 
     private final double m_duplicateNodesPrecision;
 
-    private final double m_pointOnLineTolerance = 0.0000007;     // #### magic
+    private final double m_pointOnLineTolerance = 0.0000002;     // #### magic, tuned for LPIS, make it optional
 
     public GeomUtils () {
         m_duplicateNodesPrecision = Main.pref.getDouble("validator.duplicatenodes.precision", 0.);
@@ -80,6 +80,10 @@ public class GeomUtils {
     }
 
     public boolean pointOnLine(LatLon p, LatLon x, LatLon y) {
+
+        // #### This algorithm generally doesn't behave well. Fix it as follows:
+        // (1) Compute and check smallest distance of "p" from way segment line "xy"
+        // (2) Check angle "xpy".
 
         // Compare distances
         double xy = x.distance(y);
