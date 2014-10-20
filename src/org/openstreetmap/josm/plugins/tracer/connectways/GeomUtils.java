@@ -40,6 +40,7 @@ import org.openstreetmap.josm.command.DeleteCommand;
 import org.openstreetmap.josm.command.MoveCommand;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
@@ -50,20 +51,26 @@ import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.tools.Pair;
 import org.openstreetmap.josm.data.Bounds;
+import org.openstreetmap.josm.data.projection.Projections;
+import org.openstreetmap.josm.tools.Geometry;
 
 
 public class GeomUtils {
 
     private final double m_duplicateNodesPrecision;
 
-    private final double m_pointOnLineTolerance = 0.0000002;     // #### magic, tuned for LPIS, make it optional
+    private final double m_metersPerDegree = 111120.00071117;
+    private final double m_pointOnLineToleranceMeters = 0.20;        // #### magic, tuned for LPIS, make it optional
+    private final double m_pointOnLineMaxLateralAngle = Math.PI / 3; // #### magic, tuned for LPIS, make it optional, must be < Pi/2
+
+	private final double m_pointOnLineToleranceDegrees = m_pointOnLineToleranceMeters/m_metersPerDegree;
 
     public GeomUtils () {
         m_duplicateNodesPrecision = Main.pref.getDouble("validator.duplicatenodes.precision", 0.);
     }
 
-    public double pointOnLineTolerance() {
-        return m_pointOnLineTolerance;
+    public double pointOnLineToleranceDegrees() {
+        return m_pointOnLineToleranceDegrees;
     }
 
     public boolean duplicateNodes(LatLon l1, LatLon l2) {
@@ -79,30 +86,29 @@ public class GeomUtils {
             Math.round(coor.lon() / m_duplicateNodesPrecision) * m_duplicateNodesPrecision);
     }
 
-    public boolean pointOnLine(LatLon p, LatLon x, LatLon y) {
-
-        // #### This algorithm generally doesn't behave well. Fix it as follows:
-        // (1) Compute and check smallest distance of "p" from way segment line "xy"
-        // (2) Check angle "xpy".
-
-        // Compare distances
-        double xy = x.distance(y);
-        double xpy = x.distance(p) + p.distance(y);
-        double delta = Math.abs (xpy - xy);
-        if (delta >= m_pointOnLineTolerance)
-            return false;
-
-        // Consider angles as well.
-        // Distance test is unreliable if "p" is very close to "x" or "y".
-        double a1 = unorientedAngleBetween(x, y, p);
-        double a2 = unorientedAngleBetween(y, x, p);
-        double limit = Math.PI / 32; // #### magic
-        return (a1 <= limit && a2 <= limit);
+    public boolean pointOnLine(EdNode p, EdNode x, EdNode y) {
+        return pointOnLine(p.currentNodeUnsafe(), x.currentNodeUnsafe(), y.currentNodeUnsafe());
     }
 
-    public double unorientedAngleBetween(LatLon p0, LatLon p1, LatLon p2) {
-        double a1 = p1.heading(p0);
-        double a2 = p1.heading(p2);
+    public boolean pointOnLine(Node p, Node x, Node y) {
+
+        EastNorth ep = p.getEastNorth();
+        EastNorth ex = x.getEastNorth();
+        EastNorth ey = y.getEastNorth();
+
+        EastNorth cp = Geometry.closestPointToSegment(ex, ey, ep);
+        if (p.getCoor().greatCircleDistance(Projections.inverseProject(cp)) > m_pointOnLineToleranceMeters)
+            return false;
+
+        double a1 = unorientedAngleBetween(x, y, p);
+        double a2 = unorientedAngleBetween(y, x, p);
+        double limit = m_pointOnLineMaxLateralAngle;
+        return (a1 < limit && a2 < limit);
+    }
+
+    private double unorientedAngleBetween(Node p0, Node p1, Node p2) {
+        double a1 = p1.getCoor().heading(p0.getCoor());
+        double a2 = p1.getCoor().heading(p2.getCoor());
         double angle = Math.abs(a2 - a1) % (2 * Math.PI);
         if (angle < 0)
             angle += 2 * Math.PI;

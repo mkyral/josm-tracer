@@ -179,10 +179,12 @@ public class WayEditor {
     }
 
     Set<EdNode> findExistingNodesTouchingWaySegment(LatLon x, LatLon y, IEdNodePredicate filter) {
-        double oversize = geomUtils().pointOnLineTolerance() * 10;
-        BBox bbox = new BBox (new Node(x));
-        bbox.addPrimitive (new Node(y), oversize);
-        bbox.addPrimitive (new Node(x), oversize);
+        double oversize = geomUtils().pointOnLineToleranceDegrees() * 10;
+        Node nx = new Node(x);
+        Node ny = new Node(y);
+        BBox bbox = new BBox (nx);
+        bbox.addPrimitive (ny, oversize);
+        bbox.addPrimitive (nx, oversize);
 
         Set<EdNode> result = new HashSet<EdNode>();
 
@@ -194,7 +196,7 @@ public class WayEditor {
                 continue;
             if (!filter.evaluate(nd))
                 continue;
-            if (!geomUtils().pointOnLine(nd.getCoor(), x, y))
+            if (!geomUtils().pointOnLine(nd, nx, ny))
                 continue;
             result.add(useNode(nd));
         }
@@ -207,7 +209,7 @@ public class WayEditor {
                 continue;
             if (!filter.evaluate(ednd))
                 continue;
-            if (!geomUtils().pointOnLine(ednd.getCoor(), x, y))
+            if (!geomUtils().pointOnLine(ednd.currentNodeUnsafe(), nx, ny))
                 continue;
             result.add(ednd);
         }

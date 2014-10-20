@@ -280,12 +280,12 @@ public class EdWay extends EdObject {
 
         int i = 0;
         while (i < m_nodes.size() - 1) {
-            final LatLon x = m_nodes.get(i).getCoor();
-            final LatLon y = m_nodes.get(i+1).getCoor();
+            final EdNode x = m_nodes.get(i);
+            final EdNode y = m_nodes.get(i+1);
 
             List<EdNode> add_nodes = new ArrayList<EdNode> ();
             for (EdNode n: other_nodes) {
-                if (!getEditor().geomUtils().pointOnLine(n.getCoor(), x, y))
+                if (!getEditor().geomUtils().pointOnLine(n, x, y))
                     continue;
                 if (!filter.evaluate(n))
                     continue;
@@ -299,7 +299,7 @@ public class EdWay extends EdObject {
             // Sort nodes according to the distance from "x"
             Collections.sort(add_nodes, new Comparator<EdNode>(){
                 public int compare(EdNode d1, EdNode d2) {
-                    return Double.compare(x.distance(d1.getCoor()), x.distance(d2.getCoor()));
+                    return Double.compare(x.getCoor().distance(d1.getCoor()), x.getCoor().distance(d2.getCoor()));
                 }
             });
             for (EdNode n: add_nodes) {

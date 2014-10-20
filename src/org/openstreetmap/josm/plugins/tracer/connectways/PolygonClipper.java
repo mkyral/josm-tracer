@@ -174,9 +174,9 @@ public class PolygonClipper {
             while ((list.size() >= 3) && i < list.size ()) {
                 int i1 = (i + 1) % list.size();
                 int i2 = (i + 2) % list.size();
-                LatLon p0 = list.get(i).getCoor();
-                LatLon p1 = list.get(i1).getCoor();
-                LatLon p2 = list.get(i2).getCoor();
+                EdNode p0 = list.get(i);
+                EdNode p1 = list.get(i1);
+                EdNode p2 = list.get(i2);
                 if (m_editor.geomUtils().pointOnLine(p2, p0, p1) ||
                     m_editor.geomUtils().pointOnLine(p0, p1, p2)) {
                     list.remove(i1);

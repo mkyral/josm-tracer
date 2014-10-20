@@ -79,6 +79,12 @@ public class EdNode extends EdObject {
     public EastNorth getEastNorth() {
         return m_node.getEastNorth();
     }
+
+    Node currentNodeUnsafe() {
+        checkNotDeleted();
+        // Be careful, never modify returned Node!!
+        return m_node;
+    }
 }
 
 
