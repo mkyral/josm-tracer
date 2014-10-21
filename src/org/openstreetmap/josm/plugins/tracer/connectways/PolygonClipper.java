@@ -164,6 +164,11 @@ public class PolygonClipper {
             }
         }
 
+        // Avoid consecutive duplicate nodes around the end of polygon
+        while ((list.size() >= 2) &&
+               (m_editor.geomUtils().duplicateNodes(list.get(0).getCoor(), list.get(list.size() - 1).getCoor())))
+            list.remove(list.size() - 1);
+
         boolean changed;
         int i;
         do {
