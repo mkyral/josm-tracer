@@ -178,10 +178,10 @@ public class WayEditor {
         return obj.getEditor() == this;
     }
 
-    Set<EdNode> findExistingNodesTouchingWaySegment(LatLon x, LatLon y, IEdNodePredicate filter) {
+    Set<EdNode> findExistingNodesTouchingWaySegment(EdNode x, EdNode y, IEdNodePredicate filter) {
         double oversize = geomUtils().pointOnLineToleranceDegrees() * 10;
-        Node nx = new Node(x);
-        Node ny = new Node(y);
+        Node nx = new Node(x.currentNodeUnsafe());
+        Node ny = new Node(y.currentNodeUnsafe());
         BBox bbox = new BBox (nx);
         bbox.addPrimitive (ny, oversize);
         bbox.addPrimitive (nx, oversize);
@@ -204,8 +204,6 @@ public class WayEditor {
         // (2) edited nodes
         for (EdNode ednd: searchEdNodes(bbox)) {
             if (ednd.isDeleted())
-                continue;
-            if (!ednd.hasEditorReferrers())
                 continue;
             if (!filter.evaluate(ednd))
                 continue;

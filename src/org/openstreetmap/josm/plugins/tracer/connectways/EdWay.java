@@ -230,33 +230,27 @@ public class EdWay extends EdObject {
         if (filter == null)
             throw new IllegalArgumentException(tr("No filter specified"));
 
-        boolean modified = false;
+        Map<EdNode, Pair<Double, Integer>> nodes_map = new HashMap<EdNode, Pair<Double, Integer>>();
 
-        int i = 0;
-        while (i < m_nodes.size() - 1) {
-            final LatLon x = m_nodes.get(i).getCoor();
-            final LatLon y = m_nodes.get(i+1).getCoor();
+        // get every node touching the way, assign it to closest way segment
+        for (int i = 0; i < m_nodes.size() - 1; i++) {
+            final EdNode x = m_nodes.get(i);
+            final EdNode y = m_nodes.get(i+1);
             Set<EdNode> tn = getEditor().findExistingNodesTouchingWaySegment(x, y, filter);
-            List<EdNode> add_nodes = new ArrayList<EdNode> (tn);
-
-            i++;
-            if (add_nodes.size() <= 0)
-                continue;
-
-            // Sort nodes according to the distance from "x"
-            Collections.sort(add_nodes, new Comparator<EdNode>(){
-                public int compare(EdNode d1, EdNode d2) {
-                    return Double.compare(x.distance(d1.getCoor()), x.distance(d2.getCoor()));
+            for (EdNode node: tn) {
+                Pair<Double, Integer> best_segment = nodes_map.get(node);
+                double dist = getEditor().geomUtils().distanceToSegmentMeters(node, x, y);
+                if (best_segment == null || best_segment.a > dist) {
+                    nodes_map.put(node, new Pair<Double, Integer> (dist, i));
                 }
-            });
-            for (EdNode n: add_nodes) {
-                System.out.println("Connecting node " + Long.toString(n.getUniqueId()) + " into way " + Long.toString(this.getUniqueId()));
-                this.addNode(i, n);
-                modified = true;
-                i++;
             }
         }
-        return modified;
+
+        if (nodes_map.size() <= 0)
+            return false;
+
+        insertTouchingNodesIntoWaySegments(nodes_map);
+        return true;
     }
 
 
@@ -276,40 +270,66 @@ public class EdWay extends EdObject {
             return false;
 
         Set<EdNode> other_nodes = new HashSet<EdNode>(other.m_nodes);
-        boolean modified = false;
+        Map<EdNode, Pair<Double, Integer>> nodes_map = new HashMap<EdNode, Pair<Double, Integer>>();
 
-        int i = 0;
-        while (i < m_nodes.size() - 1) {
+        // get every node touching the way, assign it to closest way segment
+        for (int i = 0; i < m_nodes.size() - 1; i++) {
             final EdNode x = m_nodes.get(i);
             final EdNode y = m_nodes.get(i+1);
+            for (EdNode node: other_nodes) {
+                if (!getEditor().geomUtils().pointOnLine(node, x, y))
+                    continue;
+                if (!filter.evaluate(node))
+                    continue;
+                Pair<Double, Integer> best_segment = nodes_map.get(node);
+                double dist = getEditor().geomUtils().distanceToSegmentMeters(node, x, y);
+                if (best_segment == null || best_segment.a > dist) {
+                    nodes_map.put(node, new Pair<Double, Integer> (dist, i));
+                }
+            }
+        }
 
+        if (nodes_map.size() <= 0)
+            return false;
+        
+        insertTouchingNodesIntoWaySegments(nodes_map);
+        return true;
+    }
+
+    private void insertTouchingNodesIntoWaySegments(Map<EdNode, Pair<Double, Integer>> nodes_map) {
+
+        Set<Map.Entry<EdNode, Pair<Double, Integer>>> entry_set = nodes_map.entrySet();
+        List<EdNode> new_nodes = new ArrayList<EdNode>(m_nodes.size() + nodes_map.size());
+
+        // go through all way segments and add touching nodes
+        for (int i = 0; i < m_nodes.size(); i++) {
+            final EdNode x = m_nodes.get(i);
+            new_nodes.add(m_nodes.get(i));
+
+            // get all nodes mapped to this way segment
             List<EdNode> add_nodes = new ArrayList<EdNode> ();
-            for (EdNode n: other_nodes) {
-                if (!getEditor().geomUtils().pointOnLine(n, x, y))
+            for (Map.Entry<EdNode, Pair<Double, Integer>> entry: entry_set) {
+                if (entry.getValue().b != i)
                     continue;
-                if (!filter.evaluate(n))
-                    continue;
-                add_nodes.add(n);
+                add_nodes.add(entry.getKey());
             }
 
-            i++;
             if (add_nodes.size() <= 0)
                 continue;
 
-            // Sort nodes according to the distance from "x"
+            // sort nodes according to the distance from segment's first node
             Collections.sort(add_nodes, new Comparator<EdNode>(){
                 public int compare(EdNode d1, EdNode d2) {
                     return Double.compare(x.getCoor().distance(d1.getCoor()), x.getCoor().distance(d2.getCoor()));
                 }
             });
             for (EdNode n: add_nodes) {
-                System.out.println("Connecting node " + Long.toString(n.getUniqueId()) + " into way " + Long.toString(this.getUniqueId()));            
-                this.addNode(i, n);
-                modified = true;
-                i++;
-            }            
+                System.out.println("Connecting node " + Long.toString(n.getUniqueId()) + " into way " + Long.toString(this.getUniqueId()));
+                new_nodes.add(n);
+            }
         }
-        return modified;
+
+        this.setNodes(new_nodes);        
     }
 
     /**

@@ -61,7 +61,7 @@ public class GeomUtils {
 
     private final double m_metersPerDegree = 111120.00071117;
     private final double m_pointOnLineToleranceMeters = 0.20;        // #### magic, tuned for LPIS, make it optional
-    private final double m_pointOnLineMaxLateralAngle = Math.PI / 6; // #### magic, tuned for LPIS, make it optional, must be < Pi/2
+    private final double m_pointOnLineMaxLateralAngle = Math.PI / 3; // #### magic, tuned for LPIS, make it optional, must be < Pi/2
 
 	private final double m_pointOnLineToleranceDegrees = m_pointOnLineToleranceMeters/m_metersPerDegree;
 
@@ -88,6 +88,20 @@ public class GeomUtils {
 
     public boolean pointOnLine(EdNode p, EdNode x, EdNode y) {
         return pointOnLine(p.currentNodeUnsafe(), x.currentNodeUnsafe(), y.currentNodeUnsafe());
+    }
+
+    public double distanceToSegmentMeters(EdNode p, EdNode x, EdNode y) {
+        return distanceToSegmentMeters(p.currentNodeUnsafe(), x.currentNodeUnsafe(), y.currentNodeUnsafe());
+    }
+
+
+    public double distanceToSegmentMeters(Node p, Node x, Node y) {
+        EastNorth ep = p.getEastNorth();
+        EastNorth ex = x.getEastNorth();
+        EastNorth ey = y.getEastNorth();
+
+        EastNorth cp = Geometry.closestPointToSegment(ex, ey, ep);
+        return p.getCoor().greatCircleDistance(Projections.inverseProject(cp));
     }
 
     public boolean pointOnLine(Node p, Node x, Node y) {
