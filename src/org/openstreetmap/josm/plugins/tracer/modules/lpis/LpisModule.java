@@ -39,6 +39,7 @@ import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
@@ -374,7 +375,7 @@ public class LpisModule implements TracerModule  {
         }
 
         private void clipLanduseHandleSimpleSimpleSimple(WayEditor editor, EdWay clip_way, EdWay subject_way, List<EdNode> result) {
-            // Easiest case - simple way clipped by a simple way produced a single polygon
+            // ** Easiest case - simple way clipped by a simple way produced a single polygon **
 
             System.out.println(tr("Clip result: simple"));
 
@@ -394,11 +395,78 @@ public class LpisModule implements TracerModule  {
             clip_way.connectNonIncludedTouchingNodes(subject_way);
         }
 
-        private void clipLanduseHandleSimpleSimpleMulti(WayEditor editor, EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers, List<List<EdNode>> inners)
-        {
-            // #### not completed
-            System.out.println(tr("Clip result: multi"));
+        private void clipLanduseHandleSimpleSimpleMulti(WayEditor editor, EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers, List<List<EdNode>> inners) {        
+            // ** Simple way clipped by a simple way produced multiple polygons **
+
+            if (inners.size() == 0) {
+                System.out.println(tr("Clip result: multi outers"));
+                clipLanduseHandleSimpleSimpleMultiOuters(editor, clip_way, subject_way, outers);
+            }
+            else {
+                System.out.println(tr("Clip result: multi mixed"));
+                // #### not completed
+            }
         }
+
+        private void clipLanduseHandleSimpleSimpleMultiOuters(WayEditor editor, EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers) {
+            // ** Simple subject clipped by a simple way produced multiple simple (outer) polygons **
+
+            // Don't clip subject which is a member of a (non-multipolygon) relation.
+            // It's questionable if all pieces should be added to the relation, or only some of them, etc...
+            if (subject_way.hasEditorReferrers() || subject_way.hasExternalReferrers()) {
+                System.out.println(tr("Clipped way is a member of non-multipolygon relation, ignoring (yet)"));
+                return;
+            }
+
+            System.out.println(tr(" ! CLIPPING subject " + Long.toString(subject_way.getUniqueId()) + " to multiple simple ways"));
+
+            // #### Generally, it's better to create multiple simple ways than combine them to a new multipolygon.
+            // But in some cases, maybe it would make sense to create a multipolygon... E.g. named landuse areas??
+
+            // find the largest polygon, which will be used to update subject_way's geometry
+            List<EdNode> maxnodes = null;
+            double maxarea = Double.NEGATIVE_INFINITY;
+            for (List<EdNode> nodes: outers) {
+                double area = getClosedWayArea(nodes);
+                if (area < maxarea)
+                    continue;
+                maxnodes = nodes;
+                maxarea = area;
+            }
+
+            // update subject_way geometry and create new ways for the other pieces
+            for (List<EdNode> nodes: outers) {
+                if (nodes == maxnodes) {
+                    subject_way.setNodes(nodes);
+                    clip_way.connectNonIncludedTouchingNodes(subject_way);
+                }
+                else {
+                    EdWay new_way = editor.newWay(nodes);
+                    new_way.setKeys(subject_way.getKeys());
+                    clip_way.connectNonIncludedTouchingNodes(new_way);
+                }
+            }
+        }
+
+        private double getClosedWayArea(List<EdNode> nodes) {
+            // Joseph O'Rourke, Computational Geometry in C, copied from GPCJ2
+
+            if (nodes.size() < 4)
+                return 0;
+
+            double area = 0;
+            EastNorth a = nodes.get(0).getEastNorth();
+
+            for (int i = 1; i < nodes.size() - 2; i++) {
+                EastNorth b = nodes.get(i).getEastNorth();
+                EastNorth c = nodes.get(i+1).getEastNorth();
+                double t = ((c.getX() - b.getX()) * (a.getY() - b.getY())) - ((a.getX() - b.getX()) * (c.getY() - b.getY()));
+                area += t;
+            }
+
+            return Math.abs(area) / 2;
+        }
+
 
         private void connectExistingTouchingNodesMulti(WayEditor editor, EdMultipolygon multipolygon) {
             // Setup filters - include landuse nodes only, exclude all nodes of the multipolygon itself
@@ -426,7 +494,6 @@ public class LpisModule implements TracerModule  {
             // Connect nodes
             way.connectExistingTouchingNodes(filter);
         }
-
     }
 }
 

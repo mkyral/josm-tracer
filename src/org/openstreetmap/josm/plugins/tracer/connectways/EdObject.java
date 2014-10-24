@@ -136,7 +136,7 @@ public abstract class EdObject {
 
     protected abstract OsmPrimitive currentPrimitive();
 
-    protected boolean hasEditorReferrers() {
+    public boolean hasEditorReferrers() {
         return m_refs != null;
     }
 
