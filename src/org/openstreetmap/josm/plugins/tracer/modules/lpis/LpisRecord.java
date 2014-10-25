@@ -18,33 +18,29 @@
 
 package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
-import static org.openstreetmap.josm.tools.I18n.tr;
-
-import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.tools.Utils;
-
-import java.util.*;
-import java.lang.StringBuilder;
 import java.io.ByteArrayInputStream;
-
-
+import java.lang.StringBuilder;
+import java.util.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathFactory;
 
-import org.xml.sax.InputSource;
+import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+import static org.openstreetmap.josm.tools.I18n.tr;
+import org.openstreetmap.josm.tools.Utils;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+import org.xml.sax.InputSource;
 
 
 /**
@@ -288,6 +284,23 @@ public class LpisRecord {
       return m_geometry.getInner(i);
   }
 
+  /**
+   * Returns BBox of LPIS (multi)polygon
+   * @return BBox of LPIS (multi)polygon
+   */
+  public BBox getBBox() {
+      List<LatLon> outer = getOuter();
+      LatLon p0 = outer.get(0);
+      
+      BBox bbox = new BBox(p0.lon(), p0.lat());
+      for (int i = 1; i < outer.size(); i++) {
+          LatLon p = outer.get(i);
+          bbox.add(p.lon(), p.lat());
+      }
+ 
+      return bbox;
+  }
+  
   /**
    *  Return usage
    *  @return usage

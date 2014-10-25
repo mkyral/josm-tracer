@@ -19,51 +19,52 @@
 
 package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
-import static org.openstreetmap.josm.tools.I18n.*;
+import com.seisw.util.geom.*;
 import java.awt.Cursor;
 import java.awt.Point;
-import java.util.*;
 import java.lang.StringBuilder;
+import java.util.*;
 import java.util.List;
 import java.util.Map;
 
-import com.seisw.util.geom.*;
-
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
+import org.openstreetmap.josm.actions.search.SearchCompiler;
+import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
+import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
 import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.Bounds;
-import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.coor.EastNorth;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
-import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
-import org.openstreetmap.josm.gui.PleaseWaitRunnable;
-import org.openstreetmap.josm.gui.progress.ProgressMonitor;
+import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.Notification;
-import org.openstreetmap.josm.gui.ExtendedDialog;
-import org.openstreetmap.josm.tools.ImageProvider;
-import org.openstreetmap.josm.tools.Shortcut;
-import org.openstreetmap.josm.tools.Pair;
-import org.openstreetmap.josm.actions.search.SearchCompiler;
-import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
-import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
+import org.openstreetmap.josm.gui.PleaseWaitRunnable;
+import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
+import org.openstreetmap.josm.gui.progress.ProgressMonitor;
+import org.openstreetmap.josm.plugins.tracer.TracerModule;
 
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
-import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
 
 // import org.openstreetmap.josm.plugins.tracer.modules.lpis.LpisRecord;
 
+import static org.openstreetmap.josm.tools.I18n.*;
+import org.openstreetmap.josm.tools.ImageProvider;
+import org.openstreetmap.josm.tools.Pair;
+import org.openstreetmap.josm.tools.Shortcut;
 import org.xml.sax.SAXException;
 
 public class LpisModule implements TracerModule  {
@@ -149,74 +150,116 @@ public class LpisModule implements TracerModule  {
             System.out.println("");
 
             progressMonitor.indeterminateSubTask(tr("Downloading LPIS data..."));
-
             try {
                 LpisServer server = new LpisServer();
                 m_record = server.getElementBasicData(m_pos, lpisUrl);
-                progressMonitor.subTask(tr("Creating LPIS polygon..."));
             }
-            catch (Exception e) {
-                m_asyncException = e;
-            }
-        }
-
-        protected void finish() {
-
-            // Note: finish() is guaranteed to run on EDT, after realRun() suceeded.
-
-            // Async download failed?
-            if (m_asyncException != null) {
-                m_asyncException.printStackTrace();
-                TracerUtils.showNotification(tr("LPIS download failed.") + "\n(" + m_pos.toDisplayString() + ")", "error");
+            catch (final Exception e) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        e.printStackTrace();
+                        TracerUtils.showNotification(tr("LPIS download failed.") + "\n(" + m_pos.toDisplayString() + ")", "error");
+                    }                    
+                });
                 return;
             }
 
-            // Cancelled by user?
-            if (m_cancelled) {
+            if (m_cancelled)
                 return;
-            }
 
             // No data available?
             if (m_record.getLpisID() == -1) {
-                TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
+                    }
+                });
                 return;
             }
 
-            Main.main.getCurrentDataSet().beginUpdate();
+            // Look for incomplete multipolygons that might participate in landuse clipping
+            List<Relation> incomplete_multipolygons = null;
+            if (m_performClipping)
+                incomplete_multipolygons = getIncompleteMultipolygonsForDownload ();
+        
+            // No multipolygons to download, create traced polygon immediately within this task
+            if (incomplete_multipolygons == null || incomplete_multipolygons.isEmpty()) {
+                progressMonitor.subTask(tr("Creating LPIS polygon..."));
+                createTracedPolygon();
+            }
+            else {
+                // Schedule task to download incomplete multipolygons
+                Main.worker.submit(new DownloadRelationTask(incomplete_multipolygons, Main.main.getEditLayer())); 
+
+                // Schedule task to create traced polygon
+                Main.worker.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        createTracedPolygon();
+                    }
+                });
+            }
+        }
+        
+        /**
+         * Returns list of all existing incomplete multipolygons that might participate in
+         * LPIS polygon clipping. These relations must be downloaded first, clipping
+         * doesn't support incomplete multipolygons.
+         * @return List of incomplete multipolygon relations
+         */
+        private List<Relation> getIncompleteMultipolygonsForDownload() {
+            List<Relation> list = new ArrayList<>();
+            for (Relation rel : Main.main.getCurrentDataSet().searchRelations(m_record.getBBox())) {
+                if (!MultipolygonMatch.match(rel))
+                    continue;
+                if (rel.isIncomplete() || rel.hasIncompleteMembers())
+                    list.add(rel);
+            }
+            return list;
+        }
+        
+        private void wayIsOutsideDownloadedAreaDialog() {
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    ExtendedDialog ed = new ExtendedDialog(
+                        Main.parent, tr("Way is outside downloaded area"),
+                        new String[] {tr("Ok")});
+                    ed.setButtonIcons(new String[] {"ok"});
+                    ed.setIcon(JOptionPane.ERROR_MESSAGE);
+                    ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
+                    ed.showDialog();
+                }
+            });
+        }
+
+        private void createTracedPolygon() {
+            DataSet data_set = Main.main.getCurrentDataSet();
+            data_set.beginUpdate();
             try {
-                createTracedPolygon ();
+                createTracedPolygonImpl (data_set);
             }
             catch (Exception e) {
                 e.printStackTrace();
                 throw e;
             }
             finally {
-                Main.main.getCurrentDataSet().endUpdate();
+                data_set.endUpdate();
             }
         }
-
-        private void wayIsOutsideDownloadedAreaDialog() {
-            ExtendedDialog ed = new ExtendedDialog(
-                Main.parent, tr("Way is outside downloaded area"),
-                    new String[] {tr("Ok")});
-            ed.setButtonIcons(new String[] {"ok"});
-            ed.setIcon(JOptionPane.ERROR_MESSAGE);
-            ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
-            ed.showDialog();
-        }
-
-        private void createTracedPolygon() {
-
-            // Note: must be called from finish() only
+        
+        private void createTracedPolygonImpl(DataSet data_set) {
 
             System.out.println("  LPIS ID: " + m_record.getLpisID());
             System.out.println("  LPIS usage: " + m_record.getUsage());
 
             GeomUtils geom = new GeomUtils();
-            WayEditor editor = new WayEditor (Main.main.getCurrentDataSet(), geom);
+            WayEditor editor = new WayEditor (data_set, geom);
 
             // Create outer way
-            List<EdNode> outer_nodes = new ArrayList<EdNode> ();
+            List<EdNode> outer_nodes = new ArrayList<> ();
             LatLon prev_coor = null;
             // m_record.getCoorCount() - 1 - omit last node
             for (int i = 0; i < m_record.getOuter().size() - 1; i++) {
@@ -311,6 +354,9 @@ public class LpisModule implements TracerModule  {
             }
         }
 
+        protected void finish() {
+        }        
+        
         protected void cancel() {
             m_cancelled = true;
             // #### TODO: break the connection to remote LPIS server
