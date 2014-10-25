@@ -41,6 +41,7 @@ import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
+import org.openstreetmap.josm.gui.util.GuiHelper;
 
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
@@ -144,7 +145,7 @@ public class LpisModule implements TracerModule  {
                 m_record = server.getElementBasicData(m_pos, lpisUrl);
             }
             catch (final Exception e) {
-                SwingUtilities.invokeLater(new Runnable() {
+                GuiHelper.runInEDT(new Runnable() {
                     @Override
                     public void run() {
                         e.printStackTrace();
@@ -159,7 +160,7 @@ public class LpisModule implements TracerModule  {
 
             // No data available?
             if (m_record.getLpisID() == -1) {
-                SwingUtilities.invokeLater(new Runnable() {
+                GuiHelper.runInEDT(new Runnable() {
                     @Override
                     public void run() {
                         TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
@@ -216,33 +217,33 @@ public class LpisModule implements TracerModule  {
         }
         
         private void wayIsOutsideDownloadedAreaDialog() {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    ExtendedDialog ed = new ExtendedDialog(
-                        Main.parent, tr("Way is outside downloaded area"),
-                        new String[] {tr("Ok")});
-                    ed.setButtonIcons(new String[] {"ok"});
-                    ed.setIcon(JOptionPane.ERROR_MESSAGE);
-                    ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
-                    ed.showDialog();
-                }
-            });
+            ExtendedDialog ed = new ExtendedDialog(
+                Main.parent, tr("Way is outside downloaded area"),
+                new String[] {tr("Ok")});
+            ed.setButtonIcons(new String[] {"ok"});
+            ed.setIcon(JOptionPane.ERROR_MESSAGE);
+            ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
+            ed.showDialog();
         }
 
         private void createTracedPolygon() {
-            DataSet data_set = Main.main.getCurrentDataSet();
-            data_set.beginUpdate();
-            try {
-                createTracedPolygonImpl (data_set);
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-                throw e;
-            }
-            finally {
-                data_set.endUpdate();
-            }
+            GuiHelper.runInEDT(new Runnable() {
+                @Override
+                public void run() {
+                    DataSet data_set = Main.main.getCurrentDataSet();
+                    data_set.beginUpdate();
+                    try {
+                        createTracedPolygonImpl (data_set);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                        throw e;
+                    }
+                    finally {
+                        data_set.endUpdate();
+                    }
+                }
+            });
         }
         
         private void createTracedPolygonImpl(DataSet data_set) {
