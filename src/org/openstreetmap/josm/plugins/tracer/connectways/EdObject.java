@@ -23,9 +23,7 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import java.util.Collections;
 

@@ -2,16 +2,11 @@ package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import static org.openstreetmap.josm.tools.I18n.tr;
 
-import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.Node;
-import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
 import java.util.List;
 import java.util.ArrayList;
-import org.openstreetmap.josm.tools.Pair;
 import java.util.Map;
-import java.util.HashMap;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 
 

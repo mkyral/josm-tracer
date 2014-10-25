@@ -19,14 +19,7 @@
 
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
-import java.util.List;
-
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Node;
-import org.openstreetmap.josm.data.osm.Way;
-import org.openstreetmap.josm.actions.search.SearchCompiler;
-import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
-import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 
 public final class EdNodeLogicalAndPredicate implements IEdNodePredicate {
 

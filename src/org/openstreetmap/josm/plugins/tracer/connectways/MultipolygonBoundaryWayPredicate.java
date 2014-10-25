@@ -19,15 +19,11 @@
 
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
-import static org.openstreetmap.josm.tools.I18n.*;
 
 import java.util.List;
 
-import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.osm.Relation;
-import org.openstreetmap.josm.actions.search.SearchCompiler;
-import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 
