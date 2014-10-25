@@ -210,14 +210,20 @@ public class LpisModule implements TracerModule  {
          * @return List of incomplete multipolygon relations
          */
         private List<Relation> getIncompleteMultipolygonsForDownload() {
-            List<Relation> list = new ArrayList<>();
-            for (Relation rel : Main.main.getCurrentDataSet().searchRelations(m_record.getBBox())) {
-                if (!MultipolygonMatch.match(rel))
-                    continue;
-                if (rel.isIncomplete() || rel.hasIncompleteMembers())
-                    list.add(rel);
+            DataSet ds = Main.main.getCurrentDataSet();
+            ds.getReadLock().lock();
+            try {
+                List<Relation> list = new ArrayList<>();
+                for (Relation rel : ds.searchRelations(m_record.getBBox())) {
+                    if (!MultipolygonMatch.match(rel))
+                        continue;
+                    if (rel.isIncomplete() || rel.hasIncompleteMembers())
+                        list.add(rel);
+                }
+                return list;
+            } finally {
+                ds.getReadLock().unlock();
             }
-            return list;
         }
         
         private void wayIsOutsideDownloadedAreaDialog() {
