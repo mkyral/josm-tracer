@@ -19,10 +19,7 @@
 
 package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
-import com.seisw.util.geom.*;
 import java.awt.Cursor;
-import java.awt.Point;
-import java.lang.StringBuilder;
 import java.util.*;
 import java.util.List;
 import java.util.Map;
@@ -30,32 +27,21 @@ import java.util.Map;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.actions.mapmode.MapMode;
 import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
-import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
-import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
-import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
-import org.openstreetmap.josm.data.osm.RelationMember;
-import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.ExtendedDialog;
-import org.openstreetmap.josm.gui.MapFrame;
-import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
-import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 
-import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
 
@@ -63,8 +49,6 @@ import org.openstreetmap.josm.plugins.tracer.connectways.*;
 
 import static org.openstreetmap.josm.tools.I18n.*;
 import org.openstreetmap.josm.tools.ImageProvider;
-import org.openstreetmap.josm.tools.Pair;
-import org.openstreetmap.josm.tools.Shortcut;
 import org.xml.sax.SAXException;
 
 public class LpisModule implements TracerModule  {
@@ -93,25 +77,31 @@ public class LpisModule implements TracerModule  {
         moduleEnabled = enabled;
     }
 
+    @Override
     public void init() {
     }
 
+    @Override
     public Cursor getCursor() {
         return ImageProvider.getCursor("crosshair", "tracer-lpis-sml");
     }
 
+    @Override
     public String getName() {
         return tr("LPIS");
     }
 
+    @Override
     public boolean moduleIsEnabled() {
         return moduleEnabled;
     }
 
+    @Override
     public void setModuleIsEnabled(boolean enabled) {
         moduleEnabled = enabled;
     }
 
+    @Override
     public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
         return new LpisTracerTask (pos, ctrl, alt, shift);
     }
@@ -125,7 +115,6 @@ public class LpisModule implements TracerModule  {
         private final boolean m_performClipping;
 
         private LpisRecord m_record;
-        private Exception m_asyncException;
         private boolean m_cancelled;
 
         LpisTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
@@ -135,12 +124,12 @@ public class LpisModule implements TracerModule  {
             this.m_alt = alt;
             this.m_shift = shift;
             this.m_record = null;
-            this.m_asyncException = null;
             this.m_cancelled = false;
 
             this.m_performClipping = !m_ctrl;
         }
 
+        @Override
         protected void realRun() throws SAXException {
 
             System.out.println("");
@@ -306,7 +295,7 @@ public class LpisModule implements TracerModule  {
 
                 for (int i = 0; i < m_record.getInnersCount(); i++) {
                     ArrayList<LatLon> in = m_record.getInner(i);
-                    List<EdNode> inner_nodes = new ArrayList<EdNode>(in.size());
+                    List<EdNode> inner_nodes = new ArrayList<>(in.size());
                     prev_coor = null;
                     for (int j = 0; j < in.size() - 1; j++) {
                         EdNode node = editor.newNode(in.get(j));
@@ -360,23 +349,25 @@ public class LpisModule implements TracerModule  {
             }
         }
 
+        @Override
         protected void finish() {
         }        
         
+        @Override
         protected void cancel() {
             m_cancelled = true;
             // #### TODO: break the connection to remote LPIS server
         }
 
         private void tagMultipolygon (EdMultipolygon multipolygon) {
-            Map <String, String> map = new HashMap <String, String> (m_record.getUsageOsm());
+            Map <String, String> map = new HashMap <> (m_record.getUsageOsm());
             map.put("source", source);
             map.put("ref", Long.toString(m_record.getLpisID()));
             multipolygon.setKeys(map);
         }
 
         private void tagOuterWay (EdWay way) {
-            Map <String, String> map = new HashMap <String, String> (m_record.getUsageOsm());
+            Map <String, String> map = new HashMap <> (m_record.getUsageOsm());
             map.put("source", source);
             map.put("ref", Long.toString(m_record.getLpisID()));
             way.setKeys(map);
@@ -416,9 +407,9 @@ public class LpisModule implements TracerModule  {
 
             System.out.println("- result: outers=" + Long.toString(outers.size()) + ", inners=" + Long.toString(inners.size()));
 
-            if (outers.size() == 0 && inners.size() == 0)
+            if (outers.isEmpty() && inners.isEmpty())
                 System.out.println(tr("No result of difference - subject should be removed?!"));
-            else if (outers.size() == 1 && inners.size() == 0)
+            else if (outers.size() == 1 && inners.isEmpty())
                 clipLanduseHandleSimpleSimpleSimple(editor, clip_way, subject_way, outers.get(0));
             else if ((outers.size() + inners.size()) > 1)
                 clipLanduseHandleSimpleSimpleMulti(editor, clip_way, subject_way, outers, inners);
@@ -450,7 +441,7 @@ public class LpisModule implements TracerModule  {
         private void clipLanduseHandleSimpleSimpleMulti(WayEditor editor, EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers, List<List<EdNode>> inners) {        
             // ** Simple way clipped by a simple way produced multiple polygons **
 
-            if (inners.size() == 0) {
+            if (inners.isEmpty()) {
                 System.out.println(tr("Clip result: multi outers"));
                 clipLanduseHandleSimpleSimpleMultiOuters(editor, clip_way, subject_way, outers);
             }
