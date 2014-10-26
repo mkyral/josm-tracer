@@ -34,39 +34,46 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
+import org.openstreetmap.josm.gui.util.GuiHelper;
 
 
 public abstract class TracerUtils {
 
     /**
-     * Show notification for 3 seconds.
+     * Show notification for 3 seconds. Runs in EDT thread.
      * @param message Message to shown.
-     * @param type Type if message (info, warning, error, plain).
+     * @param type Type of message (info, warning, error, plain).
      */
     public static void showNotification (String message, String type) {
       showNotification(message, type, Notification.TIME_SHORT);
     }
 
     /**
-     * Show notification.
+     * Show notification. Runs in EDT thread.
      * @param message Message to shown.
-     * @param type Type if message (info, warning, error, plain).
+     * @param type Type of message (info, warning, error, plain).
      * @param time How long will be the message displayed.
      */
-    public static void showNotification (String message, String type, int time) {
-      Notification note = new Notification(message);
+    public static void showNotification (final String message, final String type, final int time) {
+        GuiHelper.runInEDT(new Runnable() {
+            @Override
+            public void run() {
 
-      if (type.equals("info"))
-        note.setIcon(JOptionPane.INFORMATION_MESSAGE);
-      else if (type.equals("warning"))
-        note.setIcon(JOptionPane.WARNING_MESSAGE);
-      else if (type.equals("error"))
-        note.setIcon(JOptionPane.ERROR_MESSAGE);
-      else
-        note.setIcon(JOptionPane.PLAIN_MESSAGE);
+                Notification note = new Notification(message);
 
-      note.setDuration(time);
-      note.show();
+                if (type.equals("info"))
+                    note.setIcon(JOptionPane.INFORMATION_MESSAGE);
+                else if (type.equals("warning"))
+                    note.setIcon(JOptionPane.WARNING_MESSAGE);
+                else if (type.equals("error"))
+                    note.setIcon(JOptionPane.ERROR_MESSAGE);
+                else
+                    note.setIcon(JOptionPane.PLAIN_MESSAGE);
+
+                note.setDuration(time);
+                note.show();
+            }
+        });
     }
 
     /**

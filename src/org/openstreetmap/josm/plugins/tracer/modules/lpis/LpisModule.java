@@ -145,13 +145,8 @@ public class LpisModule implements TracerModule  {
                 m_record = server.getElementBasicData(m_pos, lpisUrl);
             }
             catch (final Exception e) {
-                GuiHelper.runInEDT(new Runnable() {
-                    @Override
-                    public void run() {
-                        e.printStackTrace();
-                        TracerUtils.showNotification(tr("LPIS download failed.") + "\n(" + m_pos.toDisplayString() + ")", "error");
-                    }                    
-                });
+                e.printStackTrace();
+                TracerUtils.showNotification(tr("LPIS download failed.") + "\n(" + m_pos.toDisplayString() + ")", "error");
                 return;
             }
 
@@ -160,12 +155,7 @@ public class LpisModule implements TracerModule  {
 
             // No data available?
             if (m_record.getLpisID() == -1) {
-                GuiHelper.runInEDT(new Runnable() {
-                    @Override
-                    public void run() {
-                        TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
-                    }
-                });
+                TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
                 return;
             }
 
