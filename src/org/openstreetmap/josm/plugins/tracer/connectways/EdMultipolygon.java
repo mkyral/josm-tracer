@@ -10,6 +10,8 @@ import org.openstreetmap.josm.data.osm.RelationMember;
 import org.openstreetmap.josm.data.osm.Way;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
+// #### TODO: explicitly enforce that every way in a multipolygon is not a member of another edited or external multipolygon.
+// Such multipolygons should be rare and their edits need very special care.
 
 public class EdMultipolygon extends EdObject {
     private Relation m_relation;
@@ -150,6 +152,17 @@ public class EdMultipolygon extends EdObject {
                 return true;
         return false;
     }
+    
+    public boolean containsNonClosedWays() {
+        checkEditable();
+        for (EdWay w: m_outerWays)
+            if (!w.isClosed())
+                return true;
+        for (EdWay w: m_innerWays)
+            if (!w.isClosed())
+                return true;
+        return false;        
+    }    
     
     protected OsmPrimitive currentPrimitive() {
         return m_relation;

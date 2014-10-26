@@ -61,12 +61,12 @@ public class PolygonClipper {
         return m_innerPolygons;
     }
 
-    public void polygonDifference (EdWay clip_way, EdWay subject_way) {
+    public void polygonDifference (EdWay clip_way, EdObject subj) {
 
         // convert EdWays to Polys, populate nodes map
         m_nodesMap = new HashMap<EastNorth, EdNode>();
         Poly clip = wayToPoly (clip_way);
-        Poly subject = wayToPoly (subject_way);
+        Poly subject = edObjectToPoly (subj);
 
         PolyDefault result = (PolyDefault)Clip.difference (subject, clip);
 
@@ -96,6 +96,23 @@ public class PolygonClipper {
         m_innerPolygons = Collections.unmodifiableList(m_innerPolygons);
     }
 
+    private Poly edObjectToPoly(EdObject obj) {
+        if (obj instanceof EdWay)
+            return wayToPoly((EdWay)obj);
+        if (obj instanceof EdMultipolygon)
+            return multipolygonToPoly((EdMultipolygon)obj);
+        throw new IllegalArgumentException("EdObject must be either EdWay or EdMultipolygon");
+    }
+
+    private Poly multipolygonToPoly(EdMultipolygon mp) {
+        Poly p = new PolyDefault();
+        for (EdWay w: mp.outerWays())
+            p.add(wayToPoly(w, false));
+        for (EdWay w: mp.innerWays())
+            p.add(wayToPoly(w, true));
+        return p;
+    }
+    
     private Poly wayToPoly (EdWay w)
     {
         return wayToPoly (w, false);

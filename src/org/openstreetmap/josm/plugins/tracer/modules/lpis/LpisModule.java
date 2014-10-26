@@ -372,32 +372,31 @@ public class LpisModule implements TracerModule  {
             for (EdObject obj: areas) {
                 if (obj instanceof EdMultipolygon) {
                     EdMultipolygon subject_mp = (EdMultipolygon)obj;
-                    
                     if (subject_mp.containsWay(clip_way))
                         continue;
                     
-                    System.out.println("Ignoring multipolygon subject " + Long.toString(subject_mp.getUniqueId()));
-                    continue; // #### support multipolygons as a clip subject
+                    // Perform clipping
+                    clipLanduseAreaSimpleMulti(editor, clip_way, subject_mp);
                 }
-                EdWay subject_way = (EdWay)obj;
-                
-                if (subject_way == clip_way)
-                    continue;
+                else if (obj instanceof EdWay) {
+                    EdWay subject_way = (EdWay)obj;
+                    if (subject_way == clip_way)
+                        continue;
 
-                // First, connect touching nodes of subject_way to clip_way. This is necessary because
-                // LPIS polygons series contain very small gaps that need to be elliminated before
-                // clipping is performed. Also, there are false joint points on LPIS polygons' edges
-                // where nodes must be added too.
-                subject_way.connectNonIncludedTouchingNodes(clip_way);
-
-                // Perform clipping
-                clipLanduseAreaSimpleSimple(editor, clip_way, subject_way);
+                    // Perform clipping
+                    clipLanduseAreaSimpleSimple(editor, clip_way, subject_way);
+                }
             }
         }
-
+        
         private void clipLanduseAreaSimpleSimple(WayEditor editor, EdWay clip_way, EdWay subject_way) {            
+            // First, connect touching nodes of subject_way to clip_way. This is necessary because
+            // LPIS polygons series contain very small gaps that need to be elliminated before
+            // clipping is performed. Also, there are false joint points on LPIS polygons' edges
+            // where nodes must be added too.
+            subject_way.connectNonIncludedTouchingNodes(clip_way);
 
-            System.out.println("Computing difference: clip=" + Long.toString(clip_way.getUniqueId()) + ", subject=" + Long.toString(subject_way.getUniqueId()));
+            System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_way=" + Long.toString(subject_way.getUniqueId()));
 
             PolygonClipper clipper = new PolygonClipper(editor);
             clipper.polygonDifference(clip_way, subject_way);
@@ -416,6 +415,88 @@ public class LpisModule implements TracerModule  {
                 throw new AssertionError(tr("PolygonClipper.polygonDifference returned nonsense!"));
         }
 
+        private void clipLanduseAreaSimpleMulti(WayEditor editor, EdWay clip_way, EdMultipolygon subject_mp) {
+            
+            // #### add support for multipolygons with non-closed ways
+            if (subject_mp.containsNonClosedWays()) {
+                System.out.println("Ignoring multipolygon " + Long.toString(clip_way.getUniqueId()) + ", it contains non-closed ways");
+                return;
+            }
+            
+            // First, connect all touching nodes of all subject ways to clip_way. This is necessary because
+            // LPIS polygons series contain very small gaps that need to be elliminated before
+            // clipping is performed. Also, there are false joint points on LPIS polygons' edges
+            // where nodes must be added too.
+            for (EdWay way: subject_mp.allWays())
+                way.connectNonIncludedTouchingNodes(clip_way);
+            
+            System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_relation=" + Long.toString(subject_mp.getUniqueId()));
+            
+            PolygonClipper clipper = new PolygonClipper(editor);
+            clipper.polygonDifference(clip_way, subject_mp);
+            List<List<EdNode>> unmapped_new_outers = new ArrayList<>(clipper.outerPolygons());
+            List<List<EdNode>> unmapped_new_inners = new ArrayList<>(clipper.innerPolygons());
+
+            System.out.println("- result: outers=" + Long.toString(unmapped_new_outers.size()) + ", inners=" + Long.toString(unmapped_new_inners.size()));
+           
+            // Create bi-directional mapping of identical geometries
+            List<EdWay> unmapped_old_outers = new ArrayList<>(subject_mp.outerWays());
+            List<EdWay> unmapped_old_inners = new ArrayList<>(subject_mp.innerWays());
+            Map<EdWay, List<EdNode>> mapped_old_new_outers = new HashMap<>();
+            Map<List<EdNode>, EdWay> mapped_new_old_outers = new HashMap<>();
+            Map<EdWay, List<EdNode>> mapped_old_new_inners = new HashMap<>();
+            Map<List<EdNode>, EdWay> mapped_new_old_inners = new HashMap<>();
+            mapIdenticalWays(unmapped_old_outers, unmapped_new_outers, mapped_old_new_outers, mapped_new_old_outers);
+            mapIdenticalWays(unmapped_old_inners, unmapped_new_inners, mapped_old_new_inners, mapped_new_old_inners);
+
+            // All new ways were successfully mapped to old ways?
+            if (unmapped_old_outers.isEmpty() && unmapped_old_inners.isEmpty() && unmapped_new_outers.isEmpty() && unmapped_new_inners.isEmpty()) {
+                System.out.println(tr(" o subject unchanged"));
+                return;
+            }
+        
+            // Handle the easiest and most common case, only one outer way of a multipolygon was clipped
+            // #### Well, I should test that the old and new outer ways have non-empty intersection. Otherwise,
+            // it means that one brand new outer way was created and one old outer way was completely deleted... 
+            // 
+            if (unmapped_old_outers.size() == 1 && unmapped_new_outers.size() == 1 &&
+                    unmapped_old_inners.isEmpty() && unmapped_new_inners.isEmpty()) {
+                EdWay old_outer_way = unmapped_old_outers.get(0);
+                List<EdNode> new_outer_way = unmapped_new_outers.get(0);                
+                clipLanduseHandleSimpleMultiOneOuterModified (editor, clip_way, subject_mp, old_outer_way, new_outer_way);
+                return;
+            }
+            else {
+                System.out.println(tr(" x clip result is too complex"));
+                return;                
+            }
+        }
+
+        private void mapIdenticalWays(List<EdWay> unmapped_old, List<List<EdNode>> unmapped_new, Map<EdWay, List<EdNode>> mapped_old_new, Map<List<EdNode>, EdWay> mapped_new_old) {
+            int iold = 0;
+            while (iold < unmapped_old.size()) {
+                EdWay old_way = unmapped_old.get(iold);
+                List<EdNode> new_way = null;
+                int inew = 0;
+                for (inew = 0; inew < unmapped_new.size(); inew++) {
+                    List<EdNode> test_way = unmapped_new.get(inew);
+                    if (old_way.hasIdenticalEdNodeGeometry(test_way, true)) {
+                        new_way = test_way;
+                        break;
+                    }
+                }
+                if (new_way != null) {
+                    mapped_old_new.put(old_way, new_way);
+                    mapped_new_old.put(new_way, old_way);
+                    unmapped_old.remove(iold);
+                    unmapped_new.remove(inew);
+                }
+                else {
+                    iold++;
+                }
+            }
+        }        
+        
         private void clipLanduseHandleSimpleSimpleSimple(WayEditor editor, EdWay clip_way, EdWay subject_way, List<EdNode> result) {
             // ** Easiest case - simple way clipped by a simple way produced a single polygon **
 
@@ -436,7 +517,20 @@ public class LpisModule implements TracerModule  {
             // intersection nodes will be included in both ways.
             clip_way.connectNonIncludedTouchingNodes(subject_way);
         }
+        
+        private void clipLanduseHandleSimpleMultiOneOuterModified (WayEditor editor, EdWay clip_way, EdMultipolygon subject_mp, EdWay old_outer_way, List<EdNode> result) {
+            // ** Easy case - clip of a multipolygon modified exactly one outer way and nothing else **
+            
+            System.out.println(tr(" ! CLIPPING subject " + Long.toString(subject_mp.getUniqueId())) + ", outer way modified: " + Long.toString(old_outer_way.getUniqueId()));
+            
+            // Change geometry of the changed outer way
+            old_outer_way.setNodes(result);
 
+            // Connect clip_way to subject_way, this step guarantees that all newly created
+            // intersection nodes will be included in both ways.
+            clip_way.connectNonIncludedTouchingNodes(old_outer_way);            
+        }
+        
         private void clipLanduseHandleSimpleSimpleMulti(WayEditor editor, EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers, List<List<EdNode>> inners) {        
             // ** Simple way clipped by a simple way produced multiple polygons **
 
@@ -488,8 +582,8 @@ public class LpisModule implements TracerModule  {
                     clip_way.connectNonIncludedTouchingNodes(new_way);
                 }
             }
-        }
-
+        }        
+        
         private double getClosedWayArea(List<EdNode> nodes) {
             // Joseph O'Rourke, Computational Geometry in C, copied from GPCJ2
 
