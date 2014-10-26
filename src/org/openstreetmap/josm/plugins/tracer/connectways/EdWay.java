@@ -182,11 +182,13 @@ public class EdWay extends EdObject {
         return m_way;
     }
 
-    public BBox getBBox(double dist) {
-        checkEditable(); // #### maybe support finalized ways
+    public BBox getBBox() {
+        checkNotDeleted();
+        if (isFinalized())
+            return m_way.getBBox();
         BBox bbox = new BBox(m_way);
         for (EdNode n: m_nodes)
-            bbox.add(n.getBBox(dist));
+            bbox.add(n.getBBox());
         return bbox;
     }
 
@@ -353,11 +355,6 @@ public class EdWay extends EdObject {
                 return true;
         
         return false;
-    }
-
-    public long getUniqueId() {
-        checkNotDeleted();
-        return m_way.getUniqueId();
     }
 
     public boolean hasIdenticalEdNodeGeometry(List<EdNode> list, boolean allow_inverted_orientation) {

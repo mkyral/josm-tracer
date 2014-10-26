@@ -19,26 +19,26 @@
 
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
-import static org.openstreetmap.josm.tools.I18n.tr;
-
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.LinkedList;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.ChangeCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.DeleteCommand;
+import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
-import org.openstreetmap.josm.data.osm.Way;
-import org.openstreetmap.josm.data.osm.Relation;
-import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.data.Bounds;
+import org.openstreetmap.josm.data.osm.Relation;
+import org.openstreetmap.josm.data.osm.RelationMember;
+import org.openstreetmap.josm.data.osm.Way;
+import static org.openstreetmap.josm.tools.I18n.tr;
 
 
 public class WayEditor {
@@ -101,6 +101,8 @@ public class WayEditor {
             throw new IllegalArgumentException(tr("Non-original Node created outside WayEditor scope"));
         if (node.getDataSet() != this.getDataSet())
             throw new IllegalArgumentException(tr("Cannot use Node from with a different/null DataSet"));
+        if (!node.isUsable())
+            throw new IllegalArgumentException(tr("Cannot edit unusable Node"));            
         
         EdNode en = m_originalNodes.get(node.getUniqueId());
         if (en != null) {
@@ -122,6 +124,8 @@ public class WayEditor {
             throw new IllegalArgumentException(tr("Non-original Way created outside WayEditor scope"));
         if (way.getDataSet() != this.getDataSet())
             throw new IllegalArgumentException(tr("Cannot use Way from with a different/null DataSet"));
+        if (!way.isUsable() || way.hasIncompleteNodes())
+            throw new IllegalArgumentException(tr("Cannot edit unusable Way"));
 
         EdWay ew = m_originalWays.get(way.getUniqueId());
         if (ew != null) {
@@ -136,6 +140,31 @@ public class WayEditor {
         return ew;
     }
 
+    public EdMultipolygon useMultipolygon(Relation rel) {
+        if (rel == null)
+            throw new IllegalArgumentException();
+        if (rel.getUniqueId() <= m_idGuard)
+            throw new IllegalArgumentException(tr("Non-original Relation created outside WayEditor scope"));
+        if (rel.getDataSet() != this.getDataSet())
+            throw new IllegalArgumentException(tr("Cannot use Relation from with a different/null DataSet"));
+        if (!rel.isUsable() || rel.hasIncompleteMembers())
+            throw new IllegalArgumentException(tr("Cannot edit unusable/incomplete Relation"));
+        if (!MultipolygonMatch.match(rel))
+            throw new IllegalArgumentException(tr("Relation is not a multipolygon"));
+        
+        EdMultipolygon emp = m_originalMultipolygons.get(rel.getUniqueId());
+        if (emp != null) {
+            if (emp.originalMultipolygon() != rel)
+                throw new IllegalArgumentException(tr("Original Relation ID mapped to a different Relation object"));
+            return emp;
+        }
+        
+        emp = new EdMultipolygon(this, rel);
+        m_originalMultipolygons.put(rel.getUniqueId(), emp);
+        m_multipolygons.add(emp);
+        return emp;
+    }
+    
     boolean isEdited(OsmPrimitive prim) {
         if (prim instanceof Node) {
             EdNode en = m_originalNodes.get(prim.getUniqueId());
@@ -397,6 +426,28 @@ public class WayEditor {
         return result;
     }
 
+    private List<EdMultipolygon> searchEdMultipolygons(BBox bbox) {
+        List<EdMultipolygon> result = new ArrayList<>();
+        for (EdMultipolygon edmp: m_multipolygons) {
+            if (edmp.isDeleted())
+                continue;
+            if (bbox.intersects(edmp.getBBox()))
+                result.add(edmp);
+        }
+        return result;
+    }
+    
+    private List<EdWay> searchEdWays(BBox bbox) {
+        List<EdWay> result = new ArrayList<>();
+        for (EdWay edw: m_ways) {
+            if (edw.isDeleted())
+                continue;
+            if (bbox.intersects(edw.getBBox()))
+                result.add(edw);
+        }
+        return result;
+    }    
+    
     public boolean insideDataSourceBounds(EdNode node) {
         List<Bounds> bounds = getDataSet().getDataSourceBounds();
         for (Bounds b: bounds) {
@@ -406,49 +457,64 @@ public class WayEditor {
         return false;
     }
 
-    public List<EdObject> useAllAreasInBBox(BBox bbox, IEdWayPredicate filter) {
-        // #### add multipolygons support!!!
-        // it will need proper handling of incomplete multipolygons in EdMultipolygon!!
+    public Set<EdObject> useAllAreasInBBox(BBox bbox, IEdAreaPredicate filter) {
+        Set<EdObject> areas = new HashSet<>();
 
-        List<EdObject> list = new ArrayList<EdObject>();
-
-        for (EdWay w: m_ways) {
-            if (w.isDeleted())
+        // look for non-edited multipolygons
+        for (Relation rel: getDataSet().searchRelations(bbox)) {
+            if (!rel.isUsable() || rel.hasIncompleteMembers() || isEdited(rel))
                 continue;
-            if (!bbox.intersects(w.getBBox(s_dMinDistance)))
+            if (filter.evaluate(rel))
+                areas.add(this.useMultipolygon(rel));
+        }
+        
+        // look for edited multipolygons
+        for (EdMultipolygon mp: this.searchEdMultipolygons(bbox)) {
+            if (areas.contains(mp))
                 continue;
+            if (filter.evaluate(mp))
+                areas.add(mp);
+        }
+        
+        // look for edited ways
+        for (EdWay w: this.searchEdWays(bbox)) {
             if (!filter.evaluate(w))
                 continue;
-            if (w.isMemberOfAnyMultipolygon()) // #### multipolygons are skipped now here
+            
+            // Way is member of a multipolygon, so it was already implicitly included
+            // as a part of EdMultipolygon above, or it's a tagged member of
+            // multipolygon that doesn't match given filter. Which can be dangerous
+            // and we ignore it (for now).
+            if (w.isMemberOfAnyMultipolygon())
                 continue;
-            list.add(w);
+            
+            areas.add(w);
         }
 
+        // look for non-edited ways
         for (Way w : getDataSet().searchWays(bbox)) {
             if (!w.isUsable())
                 continue;
             if (isEdited(w))
                 continue;
             if (!filter.evaluate(w))
-                continue;            
+                continue;
 
-            // #### multipolygons are skipped now here
-            {
-                List<Relation> relations = OsmPrimitive.getFilteredList(w.getReferrers(), Relation.class);
-                boolean is_member_of_any_multipolygon = false;
-                for (Relation rel: relations) {
-                    if (MultipolygonMatch.match(rel)) {
-                        is_member_of_any_multipolygon = true;
-                        break;
-                    }
+            // Ignore member of a multipolygon, see notes above
+            List<Relation> relations = OsmPrimitive.getFilteredList(w.getReferrers(), Relation.class);
+            boolean is_member_of_any_multipolygon = false;
+            for (Relation rel: relations) {
+                if (MultipolygonMatch.match(rel)) {
+                    is_member_of_any_multipolygon = true;
+                    break;
                 }
-                if (is_member_of_any_multipolygon)
-                    continue;
             }
+            if (is_member_of_any_multipolygon)
+                continue;
 
-            list.add(useWay(w));
+            areas.add(useWay(w));
         }
-        return list;
+        return areas;
     }
 }
 

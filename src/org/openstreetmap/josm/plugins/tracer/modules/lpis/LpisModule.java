@@ -366,13 +366,21 @@ public class LpisModule implements TracerModule  {
 
         private void clipLanduseAreasSimpleClip(WayEditor editor, EdWay clip_way) {
 
-            AreaBoundaryWayPredicate filter = new AreaBoundaryWayPredicate (m_clipLanduseWayMatch);
+            AreaPredicate filter = new AreaPredicate (m_clipLanduseWayMatch);
 
-            List<EdObject> areas = editor.useAllAreasInBBox(clip_way.getBBox(0.0000005), filter); // #### hardcoded magic
+            Set<EdObject> areas = editor.useAllAreasInBBox(clip_way.getBBox(), filter);
             for (EdObject obj: areas) {
-                if (!(obj instanceof EdWay))
+                if (obj instanceof EdMultipolygon) {
+                    EdMultipolygon subject_mp = (EdMultipolygon)obj;
+                    
+                    if (subject_mp.containsWay(clip_way))
+                        continue;
+                    
+                    System.out.println("Ignoring multipolygon subject " + Long.toString(subject_mp.getUniqueId()));
                     continue; // #### support multipolygons as a clip subject
+                }
                 EdWay subject_way = (EdWay)obj;
+                
                 if (subject_way == clip_way)
                     continue;
 

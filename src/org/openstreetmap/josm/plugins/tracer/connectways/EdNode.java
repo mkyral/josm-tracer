@@ -66,14 +66,9 @@ public class EdNode extends EdObject {
         return m_node.getCoor();
     }
 
-    public BBox getBBox(double dist) {
-        BBox bbox = new BBox(m_node);
-        bbox.addPrimitive(m_node, dist);
-        return bbox;
-    }
-
-    public long getUniqueId() {
-        return m_node.getUniqueId();
+    @Override
+    public BBox getBBox() {
+        return m_node.getBBox();
     }
 
     public EastNorth getEastNorth() {

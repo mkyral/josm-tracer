@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import java.util.Collections;
+import org.openstreetmap.josm.data.osm.BBox;
 
 
 public abstract class EdObject {
@@ -189,6 +190,11 @@ public abstract class EdObject {
         return result;
     }
 
+    public <T extends EdObject> boolean hasEditorReferrers(Class<T> type) {
+        List<T> objs = getEditorReferrers(type);
+        return objs.isEmpty();
+    }
+    
     public <T extends OsmPrimitive> List<T> getExternalReferrers(Class<T> type) {
 
         if (!hasOriginal())
@@ -216,7 +222,21 @@ public abstract class EdObject {
                 return true;
         }
         return false;
-    }    
+    }
+    
+    public abstract BBox getBBox();
+    
+    public BBox getBBox(double oversize) {
+        BBox box = this.getBBox();
+        box.add(box.getTopLeftLon() - oversize, box.getBottomRightLat() - oversize);
+        box.add(box.getBottomRightLon() + oversize, box.getTopLeftLat() + oversize);
+        return box;
+    }
+    
+    public long getUniqueId() {
+        checkNotDeleted();
+        return currentPrimitive().getUniqueId();
+    }
 }
 
 

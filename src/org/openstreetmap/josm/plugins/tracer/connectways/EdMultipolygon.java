@@ -1,13 +1,14 @@
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
-import static org.openstreetmap.josm.tools.I18n.tr;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.Way;
+import static org.openstreetmap.josm.tools.I18n.tr;
 
 
 public class EdMultipolygon extends EdObject {
@@ -24,6 +25,34 @@ public class EdMultipolygon extends EdObject {
         m_innerWays = new ArrayList<EdWay> ();
     }
 
+    EdMultipolygon(WayEditor editor, Relation original_rel) {
+        super(editor, original_rel);
+        m_relation = new Relation(original_rel);
+        while (m_relation.getMembersCount() > 0)
+            m_relation.removeMember(m_relation.getMembersCount()-1);
+
+        m_outerWays = new ArrayList<EdWay>();
+        m_innerWays = new ArrayList<EdWay>();
+        
+        for (RelationMember member: original_rel.getMembers()) {
+            if (!member.isWay())
+                throw new IllegalArgumentException("Cannot edit multipolygon with non-Way members!");
+            if (!member.hasRole())
+                throw new IllegalArgumentException("Cannot edit multipolygon with members having no role!");
+            if (member.getRole().equals("outer"))
+                m_outerWays.add(editor.useWay(member.getWay()));                
+            else if (member.getRole().equals("inner"))
+                m_innerWays.add(editor.useWay(member.getWay()));
+            else
+                throw new IllegalArgumentException("Cannot edit multipolygon member with unknown role: " + member.getRole());
+        }
+        
+        for (EdWay w: m_outerWays)
+            w.addRef(this);
+        for (EdWay w: m_innerWays)
+            w.addRef(this);
+    }
+    
     public void addOuterWay(EdWay edway) {
         checkEditable();
         if (edway == null)
@@ -111,7 +140,43 @@ public class EdMultipolygon extends EdObject {
         return list;
     }
 
+    public boolean containsWay(EdWay way) {
+        checkEditable();
+        for (EdWay w: m_outerWays)
+            if (w == way)
+                return true;
+        for (EdWay w: m_innerWays)
+            if (w == way)
+                return true;
+        return false;
+    }
+    
     protected OsmPrimitive currentPrimitive() {
         return m_relation;
+    }
+    
+    public BBox getBBox() {
+        checkNotDeleted();
+        if (isFinalized())
+            return m_relation.getBBox();
+        
+        BBox box = null;
+        for (EdWay w: m_outerWays) {
+            if (box == null)
+                box = w.getBBox();
+            else
+                box.add(w.getBBox());
+        }
+
+        for (EdWay w: m_innerWays) {
+            if (box == null)
+                box = w.getBBox();
+            else
+                box.add(w.getBBox());
+        }
+        
+        if (box == null)
+            throw new IllegalStateException("EdMultipolygon contains no ways");
+        return box;
     }
 }
