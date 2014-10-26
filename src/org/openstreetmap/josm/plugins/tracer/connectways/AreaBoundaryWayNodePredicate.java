@@ -28,28 +28,22 @@ import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 
 public final class AreaBoundaryWayNodePredicate implements IEdNodePredicate {
 
-    private final Match m_filter;
-    private final MultipolygonBoundaryWayPredicate m_filterMultipolygon;
+    private final AreaPredicate m_areaFilter;
 
     public AreaBoundaryWayNodePredicate(Match filter) {
-        m_filter = filter;
-        m_filterMultipolygon = new MultipolygonBoundaryWayPredicate(filter);
+        m_areaFilter = new AreaPredicate(filter);
     }
 
     public boolean evaluate(EdNode ednode) {
         List<EdWay> edways = ednode.getEditorReferrers(EdWay.class);
         for (EdWay way: edways) {
-            if (way.isClosed() && way.matches(m_filter))
-                return true;
-            if (m_filterMultipolygon.evaluate(way))
+            if (m_areaFilter.evaluate(way))
                 return true;
         }
 
         List<Way> ways = ednode.getExternalReferrers(Way.class);
         for (Way way: ways) {
-            if (way.isClosed() && m_filter.match(way))
-                return true;
-            if (m_filterMultipolygon.evaluate(way))
+            if (m_areaFilter.evaluate(way))
                 return true;
         }
         return false;
@@ -58,9 +52,7 @@ public final class AreaBoundaryWayNodePredicate implements IEdNodePredicate {
     public boolean evaluate(Node node) {
         List<Way> ways = OsmPrimitive.getFilteredList(node.getReferrers(), Way.class);
         for (Way way: ways) {
-            if (way.isClosed() && m_filter.match(way))
-                return true;
-            if (m_filterMultipolygon.evaluate(way))
+            if (m_areaFilter.evaluate(way))
                 return true;
         }
         return false;

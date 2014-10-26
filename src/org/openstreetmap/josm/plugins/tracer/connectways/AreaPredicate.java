@@ -9,21 +9,29 @@ import org.openstreetmap.josm.data.osm.Way;
 public class AreaPredicate implements IEdAreaPredicate {
 
     private final Match m_filter;
-    private final AreaBoundaryWayPredicate m_boundaryWayFilter;
+    private final MultipolygonBoundaryWayPredicate m_filterMultipolygon;
     
     public AreaPredicate (Match filter) {
         m_filter = filter;
-        m_boundaryWayFilter = new AreaBoundaryWayPredicate(filter);
+        m_filterMultipolygon = new MultipolygonBoundaryWayPredicate(filter);
     }
     
     @Override
     public boolean evaluate(EdWay way) {
-        return m_boundaryWayFilter.evaluate(way);
+        if (way.isClosed() && way.matches(m_filter))
+            return true;
+        if (m_filterMultipolygon.evaluate(way))
+            return true;
+        return false;
     }
 
     @Override
     public boolean evaluate(Way way) {
-        return m_boundaryWayFilter.evaluate(way);
+        if (way.isClosed() && m_filter.match(way))
+            return true;
+        if (m_filterMultipolygon.evaluate(way))
+            return true;
+        return false;
     }
 
     @Override
@@ -54,7 +62,7 @@ public class AreaPredicate implements IEdAreaPredicate {
         
         // old-style multipolygon, we detect only outer way tags
         for (RelationMember member: mp.getMembers()) {
-            if (!member.getRole().equals("outer") || !member.isWay())
+            if (!member.hasRole() || !member.getRole().equals("outer") || !member.isWay())
                 continue;
             if (m_filter.match(member.getWay()))
                 return true;
