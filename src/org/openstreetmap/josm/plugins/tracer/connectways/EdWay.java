@@ -182,6 +182,25 @@ public class EdWay extends EdObject {
         return m_way;
     }
 
+    /**
+     * Returns a final way that can be referenced in EdMultipolygon finalization.
+     * The main difference from finalWay() is that for a modified way, it doesn't
+     * return new final Way but -surprisingly- the original Way. Indeed, because
+     * JOSM's ChangeCommand does not replace the original object wit the new one but
+     * just copies it's contents, EdMultipolygon must be finalized with a reference to
+     * the original way. Command ordering in WayEditor.finalizeEdit() guarantees that
+     * the original way is changed prior the multipolygon uses it.
+     * @return final Way 
+     */
+    Way finalReferenceableWay() {
+        checkNotDeleted();
+        Way fin = finalWay();
+        if (hasOriginal() && isModified())
+            return originalWay();
+        else
+            return fin;
+    }
+    
     public BBox getBBox() {
         checkNotDeleted();
         if (isFinalized())

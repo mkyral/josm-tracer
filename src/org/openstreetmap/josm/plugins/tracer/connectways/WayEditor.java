@@ -382,29 +382,38 @@ public class WayEditor {
             cmds.add(new ChangeCommand(n.originalNode(), n.finalNode()));
 
         // commands to add new ways
-        for (EdWay w: add_ways)
+        for (EdWay w: add_ways) {
             cmds.add(new AddCommand(w.finalWay()));
+            System.out.println("Add way: " + Long.toString(w.getUniqueId()));
+        }
 
         // commands to change original ways
-        for (EdWay w: change_ways)
+        for (EdWay w: change_ways) {
             cmds.add(new ChangeCommand(w.originalWay(), w.finalWay()));
+            System.out.println("Change way: " + Long.toString(w.getUniqueId()));
+        }
 
         // multipolygon commands
         for (EdMultipolygon emp: m_multipolygons) {
             if (!emp.hasOriginal() && !emp.isDeleted()) {
                 cmds.add(new AddCommand(emp.finalMultipolygon()));
+                System.out.println("Add multipolygon: " + Long.toString(emp.getUniqueId()));    
             }
-            else if (emp.hasOriginal() && emp.isDeleted() && emp.isModified()) {
+            else if (emp.hasOriginal() && !emp.isDeleted() && emp.isModified()) {
                 cmds.add(new ChangeCommand(emp.originalMultipolygon(), emp.finalMultipolygon()));
+                System.out.println("Change multipolygon: " + Long.toString(emp.getUniqueId()));    
             }
             else if (emp.hasOriginal() && emp.isDeleted()) {
                 cmds.add(new DeleteCommand(emp.finalMultipolygon()));
+                System.out.println("Delete multipolygon: " + Long.toString(emp.getUniqueId()));    
             }
         }
 
         // commands to delete original ways
-        for (EdWay w: delete_ways)
+        for (EdWay w: delete_ways) {
             cmds.add(new DeleteCommand(w.originalWay()));
+            System.out.println("Delete way: " + Long.toString(w.getUniqueId()));
+        }
 
         // commands to delete original nodes
         for (EdNode n: delete_nodes)

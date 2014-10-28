@@ -168,6 +168,25 @@ public abstract class EdObject {
         return currentPrimitive().isTagged();
     }
 
+    /**
+     * Checks if the given EdObject is the only one referrer of this EdObject.
+     * That is, if the object has only this given editor referrer and no
+     * other external or editor referrers.
+     * @param referrer referrer to test
+     * @return true if the referrer is the only referrer of this EdObject
+     */
+    public boolean hasSingleReferrer(EdObject referrer) {
+        if (m_refs == null)
+            return false;
+        if (m_refs instanceof EdObject[])
+            return false;
+        if ((EdObject)m_refs != referrer)
+            return false;
+        if (this.hasExternalReferrers())
+            return false;
+        return true;
+    }    
+    
     public <T extends EdObject> List<T> getEditorReferrers(Class<T> type) {
         if (m_refs == null)
             return Collections.emptyList();
@@ -236,7 +255,7 @@ public abstract class EdObject {
     public long getUniqueId() {
         checkNotDeleted();
         return currentPrimitive().getUniqueId();
-    }
+    }    
 }
 
 

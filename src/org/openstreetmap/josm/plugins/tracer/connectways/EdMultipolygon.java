@@ -85,6 +85,30 @@ public class EdMultipolygon extends EdObject {
         setModified();
     }
 
+    public boolean removeOuterWay(EdWay edway) {
+        checkEditable();
+        if (edway == null)
+            throw new IllegalArgumentException();
+        if (!m_outerWays.remove(edway))
+            return false;
+        
+        edway.removeRef(this);
+        setModified();
+        return true;
+    }
+    
+    public boolean removeInnerWay(EdWay edway) {
+        checkEditable();
+        if (edway == null)
+            throw new IllegalArgumentException();
+        if (!m_innerWays.remove(edway))
+            return false;
+        
+        edway.removeRef(this);
+        setModified();
+        return true;        
+    }
+    
     public Relation originalMultipolygon() {
         if (!hasOriginal())
             throw new IllegalStateException(tr("EdMultipolygon has no original Relation"));
@@ -103,9 +127,9 @@ public class EdMultipolygon extends EdObject {
         else {
             Relation fin = new Relation(m_relation);
             for (EdWay ew: m_outerWays)
-                fin.addMember(new RelationMember ("outer", ew.finalWay()));
+                fin.addMember(new RelationMember ("outer", ew.finalReferenceableWay()));
             for (EdWay ew: m_innerWays)
-                fin.addMember(new RelationMember ("inner", ew.finalWay()));
+                fin.addMember(new RelationMember ("inner", ew.finalReferenceableWay()));
             m_relation = fin;
         }
         return m_relation;
@@ -191,16 +215,5 @@ public class EdMultipolygon extends EdObject {
         if (box == null)
             throw new IllegalStateException("EdMultipolygon contains no ways");
         return box;
-    }
-
-    public boolean hasTaggedWays() {
-        checkEditable();
-        for (EdWay w: m_outerWays)
-            if (w.isTagged())
-                return true;
-        for (EdWay w: m_innerWays)
-            if (w.isTagged())
-                return true;
-        return false;        
     }
 }

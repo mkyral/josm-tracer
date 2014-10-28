@@ -234,7 +234,7 @@ public class LpisModule implements TracerModule  {
                         data_set.endUpdate();
                         long end_time = System.nanoTime();
                         long time_msecs = (end_time - start_time) / (1000*1000);
-                        System.out.println("Total trace time (ms): " + Long.toString(time_msecs));
+                        System.out.println("Polygon time (ms): " + Long.toString(time_msecs));
                     }
                 }
             });
@@ -483,15 +483,36 @@ public class LpisModule implements TracerModule  {
                 return;
             }
             
-            // If subject multipolygon is a new-style multipolygon and its ways have
-            // no other tags, we can replace it's geometry quite agressively.
-            if (!subject_has_nonclosed_ways && !subject_mp.hasTaggedWays()) {
-                // #### continue here
+            // If modified ways have no (interesting) tags and no other referrers, we can 
+            // replace multipolygon's geometry quite agressively.
+            if (!subject_has_nonclosed_ways && 
+                    untaggedSingleReferrerWays(unmapped_old_outers, subject_mp) && 
+                    untaggedSingleReferrerWays(unmapped_old_inners, subject_mp)) {
+                clipLanduseHandleSimpleMultiAgressiveUpdate(editor, clip_way, subject_mp, 
+                    unmapped_old_outers, unmapped_old_inners, unmapped_new_outers, unmapped_new_inners);
+                return;
             }
             
             System.out.println(tr(" x clip result is too complex"));
         }
 
+        /**
+         * Returns true if all ways in the list have no (interesting) tag,
+         * have the given multipolygon referrer and no other referrers.
+         * @param list list of ways to check
+         * @param referrer expected single referrer
+         * @return true if all ways satisfy the requirements
+         */
+        private boolean untaggedSingleReferrerWays(List<EdWay> list, EdMultipolygon referrer) {
+            for (EdWay way: list) {
+                if (way.isTagged())
+                    return false;
+                if (!way.hasSingleReferrer(referrer))
+                    return false;
+            }
+            return true;
+        }
+        
         private void mapIdenticalWays(List<EdWay> unmapped_old, List<List<EdNode>> unmapped_new, Map<EdWay, List<EdNode>> mapped_old_new, Map<List<EdNode>, EdWay> mapped_new_old) {
             int iold = 0;
             while (iold < unmapped_old.size()) {
@@ -538,13 +559,18 @@ public class LpisModule implements TracerModule  {
         }
         
         /**
-         * For every source EdWay, it tries to find the most similar dest way.
-         * Source EdWays with no suitable similar ways are excluded from the result.
+         * For every source EdWay, it tries to find the most similar dest way;
+         * for every dest way, it tries to find the most similar source EdWay.
+         * Ways with no suitable similar ways are excluded from the results.
+         * Forward mapping is guaranteed to be a bijection (suitable for
+         * way updates), reverse mapping can contain duplicate values (surjection).
+         * 
          * @param srcs list of source EdWays
          * @param dsts list of dest ways
-         * @return map of source EdWays to most similar dest ways
+         * @return a pair, first element is a map of source EdWays to most similar
+         * dest ways, second element is a map of dest ways to most similar source EdWay
          */
-        private Map<EdWay, List<EdNode>> pairSimilarWays (List<EdWay> srcs, List<List<EdNode>> dsts) {
+        private Pair<Map<EdWay, List<EdNode>>, Map<List<EdNode>, EdWay>> pairSimilarWays (List<EdWay> srcs, List<List<EdNode>> dsts) {
             // Create Cartesian product of ways and sort pairs according to their similarity
             // (For simplicity, we estimate similarity from percentage of shared nodes.
             // It would be better to base the similarity on areas of polygon intersections.)
@@ -559,18 +585,26 @@ public class LpisModule implements TracerModule  {
                 }
             }
 
-            // Map source ways to their most similar dest ways.
-            Map<EdWay, List<EdNode>> result = new HashMap<>();
-            Set<List<EdNode>> used = new HashSet<>();
+            // Map ways...
+            Map<EdWay, List<EdNode>> res1 = new HashMap<>();
+            Map<List<EdNode>, EdWay> res2 = new HashMap<>();
+            Set<List<EdNode>> res1used = new HashSet<>();
             SimilarWaysPair swp;
             while ((swp = queue.poll()) != null) {
-                if (result.containsKey(swp.src) || used.contains(swp.dst))
-                    continue;
-                result.put(swp.src, swp.dst);
-                used.add(swp.dst);
+                
+                // forward mapping
+                if (!res1.containsKey(swp.src) && !res1used.contains(swp.dst)) {
+                    res1.put(swp.src, swp.dst);
+                    res1used.add(swp.dst);
+                }
+                
+                // reverse mapping
+                if (!res2.containsKey(swp.dst)) {
+                    res2.put(swp.dst, swp.src);
+                }
             }
             
-            return result;
+            return new Pair<>(res1, res2);
         }
         
         private void clipLanduseHandleSimpleSimpleSimple(WayEditor editor, EdWay clip_way, EdWay subject_way, List<EdNode> result) {
@@ -659,6 +693,85 @@ public class LpisModule implements TracerModule  {
                 }
             }
         }        
+        
+        private void clipLanduseHandleSimpleMultiAgressiveUpdate(WayEditor editor, EdWay clip_way, EdMultipolygon subject_mp, List<EdWay> unmapped_old_outers, List<EdWay> unmapped_old_inners, List<List<EdNode>> unmapped_new_outers, List<List<EdNode>> unmapped_new_inners) {
+            // ** Agressive update of a multipolygon clipped by a simple way
+
+            if (!unmapped_old_outers.isEmpty() || !unmapped_new_outers.isEmpty()) {
+                
+                // Update geometry of outer ways that can be paired together as similar ones
+                Pair<Map<EdWay, List<EdNode>>, Map<List<EdNode>, EdWay>> outer_pair_maps = pairSimilarWays (unmapped_old_outers, unmapped_new_outers);
+                Map<EdWay, List<EdNode>> outer_pairs = outer_pair_maps.a;
+                Map<List<EdNode>, EdWay> outer_revs = outer_pair_maps.b;
+                for (Map.Entry<EdWay, List<EdNode>> pair: outer_pairs.entrySet()) {
+                    EdWay old_way = pair.getKey();
+                    List<EdNode> new_nodes = pair.getValue();
+                    old_way.setNodes(new_nodes);
+                    clip_way.connectNonIncludedTouchingNodes(old_way);
+                    unmapped_old_outers.remove(old_way);
+                    unmapped_new_outers.remove(new_nodes);
+                    System.out.println("Changing outer geometry " + Long.toString(old_way.getUniqueId()));
+                }
+
+                // Create new outer ways with tagging based on reverse similarity mapping
+                // (If no reverse mapping is available, leave way untagged)
+                for (List<EdNode> new_nodes: unmapped_new_outers) {
+                    EdWay new_way = editor.newWay(new_nodes);
+                    EdWay old_way = outer_revs.get(new_nodes);
+                    if (old_way != null)
+                        new_way.setKeys(old_way.getKeys());
+                    clip_way.connectNonIncludedTouchingNodes(new_way);
+                    subject_mp.addOuterWay(new_way);
+                    System.out.println("Adding outer way " + Long.toString(new_way.getUniqueId()));
+                }
+
+                // Remove old outer ways that weren't mapped to new ways
+                // (We assume that the ways have no interesting tags and referrers, 
+                // and will be automatically deleted by WayEditor.)
+                for (EdWay old_way: unmapped_old_outers) {
+                    subject_mp.removeOuterWay(old_way);
+                    System.out.println("Removing outer way " + Long.toString(old_way.getUniqueId()));
+                }
+            }
+            
+            if (!unmapped_old_inners.isEmpty() || !unmapped_new_inners.isEmpty()) {
+            
+                // Update geometry of inner ways that can be paired together as similar ones
+                Pair<Map<EdWay, List<EdNode>>, Map<List<EdNode>, EdWay>> inner_pair_maps = pairSimilarWays (unmapped_old_inners, unmapped_new_inners);
+                Map<EdWay, List<EdNode>> inner_pairs = inner_pair_maps.a;
+                Map<List<EdNode>, EdWay> inner_revs = inner_pair_maps.b;
+                for (Map.Entry<EdWay, List<EdNode>> pair: inner_pairs.entrySet()) {
+                    EdWay old_way = pair.getKey();
+                    List<EdNode> new_nodes = pair.getValue();
+                    old_way.setNodes(new_nodes);
+                    clip_way.connectNonIncludedTouchingNodes(old_way);
+                    unmapped_old_inners.remove(old_way);
+                    unmapped_new_inners.remove(new_nodes);
+                    System.out.println("Changing inner geometry " + Long.toString(old_way.getUniqueId()));
+                }
+                
+                // Create new inner ways with tagging based on reverse similarity mapping
+                // (If no reverse mapping is available, leave way untagged)
+                for (List<EdNode> new_nodes: unmapped_new_inners) {
+                    EdWay new_way = editor.newWay(new_nodes);
+                    EdWay old_way = inner_revs.get(new_nodes);
+                    if (old_way != null)
+                        new_way.setKeys(old_way.getKeys());
+                    clip_way.connectNonIncludedTouchingNodes(new_way);
+                    subject_mp.addInnerWay(new_way);
+                    System.out.println("Adding inner way " + Long.toString(new_way.getUniqueId()));
+                }
+
+                // Remove old inner ways that weren't mapped to new ways
+                // (We assume that the ways have no interesting tags and referrers, 
+                // and will be automatically deleted by WayEditor.)
+                for (EdWay old_way: unmapped_old_inners) {
+                    subject_mp.removeInnerWay(old_way);
+                    System.out.println("Removing inner way " + Long.toString(old_way.getUniqueId()));
+                }                
+            }
+        }
+        
         
         private double getClosedWayArea(List<EdNode> nodes) {
             // Joseph O'Rourke, Computational Geometry in C, copied from GPCJ2
