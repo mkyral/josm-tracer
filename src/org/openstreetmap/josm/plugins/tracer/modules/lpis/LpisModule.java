@@ -52,6 +52,9 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Pair;
 import org.xml.sax.SAXException;
 
+// #### TODO: zjistit proc diference s relaci 24399 vzdy vede k modifikaci multipolygonu, i kdyz trasovana cesta je od nej 
+// nekolik kilometru daleko :-) Patrne chyby v geometrii vstupniho multipolygonu, s kterymi clip provadi buhvico...
+
 public class LpisModule implements TracerModule  {
 
     private boolean moduleEnabled;
