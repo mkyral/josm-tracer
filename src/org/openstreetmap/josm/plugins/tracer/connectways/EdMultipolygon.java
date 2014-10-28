@@ -192,4 +192,15 @@ public class EdMultipolygon extends EdObject {
             throw new IllegalStateException("EdMultipolygon contains no ways");
         return box;
     }
+
+    public boolean hasTaggedWays() {
+        checkEditable();
+        for (EdWay w: m_outerWays)
+            if (w.isTagged())
+                return true;
+        for (EdWay w: m_innerWays)
+            if (w.isTagged())
+                return true;
+        return false;        
+    }
 }

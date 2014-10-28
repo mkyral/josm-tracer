@@ -396,6 +396,29 @@ public class EdWay extends EdObject {
         }
         return true;
     }
+    
+    /**
+     * Returns the number of unique nodes that occur both in this way
+     * and in the given list of nodes.
+     * @param list the list of nodes to compare with
+     * @return the number of shared nodes
+     */
+    public int getSharedNodesCount(List<EdNode> list) {
+        checkEditable();
+        Set<EdNode> s1 = new HashSet<>(m_nodes);
+        Set<EdNode> s2 = new HashSet<>(list);
+        if (s1.size() > s2.size()) {
+            Set<EdNode> aux = s1;
+            s1 = s2;
+            s2 = aux;
+        }
+        int count = 0;
+        for (EdNode n: s1) {
+            if (s2.contains(n))
+                count++;
+        }
+        return count;
+    }
 }
 
 

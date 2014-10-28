@@ -40,9 +40,8 @@ import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
-import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.gui.util.GuiHelper;
-
+import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
 
@@ -50,6 +49,7 @@ import org.openstreetmap.josm.plugins.tracer.connectways.*;
 
 import static org.openstreetmap.josm.tools.I18n.*;
 import org.openstreetmap.josm.tools.ImageProvider;
+import org.openstreetmap.josm.tools.Pair;
 import org.xml.sax.SAXException;
 
 public class LpisModule implements TracerModule  {
@@ -417,8 +417,10 @@ public class LpisModule implements TracerModule  {
 
         private void clipLanduseAreaSimpleMulti(WayEditor editor, EdWay clip_way, EdMultipolygon subject_mp) {
             
+            boolean subject_has_nonclosed_ways = subject_mp.containsNonClosedWays();
+            
             // #### add support for multipolygons with non-closed ways
-            if (subject_mp.containsNonClosedWays()) {
+            if (subject_has_nonclosed_ways) {
                 System.out.println("Ignoring multipolygon " + Long.toString(clip_way.getUniqueId()) + ", it contains non-closed ways");
                 return;
             }
@@ -438,7 +440,13 @@ public class LpisModule implements TracerModule  {
             List<List<EdNode>> unmapped_new_inners = new ArrayList<>(clipper.innerPolygons());
 
             System.out.println("- result: outers=" + Long.toString(unmapped_new_outers.size()) + ", inners=" + Long.toString(unmapped_new_inners.size()));
-           
+
+            // Whole multipolygon disappeared
+            if (unmapped_new_outers.isEmpty() && unmapped_new_inners.isEmpty()) {
+                System.out.println(tr("No result of difference - subject should be removed?!"));
+                return;
+            }
+            
             // Create bi-directional mapping of identical geometries
             List<EdWay> unmapped_old_outers = new ArrayList<>(subject_mp.outerWays());
             List<EdWay> unmapped_old_inners = new ArrayList<>(subject_mp.innerWays());
@@ -454,22 +462,30 @@ public class LpisModule implements TracerModule  {
                 System.out.println(tr(" o subject unchanged"));
                 return;
             }
-        
+
+            System.out.println("- unmapped_outers: old=" + Long.toString(unmapped_old_outers.size()) + ", new=" + Long.toString(unmapped_new_outers.size()));
+            System.out.println("- unmapped_inners: old=" + Long.toString(unmapped_old_inners.size()) + ", new=" + Long.toString(unmapped_new_inners.size()));
+            
             // Handle the easiest and most common case, only one outer way of a multipolygon was clipped
-            // #### Well, I should test that the old and new outer ways have non-empty intersection. Otherwise,
-            // it means that one brand new outer way was created and one old outer way was completely deleted... 
-            // 
-            if (unmapped_old_outers.size() == 1 && unmapped_new_outers.size() == 1 &&
+            // (Maybe, I should test that the old and new outer ways have non-empty intersection. Otherwise,
+            // it means that one brand new outer way was created and one old outer way was completely deleted.
+            // But as long as clip is a simple way, it should never happen, because new way can be created only
+            // by clipping another existing way.)
+            if (!subject_has_nonclosed_ways && unmapped_old_outers.size() == 1 && unmapped_new_outers.size() == 1 &&
                     unmapped_old_inners.isEmpty() && unmapped_new_inners.isEmpty()) {
                 EdWay old_outer_way = unmapped_old_outers.get(0);
                 List<EdNode> new_outer_way = unmapped_new_outers.get(0);                
                 clipLanduseHandleSimpleMultiOneOuterModified (editor, clip_way, subject_mp, old_outer_way, new_outer_way);
                 return;
             }
-            else {
-                System.out.println(tr(" x clip result is too complex"));
-                return;                
+            
+            // If subject multipolygon is a new-style multipolygon and its ways have
+            // no other tags, we can replace it's geometry quite agressively.
+            if (!subject_has_nonclosed_ways && !subject_mp.hasTaggedWays()) {
+                // #### continue here
             }
+            
+            System.out.println(tr(" x clip result is too complex"));
         }
 
         private void mapIdenticalWays(List<EdWay> unmapped_old, List<List<EdNode>> unmapped_new, Map<EdWay, List<EdNode>> mapped_old_new, Map<List<EdNode>, EdWay> mapped_new_old) {
@@ -495,7 +511,63 @@ public class LpisModule implements TracerModule  {
                     iold++;
                 }
             }
-        }        
+        }
+        
+        class SimilarWaysPair implements Comparable<SimilarWaysPair> {
+            public final EdWay src;
+            public final List<EdNode> dst;
+            public final double similarity;
+            
+            public SimilarWaysPair(EdWay s, List<EdNode> d, double sim) {
+                src = s;
+                dst = d;
+                similarity = sim;
+            }
+
+            @Override
+            public int compareTo(SimilarWaysPair t) {
+                int x = -Double.compare(this.similarity, t.similarity);
+                if (x != 0)
+                    return x;
+                return -Integer.compare(this.src.getNodesCount(), t.src.getNodesCount());
+            }
+        }
+        
+        /**
+         * For every source EdWay, it tries to find the most similar dest way.
+         * Source EdWays with no suitable similar ways are excluded from the result.
+         * @param srcs list of source EdWays
+         * @param dsts list of dest ways
+         * @return map of source EdWays to most similar dest ways
+         */
+        private Map<EdWay, List<EdNode>> pairSimilarWays (List<EdWay> srcs, List<List<EdNode>> dsts) {
+            // Create Cartesian product of ways and sort pairs according to their similarity
+            // (For simplicity, we estimate similarity from percentage of shared nodes.
+            // It would be better to base the similarity on areas of polygon intersections.)
+            PriorityQueue<SimilarWaysPair> queue = new PriorityQueue<>(srcs.size());
+            for(EdWay w: srcs) {
+                for (List<EdNode> nw: dsts) {
+                    int shared_nodes = w.getSharedNodesCount(nw);
+                    if (shared_nodes > 0) {
+                        double similarity = shared_nodes / w.getNodesCount();
+                        queue.add(new SimilarWaysPair(w, nw, similarity));
+                    }
+                }
+            }
+
+            // Map source ways to their most similar dest ways.
+            Map<EdWay, List<EdNode>> result = new HashMap<>();
+            Set<List<EdNode>> used = new HashSet<>();
+            SimilarWaysPair swp;
+            while ((swp = queue.poll()) != null) {
+                if (result.containsKey(swp.src) || used.contains(swp.dst))
+                    continue;
+                result.put(swp.src, swp.dst);
+                used.add(swp.dst);
+            }
+            
+            return result;
+        }
         
         private void clipLanduseHandleSimpleSimpleSimple(WayEditor editor, EdWay clip_way, EdWay subject_way, List<EdNode> result) {
             // ** Easiest case - simple way clipped by a simple way produced a single polygon **
