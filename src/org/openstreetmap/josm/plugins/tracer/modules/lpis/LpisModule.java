@@ -220,6 +220,7 @@ public class LpisModule implements TracerModule  {
             GuiHelper.runInEDT(new Runnable() {
                 @Override
                 public void run() {
+                    long start_time = System.nanoTime();
                     DataSet data_set = Main.main.getCurrentDataSet();
                     data_set.beginUpdate();
                     try {
@@ -231,6 +232,9 @@ public class LpisModule implements TracerModule  {
                     }
                     finally {
                         data_set.endUpdate();
+                        long end_time = System.nanoTime();
+                        long time_msecs = (end_time - start_time) / (1000*1000);
+                        System.out.println("Total trace time (ms): " + Long.toString(time_msecs));
                     }
                 }
             });
