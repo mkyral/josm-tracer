@@ -314,9 +314,7 @@ public class WayEditor {
         for (EdWay w: m_ways) {
             if (w.isDeleted())
                 continue;
-            System.out.println("Considering way: " + Long.toString(w.getUniqueId()));
             if (w.hasEditorReferrers() || w.isTagged() || w.hasExternalReferrers()) {
-                System.out.println(" - required way: " + Long.toString(w.getUniqueId()));
                 required_ways.add(w);
                 for (int i = 0; i < w.getNodesCount(); i++)
                     required_nodes.add(w.getNode(i));
