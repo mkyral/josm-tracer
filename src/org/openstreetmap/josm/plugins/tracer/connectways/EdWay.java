@@ -406,10 +406,10 @@ public class EdWay extends EdObject {
             return false;
 
         if (!isClosed()) {
-            for (int i = 0; i < list.size(); i++)
-                if (list.get(i) != m_nodes.get(i))
-                    return false;
-            return true;
+            if (identicalEdNodeGeometryFromOffsets(m_nodes, list, list.size(), 0, 0, false))
+                return true;
+            return allow_inverted_orientation &&
+                identicalEdNodeGeometryFromOffsets(m_nodes, list, list.size(), 0, list.size() - 1, true);
         }
 
         int n = list.size() - 1;
