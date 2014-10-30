@@ -36,14 +36,13 @@ import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
-import org.openstreetmap.josm.data.osm.RelationMember;
 import org.openstreetmap.josm.data.osm.Way;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 
 public class WayEditor {
 
-    private double s_dMinDistance      = 0.0000005; // Minimal distance, for objects
+    private final double s_dMinDistance      = 0.0000005; // Minimal distance, for objects
 
     private final long m_idGuard;
     private final DataSet m_dataSet;
@@ -60,12 +59,12 @@ public class WayEditor {
         m_dataSet = dataset;
         m_idGuard = (new Node()).getUniqueId();
         m_geomUtils = geom_utils;
-        m_nodes = new HashSet<EdNode> ();
-        m_ways = new HashSet<EdWay> ();
-        m_multipolygons = new HashSet<EdMultipolygon> ();
-        m_originalNodes = new HashMap<Long, EdNode> ();
-        m_originalWays = new HashMap<Long, EdWay> ();
-        m_originalMultipolygons = new HashMap<Long, EdMultipolygon> ();
+        m_nodes = new HashSet<> ();
+        m_ways = new HashSet<> ();
+        m_multipolygons = new HashSet<> ();
+        m_originalNodes = new HashMap<> ();
+        m_originalWays = new HashMap<> ();
+        m_originalMultipolygons = new HashMap<> ();
     }
 
     public GeomUtils geomUtils() {
@@ -204,7 +203,7 @@ public class WayEditor {
         bbox.addPrimitive (ny, oversize);
         bbox.addPrimitive (nx, oversize);
 
-        Set<EdNode> result = new HashSet<EdNode>();
+        Set<EdNode> result = new HashSet<>();
 
         // (1) original nodes that are not tracked yet
         for (Node nd : getDataSet().searchNodes(bbox)) {
@@ -308,9 +307,12 @@ public class WayEditor {
 
     public List<Command> finalizeEdit () {
 
+        System.out.println("WayEditor.finalizeEdit(): ");
+        
+        
         // get ways and nodes required in the resulting DataSet
-        Set<EdWay> required_ways = new HashSet<EdWay> ();
-        Set<EdNode> required_nodes = new HashSet<EdNode> ();
+        Set<EdWay> required_ways = new HashSet<> ();
+        Set<EdNode> required_nodes = new HashSet<> ();
         for (EdWay w: m_ways) {
             if (w.isDeleted())
                 continue;
@@ -330,8 +332,8 @@ public class WayEditor {
         }
 
         // nodes to be added/changed
-        Set<EdNode> add_nodes = new HashSet<EdNode> ();
-        Set<EdNode> change_nodes = new HashSet<EdNode> ();
+        Set<EdNode> add_nodes = new HashSet<> ();
+        Set<EdNode> change_nodes = new HashSet<> ();
         for (EdNode n: required_nodes) {
             if (!n.hasOriginal())
                 add_nodes.add(n);
@@ -340,7 +342,7 @@ public class WayEditor {
         }
 
         // original nodes to be deleted
-        Set<EdNode> delete_nodes = new HashSet<EdNode> ();
+        Set<EdNode> delete_nodes = new HashSet<> ();
         for (EdNode n: m_nodes) {
             if (!n.hasOriginal())
                 continue;
@@ -350,19 +352,18 @@ public class WayEditor {
         }
 
         // ways to be added/changed
-        Set<EdWay> add_ways = new HashSet<EdWay>();
-        Set<EdWay> change_ways = new HashSet<EdWay>();
+        Set<EdWay> add_ways = new HashSet<>();
+        Set<EdWay> change_ways = new HashSet<>();
         for (EdWay w: required_ways) {
             if (!w.hasOriginal() && !w.isDeleted())
                 add_ways.add(w);
             else if (w.hasOriginal() && !w.isDeleted() && w.isModified()) {
                 change_ways.add(w);
-                System.out.println("Change way: " + Long.toString(w.getUniqueId()));
             }
         }
 
         // ways to be deleted
-        Set<EdWay> delete_ways = new HashSet<EdWay>();
+        Set<EdWay> delete_ways = new HashSet<>();
         for (EdWay w: m_ways) {
             if (!w.hasOriginal())
                 continue;
@@ -371,7 +372,7 @@ public class WayEditor {
             delete_ways.add(w);
         }
 
-        List<Command> cmds = new LinkedList<Command>();
+        List<Command> cmds = new LinkedList<>();
 
         // commands to add new nodes
         for (EdNode n: add_nodes)
@@ -384,35 +385,35 @@ public class WayEditor {
         // commands to add new ways
         for (EdWay w: add_ways) {
             cmds.add(new AddCommand(w.finalWay()));
-            System.out.println("Add way: " + Long.toString(w.getUniqueId()));
+            System.out.println(" - add way: " + Long.toString(w.getUniqueId()));
         }
 
         // commands to change original ways
         for (EdWay w: change_ways) {
             cmds.add(new ChangeCommand(w.originalWay(), w.finalWay()));
-            System.out.println("Change way: " + Long.toString(w.getUniqueId()));
+            System.out.println(" - change way: " + Long.toString(w.getUniqueId()));
         }
 
         // multipolygon commands
         for (EdMultipolygon emp: m_multipolygons) {
             if (!emp.hasOriginal() && !emp.isDeleted()) {
                 cmds.add(new AddCommand(emp.finalMultipolygon()));
-                System.out.println("Add multipolygon: " + Long.toString(emp.getUniqueId()));    
+                System.out.println(" - add multipolygon: " + Long.toString(emp.getUniqueId()));    
             }
             else if (emp.hasOriginal() && !emp.isDeleted() && emp.isModified()) {
                 cmds.add(new ChangeCommand(emp.originalMultipolygon(), emp.finalMultipolygon()));
-                System.out.println("Change multipolygon: " + Long.toString(emp.getUniqueId()));    
+                System.out.println(" - change multipolygon: " + Long.toString(emp.getUniqueId()));
             }
             else if (emp.hasOriginal() && emp.isDeleted()) {
                 cmds.add(new DeleteCommand(emp.finalMultipolygon()));
-                System.out.println("Delete multipolygon: " + Long.toString(emp.getUniqueId()));    
+                System.out.println(" - delete multipolygon: " + Long.toString(emp.getUniqueId()));    
             }
         }
 
         // commands to delete original ways
         for (EdWay w: delete_ways) {
             cmds.add(new DeleteCommand(w.originalWay()));
-            System.out.println("Delete way: " + Long.toString(w.getUniqueId()));
+            System.out.println(" - delete way: " + Long.toString(w.getUniqueId()));
         }
 
         // commands to delete original nodes
@@ -423,7 +424,7 @@ public class WayEditor {
     }
 
     private List<EdNode> searchEdNodes(BBox bbox) {
-        List<EdNode> result = new ArrayList<EdNode>();
+        List<EdNode> result = new ArrayList<>();
         for (EdNode ednd: m_nodes) {
             if (ednd.isDeleted())
                 continue;
