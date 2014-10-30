@@ -332,6 +332,9 @@ public class LpisModule implements TracerModule  {
             List<Command> commands = editor.finalizeEdit();
 
             if (!commands.isEmpty()) {
+
+                long start_time = System.nanoTime();                
+                
                 Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
 
                 OsmPrimitive sel = (multipolygon != null ?
@@ -342,6 +345,10 @@ public class LpisModule implements TracerModule  {
                 } else {
                     editor.getDataSet().setSelected(sel);
                 }
+                long end_time = System.nanoTime();
+                long time_msecs = (end_time - start_time) / (1000*1000);
+                System.out.println("undoRedo time (ms): " + Long.toString(time_msecs));                
+                
             } else {
                 System.out.println("Failed");
             }
