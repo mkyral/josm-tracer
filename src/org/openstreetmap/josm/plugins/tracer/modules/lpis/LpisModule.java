@@ -577,7 +577,7 @@ public class LpisModule implements TracerModule  {
             // Create Cartesian product of ways and sort pairs according to their similarity
             // (For simplicity, we estimate similarity from percentage of shared nodes.
             // It would be better to base the similarity on areas of polygon intersections.)
-            PriorityQueue<SimilarWaysPair> queue = new PriorityQueue<>(srcs.size());
+            PriorityQueue<SimilarWaysPair> queue = new PriorityQueue<>();
             for(EdWay w: srcs) {
                 for (List<EdNode> nw: dsts) {
                     int shared_nodes = w.getSharedNodesCount(nw);
