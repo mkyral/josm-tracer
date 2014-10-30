@@ -274,13 +274,17 @@ public class EdWay extends EdObject {
     }
 
 
+    
     /**
-     * Add all nodes occurring in "other" EdWay that touch this way.
+     * Add all nodes occurring in other EdWay that touch this way.
      * Nodes are added to the right positions into way segments.
-     *
      * This function doesn't impose any additional restrictions to matching nodes,
      * except those provided by "filter" predicate.
-     *
+     * 
+     * @param other EdWay whose nodes will be tested and added
+     * @param filter predicate to rule out unwanted nodes
+     * @return true if any touching nodes were added; false if no nodes
+     * were added.
      */
     public boolean connectTouchingNodes(EdWay other, IEdNodePredicate filter) {
         checkEditable();
@@ -288,18 +292,37 @@ public class EdWay extends EdObject {
 
         if (this == other)
             return false;
-
-        Set<EdNode> other_nodes = new HashSet<EdNode>(other.m_nodes);
+        
+        final double tolerance_degs = getEditor().geomUtils().pointOnLineToleranceDegrees();        
+        final BBox way_bbox = this.getBBox(tolerance_degs);
+        
+        // filter nodes
+        Set<EdNode> other_nodes = new HashSet<EdNode>();
+        for (EdNode node: other.m_nodes) {
+            if (!way_bbox.bounds(node.getCoor()))
+                continue;
+            if (filter.evaluate(node))
+               other_nodes.add(node);
+        }
+        
+        if (other_nodes.isEmpty())
+            return false;
+        
         Map<EdNode, Pair<Double, Integer>> nodes_map = new HashMap<EdNode, Pair<Double, Integer>>();
 
         // get every node touching the way, assign it to closest way segment
         for (int i = 0; i < m_nodes.size() - 1; i++) {
             final EdNode x = m_nodes.get(i);
             final EdNode y = m_nodes.get(i+1);
+            
+            BBox seg_bbox = new BBox(x.currentNodeUnsafe());
+            seg_bbox.add(y.getCoor());
+            BBoxUtils.extendBBox(seg_bbox, tolerance_degs);
+            
             for (EdNode node: other_nodes) {
-                if (!getEditor().geomUtils().pointOnLine(node, x, y))
+                if (!seg_bbox.bounds(node.getCoor()))
                     continue;
-                if (!filter.evaluate(node))
+                if (!getEditor().geomUtils().pointOnLine(node, x, y))
                     continue;
                 Pair<Double, Integer> best_segment = nodes_map.get(node);
                 double dist = getEditor().geomUtils().distanceToSegmentMeters(node, x, y);

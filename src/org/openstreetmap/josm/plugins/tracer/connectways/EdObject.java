@@ -247,8 +247,7 @@ public abstract class EdObject {
     
     public BBox getBBox(double oversize) {
         BBox box = this.getBBox();
-        box.add(box.getTopLeftLon() - oversize, box.getBottomRightLat() - oversize);
-        box.add(box.getBottomRightLon() + oversize, box.getTopLeftLat() + oversize);
+        BBoxUtils.extendBBox(box, oversize);
         return box;
     }
     
