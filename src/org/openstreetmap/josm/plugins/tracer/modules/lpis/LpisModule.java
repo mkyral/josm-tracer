@@ -745,7 +745,9 @@ public class LpisModule implements TracerModule  {
             }
             
             if (!unmapped_old_inners.isEmpty() || !unmapped_new_inners.isEmpty()) {
-            
+
+                boolean clip_used_as_hole = false;                
+                
                 // Update geometry of inner ways that can be paired together as similar ones
                 Pair<Map<EdWay, List<EdNode>>, Map<List<EdNode>, EdWay>> inner_pair_maps = pairSimilarWays (unmapped_old_inners, unmapped_new_inners);
                 Map<EdWay, List<EdNode>> inner_pairs = inner_pair_maps.a;
@@ -753,23 +755,39 @@ public class LpisModule implements TracerModule  {
                 for (Map.Entry<EdWay, List<EdNode>> pair: inner_pairs.entrySet()) {
                     EdWay old_way = pair.getKey();
                     List<EdNode> new_nodes = pair.getValue();
-                    old_way.setNodes(new_nodes);
-                    clip_way.connectNonIncludedTouchingNodes(old_way);
-                    unmapped_old_inners.remove(old_way);
-                    unmapped_new_inners.remove(new_nodes);
-                    System.out.println("Changing inner geometry " + Long.toString(old_way.getUniqueId()));
+                    if (!clip_used_as_hole && clip_way.hasIdenticalEdNodeGeometry(new_nodes, true)) {
+                        subject_mp.addInnerWay(clip_way);
+                        unmapped_new_inners.remove(new_nodes);
+                        System.out.println("Replacing inner way " + Long.toString(old_way.getUniqueId()) + " with clip_way");
+                        // old_way is left in unmapped_old_inners, for removal below
+                        clip_used_as_hole = true;
+                    }
+                    else {
+                        old_way.setNodes(new_nodes);
+                        clip_way.connectNonIncludedTouchingNodes(old_way);
+                        unmapped_old_inners.remove(old_way);
+                        unmapped_new_inners.remove(new_nodes);
+                        System.out.println("Changing inner geometry " + Long.toString(old_way.getUniqueId()));
+                    }
                 }
                 
-                // Create new inner ways with tagging based on reverse similarity mapping
-                // (If no reverse mapping is available, leave way untagged)
+                // Create new inner ways
                 for (List<EdNode> new_nodes: unmapped_new_inners) {
-                    EdWay new_way = editor.newWay(new_nodes);
-                    EdWay old_way = inner_revs.get(new_nodes);
-                    if (old_way != null)
-                        new_way.setKeys(old_way.getKeys());
-                    clip_way.connectNonIncludedTouchingNodes(new_way);
-                    subject_mp.addInnerWay(new_way);
-                    System.out.println("Adding inner way " + Long.toString(new_way.getUniqueId()));
+                    if (!clip_used_as_hole && clip_way.hasIdenticalEdNodeGeometry(new_nodes, true)) {
+                        subject_mp.addInnerWay(clip_way);
+                        System.out.println("Adding clip_way " + Long.toString(clip_way.getUniqueId()) + " as inner way");                                
+                        clip_used_as_hole = true;
+                    }
+                    else {
+                        // use tagging of the most similar reverse mapped way, if any
+                        EdWay new_way = editor.newWay(new_nodes);
+                        EdWay old_way = inner_revs.get(new_nodes);
+                        if (old_way != null)
+                            new_way.setKeys(old_way.getKeys());
+                        clip_way.connectNonIncludedTouchingNodes(new_way);
+                        subject_mp.addInnerWay(new_way);
+                        System.out.println("Adding inner way " + Long.toString(new_way.getUniqueId()));
+                    }
                 }
 
                 // Remove old inner ways that weren't mapped to new ways
