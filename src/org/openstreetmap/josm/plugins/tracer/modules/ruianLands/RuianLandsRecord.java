@@ -20,6 +20,7 @@ package org.openstreetmap.josm.plugins.tracer.modules.ruianLands;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.tools.Utils;
 
@@ -350,6 +351,22 @@ public class RuianLandsRecord {
    */
   public LatLon getCoor(int i) {
     return m_geometry.get(i);
+  }
+
+  /**
+   * Returns BBox of RUIAN (multi)polygon
+   * @return BBox of RUIAN (multi)polygon
+   */
+  public BBox getBBox() {
+      LatLon p0 = m_geometry.get(0);
+
+      BBox bbox = new BBox(p0.lon(), p0.lat());
+      for (int i = 1; i < m_geometry.size(); i++) {
+          LatLon p = m_geometry.get(i);
+          bbox.add(p.lon(), p.lat());
+      }
+
+      return bbox;
   }
 
   /**
