@@ -281,10 +281,6 @@ public class LpisModule implements TracerModule  {
             IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
             outer_way.reuseExistingNodes(reuse_filter);
 
-            // #### If outer way is identical to an existing way, and this way is an untagged inner way of a
-            // landuse-matching multipolygon, and it isn't a member of other relations, then drop new outer_way
-            // and use the existing one.
-
             if (!m_record.hasInners())
                 tagOuterWay(outer_way);
 
@@ -295,8 +291,7 @@ public class LpisModule implements TracerModule  {
                 tagMultipolygon(multipolygon);
                 multipolygon.addOuterWay(outer_way);
 
-                for (int i = 0; i < m_record.getInnersCount(); i++) {
-                    ArrayList<LatLon> in = m_record.getInner(i);
+                for (List<LatLon> in: m_record.getInners()) {
                     List<EdNode> inner_nodes = new ArrayList<>(in.size());
                     prev_coor = null;
                     for (int j = 0; j < in.size() - 1; j++) {
@@ -308,14 +303,11 @@ public class LpisModule implements TracerModule  {
                     }
 
                     // close way
-                    if (inner_nodes.size() > 0)
+                    if (!inner_nodes.isEmpty())
                         inner_nodes.add(inner_nodes.get(0));
                     EdWay way = editor.newWay(inner_nodes);
 
                     way.reuseExistingNodes(reuse_filter);
-
-                    // #### If inner way is identical to an existing way, and this way is a landuse-matching
-                    // (outer) way, then drop new inner_way and use the existing one.
 
                     multipolygon.addInnerWay(way);
                 }

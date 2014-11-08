@@ -44,54 +44,14 @@ import org.xml.sax.SAXException;
  *
  */
 
-class geom {
-  private ArrayList <LatLon> m_outer;
-  private ArrayList <ArrayList<LatLon>> m_inners = new ArrayList<ArrayList<LatLon>>();
-
-  public void setOuter (ArrayList <LatLon> o) {
-    m_outer = o;
-  }
-
-  public void resetInners () {
-    m_inners.clear();
-  }
-
-  public void addInner (ArrayList <LatLon> in) {
-    if (in != null)
-      m_inners.add(in);
-  }
-
-
-  public boolean isOuterSet() {
-  if (m_outer == null && m_outer.size() > 0)
-      return false;
-    else
-      return true;
-  }
-
-  public ArrayList <LatLon> getOuter() {
-    return m_outer;
-  }
-
-  public int getInnersCount() {
-    if (m_inners == null)
-      return 0;
-    else
-      return m_inners.size();
-  }
-
-  public ArrayList <LatLon> getInner(int i) {
-    return m_inners.get(i);
-  }
-}
-
 public class LpisRecord {
 
     private long     m_lpis_id;
-    private geom     m_geometry;
     private String   m_usage;
     private Map <String, String> m_usageOsm;
 
+    private List<LatLon> m_outer;
+    private List<List<LatLon>> m_inners;
 
     /**
     * Constructor
@@ -109,8 +69,8 @@ public class LpisRecord {
         m_lpis_id = -1;
         m_usage = "";
         m_usageOsm = new HashMap <>();
-        m_geometry = new geom();
-        m_geometry.resetInners();
+        m_outer = null;
+        m_inners = new ArrayList<>();
     }
 
     private void mapToOsm () {
@@ -211,18 +171,18 @@ public class LpisRecord {
             nodeList = (NodeList) xPath.compile(expOuter).evaluate(doc, XPathConstants.NODESET);
             String outer = nodeList.item(0).getFirstChild().getNodeValue();
             System.out.println("parseXML(basic) - outer: " + outer);
-            m_geometry.setOuter(parseGeometry(outer));
-            System.out.println("parseXML(basic) - outer list: " + m_geometry.getOuter());
+            m_outer = parseGeometry(outer);
+            System.out.println("parseXML(basic) - outer list: " + m_outer);
 
             System.out.println("parseXML(basic) - expInner: " + expInner);
             nodeList = (NodeList) xPath.compile(expInner).evaluate(doc, XPathConstants.NODESET);
             for (int i = 0; i < nodeList.getLength(); i++) {
                 String inner = nodeList.item(i).getFirstChild().getNodeValue();
                 System.out.println("Inner("+i+": "+ inner);
-                m_geometry.addInner(parseGeometry(inner));
+                m_inners.add(parseGeometry(inner));
             }
-            for (int i = 0; i < m_geometry.getInnersCount(); i++) {
-                System.out.println("parseXML(basic) - Inner("+i+"): " + m_geometry.getInner(i));
+            for (int i = 0; i < m_inners.size(); i++) {
+                System.out.println("parseXML(basic) - Inner("+i+"): " + m_inners.get(i));
             }
         } else {
             String expUsage = "//*[name()='ms:LPIS_FB4'][1]/*[name()='ms:kultura']";
@@ -238,37 +198,30 @@ public class LpisRecord {
         System.out.println("parseXML() - End");
     }
 
-  /**
-   *  Return outer polygon
-   *  @return Outer polygon nodes
-   */
-  public ArrayList <LatLon> getOuter() {
-    return m_geometry.getOuter();
-  }
-
-  /**
-   *  Return whether there are inners
-   *  @return True/False
-   */
-  public boolean hasInners() {
-    return m_geometry.getInnersCount() > 0;
-  }
-
-  /**
-   *  Return number of inners
-   *  @return Count of inners
-   */
-  public int getInnersCount() {
-      return m_geometry.getInnersCount();
-  }
+    /**
+     *  Return outer polygon
+     *  @return Outer polygon nodes
+     */
+    public List <LatLon> getOuter() {
+        if (m_outer == null)
+            throw new IllegalStateException("No outer geometry available");
+        return Collections.unmodifiableList(m_outer);
+    }
 
     /**
-     *  Return inner on given index
-     *  @param i geometry index
-     *  @return Inner on given index
+     *  Return whether there are inners
+     *  @return True/False
      */
-    public ArrayList <LatLon> getInner(int i) {
-        return m_geometry.getInner(i);
+    public boolean hasInners() {
+        return m_inners.size() > 0;
+    }
+
+    /**
+     *  Return number of inners
+     *  @return Count of inners
+     */
+    public List<List<LatLon>> getInners() {
+        return Collections.unmodifiableList(m_inners);
     }
 
     /**
