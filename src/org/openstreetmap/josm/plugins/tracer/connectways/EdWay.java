@@ -461,6 +461,28 @@ public class EdWay extends EdObject {
         }
         return count;
     }
+    
+    /**
+     * Returns true if EdWay has at least one referrer that matches
+     * given area predicate. Both editor and external referrers are tested.
+     * @param filter area predicate filter
+     * @return true if a matching referrer was found
+     */
+    public boolean hasMatchingReferrers(IEdAreaPredicate filter) {
+        List<EdMultipolygon> edmps = this.getEditorReferrers(EdMultipolygon.class);
+        for (EdMultipolygon edmp: edmps) {
+            if (filter.evaluate(edmp))
+                return true;
+        }
+        
+        List<Relation> rels = this.getExternalReferrers(Relation.class);
+        for (Relation rel: rels) {
+            if (filter.evaluate(rel))
+                return true;
+        }
+        
+        return false;
+    }
 }
 
 

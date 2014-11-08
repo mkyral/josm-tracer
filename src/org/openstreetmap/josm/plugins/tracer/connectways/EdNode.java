@@ -19,13 +19,15 @@
 
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
-import static org.openstreetmap.josm.tools.I18n.tr;
-
-import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.Node;
-import org.openstreetmap.josm.data.osm.BBox;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import java.util.ArrayList;
+import java.util.List;
 import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.data.osm.Node;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.Way;
+import static org.openstreetmap.josm.tools.I18n.tr;
 
 
 public class EdNode extends EdObject {
@@ -79,6 +81,32 @@ public class EdNode extends EdObject {
         checkNotDeleted();
         // Be careful, never modify returned Node!!
         return m_node;
+    }
+    
+    
+    /**
+     * Returns all way referrers of this EdNode that match given
+     * area filter predicate. Non-edited matching ways are automatically 
+     * included into node's WayEditor.
+     * @param filter area ways filter
+     * @return list of all EdWay referrers of this EdNode that match given predicate
+     */
+    List<EdWay> getAllAreaWayReferrers(IEdAreaPredicate filter) {
+        List<EdWay> result = new ArrayList<>();
+        
+        List<EdWay> edways = this.getEditorReferrers(EdWay.class);
+        for (EdWay way: edways) {
+            if (filter.evaluate(way))
+                result.add(way);
+        }
+        
+        List<Way> ways = this.getExternalReferrers(Way.class);
+        for (Way way: ways) {
+            if (filter.evaluate(way))
+                result.add(getEditor().useWay(way));
+        }
+        
+        return result;
     }
 }
 

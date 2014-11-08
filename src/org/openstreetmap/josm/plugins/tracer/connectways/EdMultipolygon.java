@@ -166,6 +166,31 @@ public class EdMultipolygon extends EdObject {
         return list;
     }
 
+    public boolean replaceWay(EdWay src, EdWay dst) {
+        checkEditable();
+        
+        int i = m_outerWays.indexOf(src);
+        if (i >= 0) {
+            src.removeRef(this);
+            m_outerWays.set(i, dst);
+            dst.addRef(this);
+            setModified();
+            System.out.println("Replacing EdWay " + Long.toString(src.getUniqueId()) + " with " + Long.toString(dst.getUniqueId()) + " in relation " + Long.toString(this.getUniqueId()));
+            return true;
+        }
+
+        i = m_innerWays.indexOf(src);
+        if (i >= 0) {
+            src.removeRef(this);
+            m_innerWays.set(i, dst);
+            dst.addRef(this);
+            setModified();
+            return true;
+        }
+        
+        return false;
+    }
+        
     public boolean containsWay(EdWay way) {
         checkEditable();
         for (EdWay w: m_outerWays)

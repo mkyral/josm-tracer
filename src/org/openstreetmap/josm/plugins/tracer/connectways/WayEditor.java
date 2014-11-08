@@ -20,6 +20,7 @@
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -465,6 +466,15 @@ public class WayEditor {
         return false;
     }
 
+    public Set<EdWay> getModifiedWays() {
+        Set<EdWay> result = new HashSet<>(m_ways);
+        for (EdWay w: m_ways) {
+            if (w.isModified())
+                result.add(w);
+        }
+        return result;
+    }
+    
     public Set<EdObject> useAllAreasInBBox(BBox bbox, IEdAreaPredicate filter) {
         Set<EdObject> areas = new HashSet<>();
 
