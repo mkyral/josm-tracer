@@ -19,28 +19,24 @@
 package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
 import java.io.ByteArrayInputStream;
-import java.lang.StringBuilder;
+import java.io.IOException;
 import java.util.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import static org.openstreetmap.josm.tools.I18n.tr;
-import org.openstreetmap.josm.tools.Utils;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 
 /**
@@ -102,7 +98,7 @@ public class LpisRecord {
     *
     */
     public void LpisRecord () {
-      init();
+        init();
     }
 
     /**
@@ -110,13 +106,11 @@ public class LpisRecord {
     *
     */
     public void init () {
-
-      m_lpis_id = -1;
-      m_usage = "";
-      m_usageOsm = new HashMap <String, String>();
-      m_geometry = new geom();
-      m_geometry.resetInners();
-
+        m_lpis_id = -1;
+        m_usage = "";
+        m_usageOsm = new HashMap <>();
+        m_geometry = new geom();
+        m_geometry.resetInners();
     }
 
     private void mapToOsm () {
@@ -149,29 +143,24 @@ public class LpisRecord {
 
     private ArrayList<LatLon> parseGeometry (String geometry) {
 
-      try {
-        ArrayList<LatLon> arrList = new ArrayList<LatLon>();
+        ArrayList<LatLon> arrList = new ArrayList<>();
         LatLon prevCoor = null;
 
         String[] coorVal = geometry.split(" ");
         for (int i = 0; i < coorVal.length; i = i + 2) {
-          String x = coorVal[i];
-          String y = coorVal[i+1];
-          krovak k = new krovak();
-          LatLon ll = k.krovak2LatLon(x, y);
+            String x = coorVal[i];
+            String y = coorVal[i+1];
+            krovak k = new krovak();
+            LatLon ll = k.krovak2LatLon(x, y);
 
-          // Sometimes, after rouding, two nodes could have the same LatLon coordinates
-          // Skip duplicated coordinate
-          if (prevCoor == null || !ll.equalsEpsilon(prevCoor)) {
-            arrList.add(ll);
-            prevCoor = ll;
-          }
+            // Sometimes, after rouding, two nodes could have the same LatLon coordinates
+            // Skip duplicated coordinate
+            if (prevCoor == null || !ll.equalsEpsilon(prevCoor)) {
+                arrList.add(ll);
+                prevCoor = ll;
+            }
         }
         return arrList;
-      } catch (Exception e) {
-        e.printStackTrace();
-        return new ArrayList<LatLon>();
-      }
     }
 
     /**
@@ -181,74 +170,73 @@ public class LpisRecord {
     *   - extra - get type (landuse) of the element
     *  @param action - basic or extra
     *  @param xmlStr - data for parsing
+     * @throws javax.xml.parsers.ParserConfigurationException
+     * @throws org.xml.sax.SAXException
+     * @throws java.io.IOException
+     * @throws javax.xml.xpath.XPathExpressionException
     *
     */
-    public void parseXML (String action, String xmlStr) {
+    public void parseXML (String action, String xmlStr) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
 
-    System.out.println("");
-    System.out.println("parseXML() - Start");
+        System.out.println("");
+        System.out.println("parseXML() - Start");
 
-    try {
-      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-      DocumentBuilder builder = factory.newDocumentBuilder();
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
 
-      Document doc = builder.parse(new ByteArrayInputStream(xmlStr.getBytes("UTF-8")));
-      doc.getDocumentElement().normalize();
+        Document doc = builder.parse(new ByteArrayInputStream(xmlStr.getBytes("UTF-8")));
+        doc.getDocumentElement().normalize();
 
-      XPath xPath =  XPathFactory.newInstance().newXPath();
-      if (action == "basic") {
-      init();
-  //       String expID = "/wfs:FeatureCollection/gml:featureMember/ms:LPIS_FB4_BBOX/ms:idPudnihoBloku";
-        String expID = "//*[name()='ms:LPIS_FB4_BBOX'][1]/*[name()='ms:idPudnihoBloku']";
-        String expOuter = "//*[name()='ms:LPIS_FB4_BBOX'][1]//*[name()='gml:exterior']//*[name()='gml:posList']";
-        String expInner = "//*[name()='ms:LPIS_FB4_BBOX'][1]//*[name()='gml:interior']//*[name()='gml:posList']";
+        XPath xPath =  XPathFactory.newInstance().newXPath();
+        if ("basic".equals(action)) {
+            init();
+            //       String expID = "/wfs:FeatureCollection/gml:featureMember/ms:LPIS_FB4_BBOX/ms:idPudnihoBloku";
+            String expID = "//*[name()='ms:LPIS_FB4_BBOX'][1]/*[name()='ms:idPudnihoBloku']";
+            String expOuter = "//*[name()='ms:LPIS_FB4_BBOX'][1]//*[name()='gml:exterior']//*[name()='gml:posList']";
+            String expInner = "//*[name()='ms:LPIS_FB4_BBOX'][1]//*[name()='gml:interior']//*[name()='gml:posList']";
 
-        NodeList nodeList;
+            NodeList nodeList;
 
-        System.out.println("parseXML(basic) - expID: " + expID);
-        nodeList = (NodeList) xPath.compile(expID).evaluate(doc, XPathConstants.NODESET);
-        if (nodeList.getLength() > 0) {
-          m_lpis_id = Long.parseLong(nodeList.item(0).getFirstChild().getNodeValue());
+            System.out.println("parseXML(basic) - expID: " + expID);
+            nodeList = (NodeList) xPath.compile(expID).evaluate(doc, XPathConstants.NODESET);
+            if (nodeList.getLength() > 0) {
+                m_lpis_id = Long.parseLong(nodeList.item(0).getFirstChild().getNodeValue());
+            } else {
+                return;
+            }
+
+            System.out.println("parseXML(basic) - m_lpis_id: " + m_lpis_id);
+
+            System.out.println("parseXML(basic) - expOuter: " + expOuter);
+            nodeList = (NodeList) xPath.compile(expOuter).evaluate(doc, XPathConstants.NODESET);
+            String outer = nodeList.item(0).getFirstChild().getNodeValue();
+            System.out.println("parseXML(basic) - outer: " + outer);
+            m_geometry.setOuter(parseGeometry(outer));
+            System.out.println("parseXML(basic) - outer list: " + m_geometry.getOuter());
+
+            System.out.println("parseXML(basic) - expInner: " + expInner);
+            nodeList = (NodeList) xPath.compile(expInner).evaluate(doc, XPathConstants.NODESET);
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                String inner = nodeList.item(i).getFirstChild().getNodeValue();
+                System.out.println("Inner("+i+": "+ inner);
+                m_geometry.addInner(parseGeometry(inner));
+            }
+            for (int i = 0; i < m_geometry.getInnersCount(); i++) {
+                System.out.println("parseXML(basic) - Inner("+i+"): " + m_geometry.getInner(i));
+            }
         } else {
-          return;
+            String expUsage = "//*[name()='ms:LPIS_FB4'][1]/*[name()='ms:kultura']";
+            NodeList nodeList;
+
+            System.out.println("parseXML(extra) - expUsage: " + expUsage);
+            nodeList = (NodeList) xPath.compile(expUsage).evaluate(doc, XPathConstants.NODESET);
+            m_usage = nodeList.item(0).getFirstChild().getNodeValue();
+            mapToOsm();
+            System.out.println("parseXML(extra) - m_usage: " + m_usage);
         }
 
-        System.out.println("parseXML(basic) - m_lpis_id: " + m_lpis_id);
-
-        System.out.println("parseXML(basic) - expOuter: " + expOuter);
-        nodeList = (NodeList) xPath.compile(expOuter).evaluate(doc, XPathConstants.NODESET);
-        String outer = nodeList.item(0).getFirstChild().getNodeValue();
-        System.out.println("parseXML(basic) - outer: " + outer);
-        m_geometry.setOuter(parseGeometry(outer));
-        System.out.println("parseXML(basic) - outer list: " + m_geometry.getOuter());
-
-        System.out.println("parseXML(basic) - expInner: " + expInner);
-        nodeList = (NodeList) xPath.compile(expInner).evaluate(doc, XPathConstants.NODESET);
-        for (int i = 0; i < nodeList.getLength(); i++) {
-            String inner = nodeList.item(i).getFirstChild().getNodeValue();
-            System.out.println("Inner("+i+": "+ inner);
-            m_geometry.addInner(parseGeometry(inner));
-        }
-        for (int i = 0; i < m_geometry.getInnersCount(); i++) {
-          System.out.println("parseXML(basic) - Inner("+i+"): " + m_geometry.getInner(i));
-        }
-      } else {
-        String expUsage = "//*[name()='ms:LPIS_FB4'][1]/*[name()='ms:kultura']";
-        NodeList nodeList;
-
-        System.out.println("parseXML(extra) - expUsage: " + expUsage);
-        nodeList = (NodeList) xPath.compile(expUsage).evaluate(doc, XPathConstants.NODESET);
-        m_usage = nodeList.item(0).getFirstChild().getNodeValue();
-        mapToOsm();
-        System.out.println("parseXML(extra) - m_usage: " + m_usage);
-      }
-
-    } catch (Exception e) {
-        e.printStackTrace();
+        System.out.println("parseXML() - End");
     }
-
-    System.out.println("parseXML() - End");
-  }
 
   /**
    *  Return outer polygon
@@ -263,9 +251,7 @@ public class LpisRecord {
    *  @return True/False
    */
   public boolean hasInners() {
-    if (m_geometry.getInnersCount() > 0)
-      return true;
-    return false;
+    return m_geometry.getInnersCount() > 0;
   }
 
   /**
@@ -276,52 +262,53 @@ public class LpisRecord {
       return m_geometry.getInnersCount();
   }
 
-  /**
-   *  Return inner on given index
-   *  @return Inner on given index
-   */
-  public ArrayList <LatLon> getInner(int i) {
-      return m_geometry.getInner(i);
-  }
+    /**
+     *  Return inner on given index
+     *  @param i geometry index
+     *  @return Inner on given index
+     */
+    public ArrayList <LatLon> getInner(int i) {
+        return m_geometry.getInner(i);
+    }
 
-  /**
-   * Returns BBox of LPIS (multi)polygon
-   * @return BBox of LPIS (multi)polygon
-   */
-  public BBox getBBox() {
-      List<LatLon> outer = getOuter();
-      LatLon p0 = outer.get(0);
+    /**
+     * Returns BBox of LPIS (multi)polygon
+     * @return BBox of LPIS (multi)polygon
+     */
+    public BBox getBBox() {
+        List<LatLon> outer = getOuter();
+        LatLon p0 = outer.get(0);
       
-      BBox bbox = new BBox(p0.lon(), p0.lat());
-      for (int i = 1; i < outer.size(); i++) {
-          LatLon p = outer.get(i);
-          bbox.add(p.lon(), p.lat());
-      }
+        BBox bbox = new BBox(p0.lon(), p0.lat());
+        for (int i = 1; i < outer.size(); i++) {
+            LatLon p = outer.get(i);
+            bbox.add(p.lon(), p.lat());
+        }
  
-      return bbox;
-  }
+        return bbox;
+    }
   
-  /**
-   *  Return usage
-   *  @return usage
-   */
-  public String getUsage() {
-    return m_usage;
-  }
+    /**
+     *  Return usage
+     *  @return usage
+     */
+    public String getUsage() {
+        return m_usage;
+    }
 
-  /**
-   *  Return usage
-   *  @return usage in Key/Value Map
-   */
-   public Map<String, String> getUsageOsm() {
-    return m_usageOsm;
-  }
+    /**
+     *  Return usage
+     *  @return usage in Key/Value Map
+     */
+    public Map<String, String> getUsageOsm() {
+        return m_usageOsm;
+    }
 
-  /**
-   *  Return LPIS id
-   *  @return LPIS id
-   */
-  public long getLpisID() {
-    return m_lpis_id;
-  }
+    /**
+     *  Return LPIS id
+     *  @return LPIS id
+     */
+    public long getLpisID() {
+        return m_lpis_id;
+    }
 }

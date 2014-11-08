@@ -20,14 +20,15 @@
 package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPathExpressionException;
 import org.openstreetmap.josm.data.coor.LatLon;
-
-// import org.openstreetmap.josm.plugins.tracer.LpisRecord;
-// import org.openstreetmap.josm.plugins.tracer.krovak;
-// import org.openstreetmap.josm.plugins.tracer.xyCoor;
+import org.xml.sax.SAXException;
 
 public class LpisServer {
 
@@ -41,70 +42,54 @@ public class LpisServer {
      * @param urlString Input parameters.
      * @return Result text.
      */
-    private String callServer(String urlString) {
-        try {
-            URL url = new URL(urlString);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
+    private String callServer(String urlString) throws MalformedURLException, UnsupportedEncodingException, IOException {
+        URL url = new URL(urlString);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
 
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (sb.length() == 0)
-                  sb.append(line);
-                else
-                  sb.append(" "+line);
-            }
-            return sb.toString();
-        } catch (Exception e) {
-            return "";
+        StringBuilder sb = new StringBuilder();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (sb.length() == 0)
+              sb.append(line);
+            else
+              sb.append(" ").append(line);
         }
+        return sb.toString();
     }
 
     /**
      * Get element ID and geometry of the land on the position.
      * @param pos Position of the land.
+     * @param url LPIS WFS service URL
      * @return Land ID and geometry.
+     * @throws java.io.UnsupportedEncodingException
+     * @throws javax.xml.parsers.ParserConfigurationException
+     * @throws org.xml.sax.SAXException
+     * @throws javax.xml.xpath.XPathExpressionException
      */
-    public LpisRecord getElementBasicData(LatLon pos, String url) {
-        try {
-            krovak k = new krovak();
-            xyCoor xy = k.LatLon2krovak(pos);
+    public LpisRecord getElementData(LatLon pos, String url) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+        krovak k = new krovak();
+        xyCoor xy = k.LatLon2krovak(pos);
 
-            System.out.println ("LatLon: "+pos+" <-> XY: "+xy.x()+" "+xy.y());
-            String bbox = xy.x()+","+xy.y()+","+xy.x()+","+xy.y();
+        System.out.println ("LatLon: "+pos+" <-> XY: "+xy.x()+" "+xy.y());
+        String bbox = xy.x()+","+xy.y()+","+xy.x()+","+xy.y();
 
-            String request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+bbox+"&SRSNAME=EPSG:102067";
+        String request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+bbox+"&SRSNAME=EPSG:102067";
 
+        System.out.println("Request: " + request);
+        String content = callServer(request);
+        System.out.println("Reply: " + content);
+        LpisRecord lpis = new LpisRecord();
+        lpis.parseXML("basic", content);
+        
+        // get additional information for given ID
+        if (lpis.getLpisID() > 0) {
+            request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
             System.out.println("Request: " + request);
-            String content = callServer(request);
+            content = callServer(request);
             System.out.println("Reply: " + content);
-            LpisRecord lpis = new LpisRecord();
-            lpis.parseXML("basic", content);
-            if (lpis.getLpisID() > 0) {
-              lpis = getElementExtraData(lpis, url);
-            }
-            return lpis;
-        } catch (Exception e) {
-            return new LpisRecord();
+            lpis.parseXML("extra", content);
         }
-    }
-
-    /**
-     * Get additional information for given ID.
-     * @param LpisRecord Object of the LPIS element.
-     * @return Updated LPIS element.
-     */
-    public LpisRecord getElementExtraData(LpisRecord lpisElement, String url) {
-        try {
-            String request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpisElement.getLpisID()+"&SRSNAME=EPSG:102067";
-
-            System.out.println("Request: " + request);
-            String content = callServer(request);
-            System.out.println("Reply: " + content);
-            lpisElement.parseXML("extra", content);
-            return lpisElement;
-        } catch (Exception e) {
-            return lpisElement;
-        }
+        return lpis;
     }
 }

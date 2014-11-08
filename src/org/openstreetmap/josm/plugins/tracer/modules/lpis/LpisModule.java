@@ -149,7 +149,7 @@ public class LpisModule implements TracerModule  {
             progressMonitor.indeterminateSubTask(tr("Downloading LPIS data..."));
             try {
                 LpisServer server = new LpisServer();
-                m_record = server.getElementBasicData(m_pos, lpisUrl);
+                m_record = server.getElementData(m_pos, lpisUrl);
             }
             catch (final Exception e) {
                 e.printStackTrace();
