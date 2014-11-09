@@ -19,6 +19,7 @@
 
 package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
+import org.openstreetmap.josm.plugins.tracer.connectways.AngPolygonClipper;
 import java.awt.Cursor;
 import java.util.*;
 import java.util.List;
@@ -416,8 +417,8 @@ public class LpisModule implements TracerModule  {
             subject_way.connectNonIncludedTouchingNodes(clip_way);
 
             System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_way=" + Long.toString(subject_way.getUniqueId()));
-
-            PolygonClipper clipper = new PolygonClipper(editor);
+            
+            AngPolygonClipper clipper = new AngPolygonClipper(editor);
             clipper.polygonDifference(clip_way, subject_way);
             List<List<EdNode>> outers = clipper.outerPolygons();
             List<List<EdNode>> inners = clipper.innerPolygons();
@@ -452,8 +453,8 @@ public class LpisModule implements TracerModule  {
                 way.connectNonIncludedTouchingNodes(clip_way);
             
             System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_relation=" + Long.toString(subject_mp.getUniqueId()));
-            
-            PolygonClipper clipper = new PolygonClipper(editor);
+
+            AngPolygonClipper clipper = new AngPolygonClipper(editor);
             clipper.polygonDifference(clip_way, subject_mp);
             List<List<EdNode>> unmapped_new_outers = new ArrayList<>(clipper.outerPolygons());
             List<List<EdNode>> unmapped_new_inners = new ArrayList<>(clipper.innerPolygons());
