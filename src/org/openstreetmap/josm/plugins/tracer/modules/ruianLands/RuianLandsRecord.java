@@ -30,6 +30,7 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonValue;
+import javax.json.JsonString;
 
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
@@ -281,6 +282,38 @@ public class RuianLandsRecord {
 
       } catch (Exception e) {
         System.out.println("coordinates: " + e.getMessage());
+      }
+
+      try {
+        String key, val;
+
+        JsonString keys = obj.getJsonString("keys");
+        String[] kv = keys.toString().replace("\"","").replace(",{","").replace("{","").replace("}}","}").split("}");
+
+        System.out.println("keys: " + kv.toString());
+        for (int i = 0; i < kv.length; i++) {
+          System.out.println("key["+i+"]: " + kv[i]);
+          String[] x= kv[i].split(",");
+          m_keys.put(x[0], x[1]);
+        }
+
+//         for(int i = 0; i < keysObjekt.size(); i++)
+//         {
+//           System.out.println("i="+i);
+//           JsonArray kv = arr.getJsonArray(i);
+//
+//           try {
+//             key = kv.getString(0);
+//             val = kv.getString(1);
+//             System.out.println("key->val: " + key + "->" + val);
+//             m_keys.put(key, val);
+//           } catch (Exception e) {
+//           }
+//
+//         }
+
+      } catch (Exception e) {
+        System.out.println("keys: " + e.getMessage());
       }
 
 // =========================================================================
