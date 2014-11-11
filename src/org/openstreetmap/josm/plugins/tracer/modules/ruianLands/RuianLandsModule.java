@@ -18,6 +18,7 @@
  */
 package org.openstreetmap.josm.plugins.tracer.modules.ruianLands;
 
+import org.openstreetmap.josm.plugins.tracer.connectways.AngPolygonClipper;
 import java.awt.Cursor;
 import java.awt.Point;
 import java.util.*;
@@ -439,7 +440,7 @@ public class RuianLandsModule implements TracerModule {
 
             System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_way=" + Long.toString(subject_way.getUniqueId()));
 
-            PolygonClipper clipper = new PolygonClipper(editor);
+            AngPolygonClipper clipper = new AngPolygonClipper(editor);
             clipper.polygonDifference(clip_way, subject_way);
             List<List<EdNode>> outers = clipper.outerPolygons();
             List<List<EdNode>> inners = clipper.innerPolygons();
@@ -453,7 +454,7 @@ public class RuianLandsModule implements TracerModule {
             else if ((outers.size() + inners.size()) > 1)
                 clipLanduseHandleSimpleSimpleMulti(editor, clip_way, subject_way, outers, inners);
             else
-                throw new AssertionError(tr("PolygonClipper.polygonDifference returned nonsense!"));
+                throw new AssertionError(tr("AngPolygonClipper.polygonDifference returned nonsense!"));
         }
 
         private void clipLanduseAreaSimpleMulti(WayEditor editor, EdWay clip_way, EdMultipolygon subject_mp) {
@@ -475,7 +476,7 @@ public class RuianLandsModule implements TracerModule {
 
             System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_relation=" + Long.toString(subject_mp.getUniqueId()));
 
-            PolygonClipper clipper = new PolygonClipper(editor);
+            AngPolygonClipper clipper = new AngPolygonClipper(editor);
             clipper.polygonDifference(clip_way, subject_mp);
             List<List<EdNode>> unmapped_new_outers = new ArrayList<>(clipper.outerPolygons());
             List<List<EdNode>> unmapped_new_inners = new ArrayList<>(clipper.innerPolygons());
