@@ -62,6 +62,7 @@ public class RuianLandsModule implements TracerModule {
 
     private static final String source = "cuzk:ruian";
     private static final String RuianLandsUrl = "http://josm.poloha.net";
+
     private static final String reuseExistingLanduseNodePattern =
         "((landuse=* -landuse=no) | natural=scrub | natural=wood | natural=grassland | natural=wood | leisure=garden)";
 
@@ -74,7 +75,36 @@ public class RuianLandsModule implements TracerModule {
             m_clipLanduseWayMatch = m_reuseExistingLanduseNodeMatch; // use the same
         }
         catch (ParseError e) {
-            throw new AssertionError(tr("Unable to compile pattern"));
+            throw new AssertionError(tr("Unable to compile landuse pattern"));
+        }
+    }
+
+    private static final String reuseExistingGardenWayPattern =
+        "((landuse=* -landuse=no -landuse=residential) | natural=scrub | natural=wood | natural=grassland | natural=wood | leisure=garden)";
+    private static volatile Match m_clipGardenWayMatch;
+
+    static {
+        try {
+            m_clipGardenWayMatch = SearchCompiler.compile(reuseExistingGardenWayPattern, false, false);
+        }
+        catch (ParseError e) {
+            throw new AssertionError(tr("Unable to compile garden pattern"));
+        }
+    }
+
+    private static final String reuseExistingBuildingNodePattern =
+        "(building=* -building=no -building=entrance)";
+
+    private static volatile Match m_reuseExistingBuildingNodeMatch;
+    private static volatile Match m_clipBuildingWayMatch;
+
+    static {
+        try {
+            m_reuseExistingBuildingNodeMatch = SearchCompiler.compile(reuseExistingBuildingNodePattern, false, false);
+            m_clipBuildingWayMatch = m_reuseExistingBuildingNodeMatch; // use the same
+        }
+        catch (ParseError e) {
+            throw new AssertionError(tr("Unable to compile building pattern"));
         }
     }
 
@@ -270,6 +300,21 @@ public class RuianLandsModule implements TracerModule {
               dAdjY = pref.getRuianAdjustPositionLon();
             }
 
+            Match existingNodeMatch;
+            Match clipWayMatch;
+
+            // Determine type of the objects
+            if (m_record.isBuilding()) {
+              existingNodeMatch = m_reuseExistingBuildingNodeMatch;
+              clipWayMatch = m_clipBuildingWayMatch;
+            } else if (m_record.isGarden()) {
+              existingNodeMatch = m_reuseExistingLanduseNodeMatch;
+              clipWayMatch = m_clipGardenWayMatch;
+            } else {
+              existingNodeMatch = m_reuseExistingLanduseNodeMatch;
+              clipWayMatch = m_clipLanduseWayMatch;
+            }
+
             // Create outer way
             List<EdNode> outer_nodes = new ArrayList<> ();
             LatLon prev_coor = null;
@@ -301,7 +346,7 @@ public class RuianLandsModule implements TracerModule {
                 outer_nodes.add(outer_nodes.get(0));
             EdWay outer_way = editor.newWay(outer_nodes);
 
-            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
+            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(existingNodeMatch);
             outer_way.reuseExistingNodes(reuse_filter);
 
             // #### If outer way is identical to an existing way, and this way is an untagged inner way of a
@@ -347,14 +392,14 @@ public class RuianLandsModule implements TracerModule {
 
             // Connect to touching nodes of near landuse polygons
             if (multipolygon == null)
-                connectExistingTouchingNodesSimple(editor, outer_way);
+                connectExistingTouchingNodesSimple(editor, outer_way, existingNodeMatch);
             else
-                connectExistingTouchingNodesMulti(editor, multipolygon);
+                connectExistingTouchingNodesMulti(editor, multipolygon, existingNodeMatch);
 
             // Clip other ways
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
-                clipLanduseAreasSimpleClip(editor, outer_way);
+                clipLanduseAreasSimpleClip(editor, outer_way, clipWayMatch);
             }
 
             List<Command> commands = editor.finalizeEdit();
@@ -406,9 +451,9 @@ public class RuianLandsModule implements TracerModule {
             way.setKeys(map);
         }
 
-        private void clipLanduseAreasSimpleClip(WayEditor editor, EdWay clip_way) {
+        private void clipLanduseAreasSimpleClip(WayEditor editor, EdWay clip_way, Match clip_way_match) {
 
-            AreaPredicate filter = new AreaPredicate (m_clipLanduseWayMatch);
+            AreaPredicate filter = new AreaPredicate (clip_way_match);
 
             Set<EdObject> areas = editor.useAllAreasInBBox(clip_way.getBBox(), filter);
             for (EdObject obj: areas) {
@@ -849,9 +894,9 @@ public class RuianLandsModule implements TracerModule {
         }
 
 
-        private void connectExistingTouchingNodesMulti(WayEditor editor, EdMultipolygon multipolygon) {
+        private void connectExistingTouchingNodesMulti(WayEditor editor, EdMultipolygon multipolygon, Match node_match) {
             // Setup filters - include landuse nodes only, exclude all nodes of the multipolygon itself
-            IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
+            IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(node_match);
             IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(multipolygon);
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
 
@@ -866,9 +911,9 @@ public class RuianLandsModule implements TracerModule {
                 way.connectExistingTouchingNodes(filter);
         }
 
-        private void connectExistingTouchingNodesSimple(WayEditor editor, EdWay way) {
+        private void connectExistingTouchingNodesSimple(WayEditor editor, EdWay way, Match node_match) {
             // Setup filters - include landuse nodes only, exclude all nodes of the way itself
-            IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
+            IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(node_match);
             IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(way);
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
 

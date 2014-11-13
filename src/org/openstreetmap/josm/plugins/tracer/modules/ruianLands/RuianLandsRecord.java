@@ -297,21 +297,6 @@ public class RuianLandsRecord {
           m_keys.put(x[0], x[1]);
         }
 
-//         for(int i = 0; i < keysObjekt.size(); i++)
-//         {
-//           System.out.println("i="+i);
-//           JsonArray kv = arr.getJsonArray(i);
-//
-//           try {
-//             key = kv.getString(0);
-//             val = kv.getString(1);
-//             System.out.println("key->val: " + key + "->" + val);
-//             m_keys.put(key, val);
-//           } catch (Exception e) {
-//           }
-//
-//         }
-
       } catch (Exception e) {
         System.out.println("keys: " + e.getMessage());
       }
@@ -364,7 +349,7 @@ public class RuianLandsRecord {
       } catch (Exception e) {
       }
 
-      mapKeys();
+//       mapKeys();
     }
 
   /**
@@ -433,4 +418,32 @@ public class RuianLandsRecord {
   public String getSource() {
     return m_source;
   }
+
+  /**
+   *  Return whether traced object is building (has building key)
+   *  @return True/False - is building or not
+   */
+  public boolean isBuilding() {
+
+    return m_keys.containsKey("building");
+  }
+
+  /**
+   *  Return whether traced object is land (has landuse, natural or leisure key)
+   *  @return True/False - is land or not
+   */
+  public boolean isLand() {
+
+    return m_keys.containsKey("landuse") || m_keys.containsKey("natural") || m_keys.containsKey("leisure");
+  }
+
+  /**
+   *  Return whether traced object is garden (has leisure=garden key)
+   *  @return True/False - is garden or not
+   */
+  public boolean isGarden() {
+
+    return m_keys.containsKey("leisure") && m_keys.get("leisure").equals("garden");
+  }
+
 }
