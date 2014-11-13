@@ -20,6 +20,7 @@ package org.openstreetmap.josm.plugins.tracer.modules.ruian;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.tools.Utils;
 
@@ -385,6 +386,22 @@ public class RuianRecord {
   }
 
   /**
+   * Returns BBox of RUIAN (multi)polygon
+   * @return BBox of RUIAN (multi)polygon
+   */
+  public BBox getBBox() {
+      LatLon p0 = m_geometry.get(0);
+
+      BBox bbox = new BBox(p0.lon(), p0.lat());
+      for (int i = 1; i < m_geometry.size(); i++) {
+          LatLon p = m_geometry.get(i);
+          bbox.add(p.lon(), p.lat());
+      }
+
+      return bbox;
+  }
+
+  /**
    *  Return number of levels in the building
    *  @return Number of levels
    */
@@ -453,4 +470,53 @@ public class RuianRecord {
   public String getSource() {
     return m_source;
   }
+
+
+  public Map<String, String> getKeys() {
+    return getKeys(false);
+  }
+
+  public Map<String, String> getKeys(boolean m_alt) {
+
+    Map<String, String> tags = new HashMap <String, String>();
+
+    if(!m_alt) {
+        if (getBuildingTagKey().equals("building") &&
+            getBuildingTagValue().length() > 0) {
+            tags.put("building", getBuildingTagValue());
+        }
+        else {
+            tags.put("building", "yes");
+        }
+    }
+
+    if (getBuildingID() > 0 ) {
+        tags.put("ref:ruian:building", Long.toString(getBuildingID()));
+    }
+
+    if (getBuildingUsageCode().length() > 0) {
+        tags.put("building:ruian:type", getBuildingUsageCode());
+    }
+
+    if (getBuildingLevels().length() > 0) {
+        tags.put("building:levels", getBuildingLevels());
+    }
+
+    if (getBuildingFlats().length() > 0) {
+        tags.put("building:flats", getBuildingFlats());
+    }
+
+    if (getBuildingFinished().length() > 0) {
+        tags.put("start_date", getBuildingFinished());
+    }
+
+    if (getSource().length() > 0) {
+        tags.put("source", getSource());
+    }
+    else {
+        tags.put("source", "cuzk:ruian");
+    }
+    return tags;
+  }
+
 }
