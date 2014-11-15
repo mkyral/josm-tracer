@@ -7,7 +7,6 @@ import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
-import org.openstreetmap.josm.data.osm.Way;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 // #### TODO: explicitly enforce that every way in a multipolygon is not a member of another edited or external multipolygon.
@@ -23,8 +22,8 @@ public class EdMultipolygon extends EdObject {
         m_relation = new Relation();
         m_relation.put("type", "multipolygon");
 
-        m_outerWays = new ArrayList<EdWay> ();
-        m_innerWays = new ArrayList<EdWay> ();
+        m_outerWays = new ArrayList<> ();
+        m_innerWays = new ArrayList<> ();
     }
 
     EdMultipolygon(WayEditor editor, Relation original_rel) {
@@ -33,20 +32,24 @@ public class EdMultipolygon extends EdObject {
         while (m_relation.getMembersCount() > 0)
             m_relation.removeMember(m_relation.getMembersCount()-1);
 
-        m_outerWays = new ArrayList<EdWay>();
-        m_innerWays = new ArrayList<EdWay>();
+        m_outerWays = new ArrayList<>();
+        m_innerWays = new ArrayList<>();
         
         for (RelationMember member: original_rel.getMembers()) {
             if (!member.isWay())
                 throw new IllegalArgumentException(tr("Cannot edit multipolygon with non-Way members!"));
             if (!member.hasRole())
                 throw new IllegalArgumentException(tr("Cannot edit multipolygon with members having no role!"));
-            if (member.getRole().equals("outer"))
-                m_outerWays.add(editor.useWay(member.getWay()));                
-            else if (member.getRole().equals("inner"))
-                m_innerWays.add(editor.useWay(member.getWay()));
-            else
-                throw new IllegalArgumentException(tr("Cannot edit multipolygon member with unknown role: {0}", member.getRole()));
+            switch (member.getRole()) {
+                case "outer":
+                    m_outerWays.add(editor.useWay(member.getWay()));
+                    break;
+                case "inner":
+                    m_innerWays.add(editor.useWay(member.getWay()));
+                    break;
+                default:
+                    throw new IllegalArgumentException(tr("Cannot edit multipolygon member with unknown role: {0}", member.getRole()));
+            }
         }
         
         for (EdWay w: m_outerWays)
@@ -138,7 +141,7 @@ public class EdMultipolygon extends EdObject {
     public void setKeys(Map<String,String> keys) {
         checkEditable();
         String type = keys.get("type");
-        if (type != null && type != "multipolygon")
+        if (type != null && !type.equals("multipolygon"))
             throw new IllegalArgumentException(tr("Multipolygon must have type=multipolygon"));
         m_relation.setKeys(keys);
         if (type == null)
@@ -147,18 +150,18 @@ public class EdMultipolygon extends EdObject {
     }
 
     public List<EdWay> outerWays() {
-        checkEditable(); // #### maybe support finalized multipolygons
-        return new ArrayList<EdWay>(m_outerWays);
+        checkEditable();
+        return new ArrayList<>(m_outerWays);
     }
 
     public List<EdWay> innerWays() {
-        checkEditable(); // #### maybe support finalized multipolygons
-        return new ArrayList<EdWay>(m_innerWays);
+        checkEditable();
+        return new ArrayList<>(m_innerWays);
     }
 
     public List<EdWay> allWays() {
         checkEditable();
-        List<EdWay> list = new ArrayList<EdWay>(m_outerWays.size() + m_innerWays.size());
+        List<EdWay> list = new ArrayList<>(m_outerWays.size() + m_innerWays.size());
         for (EdWay w: m_outerWays)
             list.add(w);
         for (EdWay w: m_innerWays)
@@ -213,10 +216,12 @@ public class EdMultipolygon extends EdObject {
         return false;        
     }    
     
+    @Override
     protected OsmPrimitive currentPrimitive() {
         return m_relation;
     }
     
+    @Override
     public BBox getBBox() {
         checkNotDeleted();
         if (isFinalized())
