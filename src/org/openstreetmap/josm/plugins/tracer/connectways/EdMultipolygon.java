@@ -38,15 +38,15 @@ public class EdMultipolygon extends EdObject {
         
         for (RelationMember member: original_rel.getMembers()) {
             if (!member.isWay())
-                throw new IllegalArgumentException("Cannot edit multipolygon with non-Way members!");
+                throw new IllegalArgumentException(tr("Cannot edit multipolygon with non-Way members!"));
             if (!member.hasRole())
-                throw new IllegalArgumentException("Cannot edit multipolygon with members having no role!");
+                throw new IllegalArgumentException(tr("Cannot edit multipolygon with members having no role!"));
             if (member.getRole().equals("outer"))
                 m_outerWays.add(editor.useWay(member.getWay()));                
             else if (member.getRole().equals("inner"))
                 m_innerWays.add(editor.useWay(member.getWay()));
             else
-                throw new IllegalArgumentException("Cannot edit multipolygon member with unknown role: " + member.getRole());
+                throw new IllegalArgumentException(tr("Cannot edit multipolygon member with unknown role: {0}", member.getRole()));
         }
         
         for (EdWay w: m_outerWays)

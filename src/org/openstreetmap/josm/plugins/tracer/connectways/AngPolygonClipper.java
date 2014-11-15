@@ -180,7 +180,7 @@ public class AngPolygonClipper {
     
     private Path wayToPath(EdWay w) {
         if (!w.isClosed())
-            throw new IllegalArgumentException (tr("Way must be closed"));
+            throw new IllegalArgumentException ("Way must be closed");
 
         Path p = new Path();
         

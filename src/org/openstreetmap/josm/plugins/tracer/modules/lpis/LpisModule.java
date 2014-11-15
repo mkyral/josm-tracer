@@ -75,7 +75,7 @@ public class LpisModule implements TracerModule  {
             m_mergeLanduseWayMatch = m_clipLanduseWayMatch; // use the same
         } 
         catch (ParseError e) {
-            throw new AssertionError(tr("Unable to compile pattern"));            
+            throw new AssertionError(tr("Unable to compile pattern"));
         }
     }
 
@@ -450,7 +450,7 @@ public class LpisModule implements TracerModule  {
             System.out.println("- result: outers=" + Long.toString(outers.size()) + ", inners=" + Long.toString(inners.size()));
 
             if (outers.isEmpty() && inners.isEmpty()) {
-                addPostTraceNotification(String.format(tr("Simple way %d would be completely removed, ignoring, please check."), subject_way.getUniqueId()));
+                addPostTraceNotification(tr("Simple way {0} would be completely removed, ignoring, please check.", subject_way.getUniqueId()));
             }
             else if (outers.size() == 1 && inners.isEmpty())
                 clipLanduseHandleSimpleSimpleSimple(editor, clip_way, subject_way, outers.get(0));
@@ -466,7 +466,7 @@ public class LpisModule implements TracerModule  {
             
             // #### add support for multipolygons with non-closed ways
             if (subject_has_nonclosed_ways) {
-                addPostTraceNotification(String.format(tr("Ignoring multipolygon %d, it contains non-closed ways."), subject_mp.getUniqueId()));
+                addPostTraceNotification(tr("Ignoring multipolygon {0}, it contains non-closed ways.", subject_mp.getUniqueId()));
                 return;
             }
             
@@ -488,23 +488,19 @@ public class LpisModule implements TracerModule  {
 
             // Whole multipolygon disappeared
             if (unmapped_new_outers.isEmpty() && unmapped_new_inners.isEmpty()) {
-                addPostTraceNotification(String.format(tr("Multipolygon %d would be completely removed, ignoring, please check."), subject_mp.getUniqueId()));
+                addPostTraceNotification(tr("Multipolygon {0} would be completely removed, ignoring, please check.", subject_mp.getUniqueId()));
                 return;
             }
             
             // Create bi-directional mapping of identical geometries
             List<EdWay> unmapped_old_outers = new ArrayList<>(subject_mp.outerWays());
             List<EdWay> unmapped_old_inners = new ArrayList<>(subject_mp.innerWays());
-            Map<EdWay, List<EdNode>> mapped_old_new_outers = new HashMap<>();
-            Map<List<EdNode>, EdWay> mapped_new_old_outers = new HashMap<>();
-            Map<EdWay, List<EdNode>> mapped_old_new_inners = new HashMap<>();
-            Map<List<EdNode>, EdWay> mapped_new_old_inners = new HashMap<>();
-            mapIdenticalWays(unmapped_old_outers, unmapped_new_outers, mapped_old_new_outers, mapped_new_old_outers);
-            mapIdenticalWays(unmapped_old_inners, unmapped_new_inners, mapped_old_new_inners, mapped_new_old_inners);
+            mapIdenticalWays(unmapped_old_outers, unmapped_new_outers);
+            mapIdenticalWays(unmapped_old_inners, unmapped_new_inners);
 
             // All new ways were successfully mapped to old ways?
             if (unmapped_old_outers.isEmpty() && unmapped_old_inners.isEmpty() && unmapped_new_outers.isEmpty() && unmapped_new_inners.isEmpty()) {
-                System.out.println(tr(" o subject unchanged"));
+                System.out.println(" o subject unchanged");
                 return;
             }
 
@@ -534,7 +530,7 @@ public class LpisModule implements TracerModule  {
                 return;
             }
             
-            addPostTraceNotification(String.format(tr("Multipolygon clipping result of %d is too complex."), subject_mp.getUniqueId()));
+            addPostTraceNotification(tr("Multipolygon clipping result of {0} is too complex.", subject_mp.getUniqueId()));
         }
 
         /**
@@ -554,7 +550,7 @@ public class LpisModule implements TracerModule  {
             return true;
         }
         
-        private void mapIdenticalWays(List<EdWay> unmapped_old, List<List<EdNode>> unmapped_new, Map<EdWay, List<EdNode>> mapped_old_new, Map<List<EdNode>, EdWay> mapped_new_old) {
+        private void mapIdenticalWays(List<EdWay> unmapped_old, List<List<EdNode>> unmapped_new) {
             int iold = 0;
             while (iold < unmapped_old.size()) {
                 EdWay old_way = unmapped_old.get(iold);
@@ -568,8 +564,8 @@ public class LpisModule implements TracerModule  {
                     }
                 }
                 if (new_way != null) {
-                    mapped_old_new.put(old_way, new_way);
-                    mapped_new_old.put(new_way, old_way);
+                    //mapped_old_new.put(old_way, new_way);
+                    //mapped_new_old.put(new_way, old_way);
                     unmapped_old.remove(iold);
                     unmapped_new.remove(inew);
                 }
@@ -651,15 +647,15 @@ public class LpisModule implements TracerModule  {
         private void clipLanduseHandleSimpleSimpleSimple(WayEditor editor, EdWay clip_way, EdWay subject_way, List<EdNode> result) {
             // ** Easiest case - simple way clipped by a simple way produced a single polygon **
 
-            System.out.println(tr("Clip result: simple"));
+            System.out.println("Clip result: simple");
 
             // Subject way unchanged?
             if (subject_way.hasIdenticalEdNodeGeometry(result, true)) {
-                System.out.println(tr(" o subject unchanged"));
+                System.out.println(" o subject unchanged");
                 return;
             }
 
-            System.out.println(tr(" ! CLIPPING subject " + Long.toString(subject_way.getUniqueId())));
+            System.out.println(" ! CLIPPING subject " + Long.toString(subject_way.getUniqueId()));
 
             // Subject way changed, change its geometry
             subject_way.setNodes(result);
@@ -672,7 +668,7 @@ public class LpisModule implements TracerModule  {
         private void clipLanduseHandleSimpleMultiOneOuterModified (WayEditor editor, EdWay clip_way, EdMultipolygon subject_mp, EdWay old_outer_way, List<EdNode> result) {
             // ** Easy case - clip of a multipolygon modified exactly one outer way and nothing else **
             
-            System.out.println(tr(" ! CLIPPING subject " + Long.toString(subject_mp.getUniqueId())) + ", outer way modified: " + Long.toString(old_outer_way.getUniqueId()));
+            System.out.println(" ! CLIPPING subject " + Long.toString(subject_mp.getUniqueId()) + ", outer way modified: " + Long.toString(old_outer_way.getUniqueId()));
             
             // Change geometry of the changed outer way
             old_outer_way.setNodes(result);
@@ -686,13 +682,13 @@ public class LpisModule implements TracerModule  {
             // ** Simple way clipped by a simple way produced multiple polygons **
 
             if (inners.isEmpty()) {
-                System.out.println(tr("Clip result: multi outers"));
+                System.out.println("Clip result: multi outers");
                 clipLanduseHandleSimpleSimpleMultiOuters(editor, clip_way, subject_way, outers);
             }
             else {
-                System.out.println(tr("Clip result: multi mixed"));
+                System.out.println("Clip result: multi mixed");
                 // #### not completed
-                addPostTraceNotification(String.format(tr("Clipping changes simple way %d to multipolygon, not supported yet."), subject_way.getUniqueId()));
+                addPostTraceNotification(tr("Clipping changes simple way {0} to multipolygon, not supported yet.", subject_way.getUniqueId()));
             }
         }
 
@@ -702,11 +698,11 @@ public class LpisModule implements TracerModule  {
             // Don't clip subject which is a member of a (non-multipolygon) relation.
             // It's questionable if all pieces should be added to the relation, or only some of them, etc...
             if (subject_way.hasEditorReferrers() || subject_way.hasExternalReferrers()) {
-                addPostTraceNotification(String.format(tr("Clipped way %d is a member of non-multipolygon relation, not supported yet."), subject_way.getUniqueId()));
+                addPostTraceNotification(tr("Clipped way {0} is a member of non-multipolygon relation, not supported yet.", subject_way.getUniqueId()));
                 return;
             }
 
-            System.out.println(tr(" ! CLIPPING subject " + Long.toString(subject_way.getUniqueId()) + " to multiple simple ways"));
+            System.out.println(" ! CLIPPING subject " + Long.toString(subject_way.getUniqueId()) + " to multiple simple ways");
 
             // #### Generally, it's better to create multiple simple ways than combine them to a new multipolygon.
             // But in some cases, maybe it would make sense to create a multipolygon... E.g. named landuse areas??
