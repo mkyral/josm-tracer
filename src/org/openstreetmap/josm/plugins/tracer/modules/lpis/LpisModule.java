@@ -64,9 +64,9 @@ public class LpisModule implements TracerModule  {
     private static final String reuseExistingLanduseNodePattern =
         "((landuse=* -landuse=no) | natural=scrub | natural=wood | natural=grassland | natural=wood | leisure=garden)";
 
-    private static volatile Match m_reuseExistingLanduseNodeMatch;
-    private static volatile Match m_clipLanduseWayMatch;
-    private static volatile Match m_mergeLanduseWayMatch;
+    private static final Match m_reuseExistingLanduseNodeMatch;
+    private static final Match m_clipLanduseWayMatch;
+    private static final Match m_mergeLanduseWayMatch;
 
     static {
         try {
@@ -140,6 +140,7 @@ public class LpisModule implements TracerModule  {
         }
 
         @Override
+        @SuppressWarnings({"CallToPrintStackTrace", "UseSpecificCatch", "BroadCatchBlock", "TooBroadCatch"})
         protected void realRun() throws SAXException {
 
             System.out.println("");
@@ -250,6 +251,7 @@ public class LpisModule implements TracerModule  {
         private void createTracedPolygon() {
             GuiHelper.runInEDT(new Runnable() {
                 @Override
+                @SuppressWarnings("CallToPrintStackTrace")
                 public void run() {
                     long start_time = System.nanoTime();
                     DataSet data_set = Main.main.getCurrentDataSet();
@@ -556,7 +558,7 @@ public class LpisModule implements TracerModule  {
                 EdWay old_way = unmapped_old.get(iold);
                 List<EdNode> new_way = null;
                 int inew = 0;
-                for (inew = 0; inew < unmapped_new.size(); inew++) {
+                for (; inew < unmapped_new.size(); inew++) {
                     List<EdNode> test_way = unmapped_new.get(inew);
                     if (old_way.hasIdenticalEdNodeGeometry(test_way, true)) {
                         new_way = test_way;
