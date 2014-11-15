@@ -123,6 +123,8 @@ public class LpisModule implements TracerModule  {
 
         private LpisRecord m_record;
         private boolean m_cancelled;
+        
+        private final List<String> m_postTraceNotifications = new ArrayList<> ();
 
         LpisTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (tr("Tracing"));
@@ -223,6 +225,28 @@ public class LpisModule implements TracerModule  {
             ed.showDialog();
         }
 
+        private void addPostTraceNotification(String s) {
+            System.out.println("Notify: " + s);
+            synchronized(m_postTraceNotifications) {
+                m_postTraceNotifications.add(s);
+            }
+        }
+        
+        private void showPostTraceNotifications () {
+            StringBuilder sb = new StringBuilder();
+            synchronized(m_postTraceNotifications) {
+                if (m_postTraceNotifications.isEmpty())
+                    return;
+                for (String s: m_postTraceNotifications) {
+                    if (sb.length() != 0)
+                        sb.append("\n");
+                    sb.append(s);
+                }
+                m_postTraceNotifications.clear();
+            }
+            TracerUtils.showNotification(sb.toString(), "warning");
+        }
+        
         private void createTracedPolygon() {
             GuiHelper.runInEDT(new Runnable() {
                 @Override
@@ -232,6 +256,7 @@ public class LpisModule implements TracerModule  {
                     data_set.beginUpdate();
                     try {
                         createTracedPolygonImpl (data_set);
+                        showPostTraceNotifications();
                     }
                     catch (Exception e) {
                         e.printStackTrace();
@@ -355,7 +380,7 @@ public class LpisModule implements TracerModule  {
                 System.out.println("undoRedo time (ms): " + Long.toString(time_msecs));                
                 
             } else {
-                System.out.println("Failed");
+                addPostTraceNotification(tr("Nothing changed."));
             }
         }
 
@@ -424,8 +449,9 @@ public class LpisModule implements TracerModule  {
 
             System.out.println("- result: outers=" + Long.toString(outers.size()) + ", inners=" + Long.toString(inners.size()));
 
-            if (outers.isEmpty() && inners.isEmpty())
-                System.out.println(tr("No result of difference - subject should be removed?!"));
+            if (outers.isEmpty() && inners.isEmpty()) {
+                addPostTraceNotification(String.format(tr("Simple way %d would be completely removed, ignoring, please check."), subject_way.getUniqueId()));
+            }
             else if (outers.size() == 1 && inners.isEmpty())
                 clipLanduseHandleSimpleSimpleSimple(editor, clip_way, subject_way, outers.get(0));
             else if ((outers.size() + inners.size()) > 1)
@@ -440,7 +466,7 @@ public class LpisModule implements TracerModule  {
             
             // #### add support for multipolygons with non-closed ways
             if (subject_has_nonclosed_ways) {
-                System.out.println("Ignoring multipolygon " + Long.toString(clip_way.getUniqueId()) + ", it contains non-closed ways");
+                addPostTraceNotification(String.format(tr("Ignoring multipolygon %d, it contains non-closed ways."), subject_mp.getUniqueId()));
                 return;
             }
             
@@ -462,7 +488,7 @@ public class LpisModule implements TracerModule  {
 
             // Whole multipolygon disappeared
             if (unmapped_new_outers.isEmpty() && unmapped_new_inners.isEmpty()) {
-                System.out.println(tr("No result of difference - subject should be removed?!"));
+                addPostTraceNotification(String.format(tr("Multipolygon %d would be completely removed, ignoring, please check."), subject_mp.getUniqueId()));
                 return;
             }
             
@@ -508,7 +534,7 @@ public class LpisModule implements TracerModule  {
                 return;
             }
             
-            System.out.println(tr(" x clip result is too complex"));
+            addPostTraceNotification(String.format(tr("Multipolygon clipping result of %d is too complex."), subject_mp.getUniqueId()));
         }
 
         /**
@@ -666,6 +692,7 @@ public class LpisModule implements TracerModule  {
             else {
                 System.out.println(tr("Clip result: multi mixed"));
                 // #### not completed
+                addPostTraceNotification(String.format(tr("Clipping changes simple way %d to multipolygon, not supported yet."), subject_way.getUniqueId()));
             }
         }
 
@@ -675,7 +702,7 @@ public class LpisModule implements TracerModule  {
             // Don't clip subject which is a member of a (non-multipolygon) relation.
             // It's questionable if all pieces should be added to the relation, or only some of them, etc...
             if (subject_way.hasEditorReferrers() || subject_way.hasExternalReferrers()) {
-                System.out.println(tr("Clipped way is a member of non-multipolygon relation, ignoring (yet)"));
+                addPostTraceNotification(String.format(tr("Clipped way %d is a member of non-multipolygon relation, not supported yet."), subject_way.getUniqueId()));
                 return;
             }
 
