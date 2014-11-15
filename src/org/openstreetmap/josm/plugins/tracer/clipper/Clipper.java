@@ -2612,6 +2612,7 @@ public class Clipper extends ClipperBase {
               e.iCurr.Y = topY;
             }
 
+            /* #### this piece of code breaks collinear side edges into unwanted segments
             if (getStrictlySimple())
             {
               TEdge ePrev = e.PrevInAEL;
@@ -2625,7 +2626,7 @@ public class Clipper extends ClipperBase {
                 OutPt op2 = addOutPt(e, ip);
                 addJoin(op, op2, ip); //StrictlySimple (type-3) join
               }
-            }
+            } */
 
             e = e.NextInAEL;
           }
