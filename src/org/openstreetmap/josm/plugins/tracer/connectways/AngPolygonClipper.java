@@ -198,12 +198,10 @@ public class AngPolygonClipper {
     
     private Point2d nodeToPoint2d(EdNode node) {
         EastNorth en = node.getEastNorth();
-        System.out.println("EaNt: " + Double.toString(en.getX()) + ", " + Double.toString(en.getY()));
         long x = (long)(en.getX() * fixedPointScale);
         long y = (long)(en.getY() * fixedPointScale);
         Point2d pt = new Point2d(x, y);
         m_nodesMap.put(pt, node);
-        System.out.println("Node: " + Long.toString(pt.X) + ", " + Long.toString(pt.Y));
         return pt;
     }
     
@@ -216,6 +214,7 @@ public class AngPolygonClipper {
         EastNorth en = new EastNorth (x,y);
         LatLon ll = Projections.inverseProject(en);
         node = m_editor.newNode(ll);
+        m_nodesMap.put(pt, node);
         return node;
     }
     
