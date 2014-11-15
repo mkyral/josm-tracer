@@ -35,6 +35,7 @@
 
 package org.openstreetmap.josm.plugins.tracer.clipper;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -163,6 +164,13 @@ class ClipperBase {
     {
         return e.iDelta.Y == 0;
     }
+    
+    private static BigInteger Int128Mul(long x, long y) {
+        BigInteger bx = BigInteger.valueOf(x);
+        BigInteger by = BigInteger.valueOf(y);
+        return bx.multiply(by);
+    }
+    
     //------------------------------------------------------------------------------
 
     boolean pointIsVertex(Point2d pt, OutPt pp)
@@ -179,8 +187,16 @@ class ClipperBase {
         return false;
     }
     
-    boolean pointOnLineSegment(Point2d pt, Point2d linePt1, Point2d linePt2)
+    boolean pointOnLineSegment(Point2d pt, Point2d linePt1, Point2d linePt2, boolean UseFullRange)
     {
+      if (UseFullRange)
+        return ((pt.X == linePt1.X) && (pt.Y == linePt1.Y)) ||
+          ((pt.X == linePt2.X) && (pt.Y == linePt2.Y)) ||
+          (((pt.X > linePt1.X) == (pt.X < linePt2.X)) &&
+          ((pt.Y > linePt1.Y) == (pt.Y < linePt2.Y)) &&
+          ((Int128Mul((pt.X - linePt1.X), (linePt2.Y - linePt1.Y)).equals(
+          Int128Mul((linePt2.X - linePt1.X), (pt.Y - linePt1.Y))))));
+      else
         return ((pt.X == linePt1.X) && (pt.Y == linePt1.Y)) ||
             ((pt.X == linePt2.X) && (pt.Y == linePt2.Y)) ||
             (((pt.X > linePt1.X) == (pt.X < linePt2.X)) &&
@@ -190,12 +206,12 @@ class ClipperBase {
     }
     //------------------------------------------------------------------------------
 
-    boolean pointOnPolygon(Point2d pt, OutPt pp)
+    boolean pointOnPolygon(Point2d pt, OutPt pp, boolean UseFullRange)
     {
         OutPt pp2 = pp;
         while (true)
         {
-            if (pointOnLineSegment(pt, pp2.iPt, pp2.Next.iPt))
+            if (pointOnLineSegment(pt, pp2.iPt, pp2.Next.iPt, UseFullRange))
                 return true;
             pp2 = pp2.Next;
             if (pp2 == pp)
@@ -204,21 +220,34 @@ class ClipperBase {
         return false;
     }
     
-    static boolean slopesEqual(TEdge e1, TEdge e2)
+    static boolean slopesEqual(TEdge e1, TEdge e2, boolean UseFullRange)
     {
-        return (e1.iDelta.Y) * (e2.iDelta.X) == (e1.iDelta.X) * (e2.iDelta.Y);
+        if (UseFullRange)
+          return Int128Mul(e1.iDelta.Y, e2.iDelta.X).equals(
+              Int128Mul(e1.iDelta.X, e2.iDelta.Y));
+        else return (long)(e1.iDelta.Y) * (e2.iDelta.X) ==
+          (long)(e1.iDelta.X) * (e2.iDelta.Y);
     }
     //------------------------------------------------------------------------------
 
-    static boolean slopesEqual(Point2d pt1, Point2d pt2, Point2d pt3)
+    static boolean slopesEqual(Point2d pt1, Point2d pt2, Point2d pt3, boolean UseFullRange)
     {
-        return (pt1.Y - pt2.Y) * (pt2.X - pt3.X) - (pt1.X - pt2.X) * (pt2.Y - pt3.Y) == 0;
+        if (UseFullRange)
+            return Int128Mul(pt1.Y - pt2.Y, pt2.X - pt3.X).equals(
+              Int128Mul(pt1.X - pt2.X, pt2.Y - pt3.Y));
+        else return
+          (long)(pt1.Y - pt2.Y) * (pt2.X - pt3.X) - (long)(pt1.X - pt2.X) * (pt2.Y - pt3.Y) == 0;
     }
+    
     //------------------------------------------------------------------------------
 
-    static boolean slopesEqual(Point2d pt1, Point2d pt2, Point2d pt3, Point2d pt4)
+    static boolean slopesEqual(Point2d pt1, Point2d pt2, Point2d pt3, Point2d pt4, boolean UseFullRange)
     {
-        return (pt1.Y - pt2.Y) * (pt3.X - pt4.X) - (pt1.X - pt2.X) * (pt3.Y - pt4.Y) == 0;
+        if (UseFullRange)
+            return Int128Mul(pt1.Y - pt2.Y, pt3.X - pt4.X).equals(
+              Int128Mul(pt1.X - pt2.X, pt3.Y - pt4.Y));
+        else return
+          (long)(pt1.Y - pt2.Y) * (pt3.X - pt4.X) - (long)(pt1.X - pt2.X) * (pt3.Y - pt4.Y) == 0;
     }
     
     ClipperBase() //constructor (nb: no external instantiation)
@@ -247,12 +276,22 @@ class ClipperBase {
         }
         m_CurrentLM = null;
     }
-    
-    void rangeTest(Point2d Pt) throws ClipperException
+        
+    boolean rangeTest(Point2d Pt, boolean useFullRange) throws ClipperException
     {
-        if (Pt.X > hiRange || Pt.Y > hiRange || -Pt.X > hiRange || -Pt.Y > hiRange)
-            throw new ClipperException("Coordinate outside allowed range");
+      if (useFullRange)
+      {
+        if (Pt.X > hiRange || Pt.Y > hiRange || -Pt.X > hiRange || -Pt.Y > hiRange) 
+          throw new ClipperException("Coordinate outside allowed range");
+      }
+      else if (Pt.X > loRange || Pt.Y > loRange || -Pt.X > loRange || -Pt.Y > loRange) 
+      {
+        useFullRange = true;
+        rangeTest(Pt, useFullRange);
+      }      
+      return useFullRange;
     }
+    
     
     private void initEdge(TEdge e, TEdge eNext, TEdge ePrev, Point2d pt)
     {
@@ -439,13 +478,13 @@ class ClipperBase {
 
       //1. Basic (first) edge initialization ...
       edges.get(1).iCurr.assign(pg.get(1));
-      rangeTest(pg.get(0));
-      rangeTest(pg.get(highI));
+      m_UseFullRange = rangeTest(pg.get(0), m_UseFullRange);
+      m_UseFullRange = rangeTest(pg.get(highI), m_UseFullRange);
       initEdge(edges.get(0), edges.get(1), edges.get(highI), pg.get(0));
       initEdge(edges.get(highI), edges.get(0), edges.get(highI - 1), pg.get(highI));
       for (int i = highI - 1; i >= 1; --i)
       {
-        rangeTest(pg.get(i));
+        m_UseFullRange = rangeTest(pg.get(i), m_UseFullRange);
         initEdge(edges.get(i), edges.get(i + 1), edges.get(i - 1), pg.get(i));
       }
       TEdge eStart = edges.get(0);
@@ -466,7 +505,7 @@ class ClipperBase {
         if (E.Prev == E.Next) 
           break; //only two vertices
         else if (Closed &&
-          slopesEqual(E.Prev.iCurr, E.iCurr, E.Next.iCurr) && 
+          slopesEqual(E.Prev.iCurr, E.iCurr, E.Next.iCurr, m_UseFullRange) && 
           (!getPreserveCollinear() ||
           !Pt2IsBetweenPt1AndPt3(E.Prev.iCurr, E.iCurr, E.Next.iCurr))) 
         {
@@ -1048,7 +1087,7 @@ public class Clipper extends ClipperBase {
           if (lb.OutIdx >= 0 && lb.PrevInAEL != null &&
             lb.PrevInAEL.iCurr.X == lb.iBot.X &&
             lb.PrevInAEL.OutIdx >= 0 &&
-            slopesEqual(lb.PrevInAEL, lb) &&
+            slopesEqual(lb.PrevInAEL, lb, m_UseFullRange) &&
             lb.WindDelta != 0 && lb.PrevInAEL.WindDelta != 0)
           {
             OutPt Op2 = addOutPt(lb.PrevInAEL, lb.iBot);
@@ -1059,7 +1098,7 @@ public class Clipper extends ClipperBase {
           {
 
             if (rb.OutIdx >= 0 && rb.PrevInAEL.OutIdx >= 0 &&
-              slopesEqual(rb.PrevInAEL, rb) &&
+              slopesEqual(rb.PrevInAEL, rb, m_UseFullRange) &&
               rb.WindDelta != 0 && rb.PrevInAEL.WindDelta != 0)
             {
               OutPt Op2 = addOutPt(rb.PrevInAEL, rb.iBot);
@@ -1536,7 +1575,7 @@ public class Clipper extends ClipperBase {
 
         if (prevE != null && prevE.OutIdx >= 0 &&
             (topX(prevE, pt.Y) == topX(e, pt.Y)) &&
-            slopesEqual(e, prevE) &&
+            slopesEqual(e, prevE, m_UseFullRange) &&
             (e.WindDelta != 0) && (prevE.WindDelta != 0))
         {
           OutPt outPt = addOutPt(prevE, pt);
@@ -2259,7 +2298,7 @@ public class Clipper extends ClipperBase {
             if (ePrev != null && ePrev.iCurr.X == horzEdge.iBot.X &&
               ePrev.iCurr.Y == horzEdge.iBot.Y && ePrev.WindDelta != 0 &&
               (ePrev.OutIdx >= 0 && ePrev.iCurr.Y > ePrev.iTop.Y &&
-              slopesEqual(horzEdge, ePrev)))
+              slopesEqual(horzEdge, ePrev, m_UseFullRange)))
             {
               OutPt op2 = addOutPt(ePrev, horzEdge.iBot);
               addJoin(op1, op2, horzEdge.iTop);
@@ -2267,7 +2306,7 @@ public class Clipper extends ClipperBase {
             else if (eNext != null && eNext.iCurr.X == horzEdge.iBot.X &&
               eNext.iCurr.Y == horzEdge.iBot.Y && eNext.WindDelta != 0 &&
               eNext.OutIdx >= 0 && eNext.iCurr.Y > eNext.iTop.Y &&
-              slopesEqual(horzEdge, eNext))
+              slopesEqual(horzEdge, eNext, m_UseFullRange))
             {
               OutPt op2 = addOutPt(eNext, horzEdge.iBot);
               addJoin(op1, op2, horzEdge.iTop);
@@ -2612,7 +2651,7 @@ public class Clipper extends ClipperBase {
             if (ePrev != null && ePrev.iCurr.X == e.iBot.X &&
               ePrev.iCurr.Y == e.iBot.Y && op != null &&
               ePrev.OutIdx >= 0 && ePrev.iCurr.Y > ePrev.iTop.Y &&
-              slopesEqual(e, ePrev) &&
+              slopesEqual(e, ePrev,m_UseFullRange) &&
               (e.WindDelta != 0) && (ePrev.WindDelta != 0))
             {
               OutPt op2 = addOutPt(ePrev, e.iBot);
@@ -2621,7 +2660,7 @@ public class Clipper extends ClipperBase {
             else if (eNext != null && eNext.iCurr.X == e.iBot.X &&
               eNext.iCurr.Y == e.iBot.Y && op != null &&
               eNext.OutIdx >= 0 && eNext.iCurr.Y > eNext.iTop.Y &&
-              slopesEqual(e, eNext) &&
+              slopesEqual(e, eNext,m_UseFullRange) &&
               (e.WindDelta != 0) && (eNext.WindDelta != 0))
             {
               OutPt op2 = addOutPt(eNext, e.iBot);
@@ -2785,7 +2824,7 @@ public class Clipper extends ClipperBase {
               }
               //test for duplicate points and collinear edges ...
               if ((pp.iPt.equals(pp.Next.iPt)) || (pp.iPt.equals(pp.Prev.iPt)) ||
-                (slopesEqual(pp.Prev.iPt, pp.iPt, pp.Next.iPt) &&
+                (slopesEqual(pp.Prev.iPt, pp.iPt, pp.Next.iPt, m_UseFullRange) &&
                 (!getPreserveCollinear() || !Pt2IsBetweenPt1AndPt3(pp.Prev.iPt, pp.iPt, pp.Next.iPt))))
               {
                   lastOK = null;
@@ -3049,24 +3088,24 @@ public class Clipper extends ClipperBase {
           op1b = op1.Next;
           while ((op1b.iPt.equals(op1.iPt)) && (op1b != op1)) op1b = op1b.Next;
           boolean Reverse1 = ((op1b.iPt.Y > op1.iPt.Y) ||
-            !slopesEqual(op1.iPt, op1b.iPt, j.iOffPt));
+            !slopesEqual(op1.iPt, op1b.iPt, j.iOffPt, m_UseFullRange));
           if (Reverse1)
           {
             op1b = op1.Prev;
             while ((op1b.iPt.equals(op1.iPt)) && (op1b != op1)) op1b = op1b.Prev;
             if ((op1b.iPt.Y > op1.iPt.Y) ||
-              !slopesEqual(op1.iPt, op1b.iPt, j.iOffPt)) return false;
+              !slopesEqual(op1.iPt, op1b.iPt, j.iOffPt, m_UseFullRange)) return false;
           }
           op2b = op2.Next;
           while ((op2b.iPt.equals(op2.iPt)) && (op2b != op2)) op2b = op2b.Next;
           boolean Reverse2 = ((op2b.iPt.Y > op2.iPt.Y) ||
-            !slopesEqual(op2.iPt, op2b.iPt, j.iOffPt));
+            !slopesEqual(op2.iPt, op2b.iPt, j.iOffPt, m_UseFullRange));
           if (Reverse2)
           {
             op2b = op2.Prev;
             while ((op2b.iPt.equals(op2.iPt)) && (op2b != op2)) op2b = op2b.Prev;
             if ((op2b.iPt.Y > op2.iPt.Y) ||
-              !slopesEqual(op2.iPt, op2b.iPt, j.iOffPt)) return false;
+              !slopesEqual(op2.iPt, op2b.iPt, j.iOffPt, m_UseFullRange)) return false;
           }
 
           if ((op1b == op1) || (op2b == op2) || (op1b == op2b) ||
