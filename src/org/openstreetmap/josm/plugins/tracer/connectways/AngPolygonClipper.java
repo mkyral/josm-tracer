@@ -17,7 +17,6 @@ import org.openstreetmap.josm.plugins.tracer.clipper.Point2d;
 import org.openstreetmap.josm.plugins.tracer.clipper.PolyNode;
 import org.openstreetmap.josm.plugins.tracer.clipper.PolyTree;
 import org.openstreetmap.josm.plugins.tracer.clipper.PolyType;
-import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class AngPolygonClipper {
     private final WayEditor m_editor;
@@ -49,6 +48,7 @@ public class AngPolygonClipper {
         return m_inners;
     }
     
+    @SuppressWarnings("CallToPrintStackTrace")
     public void polygonDifference (EdWay clip_way, EdObject subj) {
 
         // initialize collections
