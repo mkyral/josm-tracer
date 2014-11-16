@@ -127,17 +127,6 @@ public class EdWay extends EdObject {
         ednode.addRef(this);        
     }
 
-    public void setKeys(Map<String,String> keys) {
-        checkEditable();
-        m_way.setKeys(keys);
-        setModified();
-    }
-
-    public Map<String,String> getKeys() {
-        checkNotDeleted();
-        return new HashMap<String,String> (m_way.getKeys());
-    }
-
     public int getNodesCount() {
         return m_nodes.size();
     }

@@ -138,6 +138,7 @@ public class EdMultipolygon extends EdObject {
         return m_relation;
     }
 
+    @Override
     public void setKeys(Map<String,String> keys) {
         checkEditable();
         String type = keys.get("type");

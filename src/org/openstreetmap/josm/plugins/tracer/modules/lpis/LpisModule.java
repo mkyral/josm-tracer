@@ -307,13 +307,9 @@ public class LpisModule implements TracerModule  {
                 return;
             EdWay outer_way = trobj.a;
             EdMultipolygon multipolygon = trobj.b;
-            EdObject traced_object = multipolygon == null ? outer_way : multipolygon;
 
             // Tag object
-            if (multipolygon == null)
-                tagOuterWay(outer_way);
-            else
-                tagMultipolygon(multipolygon);
+            tagTracedObject(multipolygon == null ? outer_way : multipolygon);
             
             // Connect to touching nodes of near landuse polygons            
             if (multipolygon == null)
@@ -371,18 +367,11 @@ public class LpisModule implements TracerModule  {
             // #### TODO: break the connection to remote LPIS server
         }
 
-        private void tagMultipolygon (EdMultipolygon multipolygon) {
+        private void tagTracedObject (EdObject obj) {
             Map <String, String> map = new HashMap <> (m_record.getUsageOsm());
             map.put("source", source);
             map.put("ref", Long.toString(m_record.getLpisID()));
-            multipolygon.setKeys(map);
-        }
-
-        private void tagOuterWay (EdWay way) {
-            Map <String, String> map = new HashMap <> (m_record.getUsageOsm());
-            map.put("source", source);
-            map.put("ref", Long.toString(m_record.getLpisID()));
-            way.setKeys(map);
+            obj.setKeys(map);
         }
 
         private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {

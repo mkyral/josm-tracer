@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import org.openstreetmap.josm.data.osm.BBox;
 
 
@@ -171,6 +173,18 @@ public abstract class EdObject {
     public final String get(String key) {
         return currentPrimitive().get(key);
     }
+    
+    public void setKeys(Map<String,String> keys) {
+        checkEditable();
+        currentPrimitive().setKeys(keys);
+        setModified();
+    }
+
+    public final Map<String,String> getKeys() {
+        checkNotDeleted();
+        return new HashMap<> (currentPrimitive().getKeys());
+    }
+    
     
     /**
      * Checks if the given EdObject is the only one referrer of this EdObject.
