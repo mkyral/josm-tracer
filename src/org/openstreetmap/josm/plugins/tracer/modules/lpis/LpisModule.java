@@ -34,6 +34,7 @@ import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
@@ -63,16 +64,18 @@ public class LpisModule implements TracerModule  {
     private static final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
     private static final String reuseExistingLanduseNodePattern =
         "((landuse=* -landuse=no) | natural=scrub | natural=wood | natural=grassland | natural=wood | leisure=garden)";
-
+    
     private static final Match m_reuseExistingLanduseNodeMatch;
     private static final Match m_clipLanduseWayMatch;
     private static final Match m_mergeLanduseWayMatch;
+    private static final Match m_retraceAreaMatch;
 
     static {
         try {
             m_reuseExistingLanduseNodeMatch = SearchCompiler.compile(reuseExistingLanduseNodePattern, false, false);
             m_clipLanduseWayMatch = m_reuseExistingLanduseNodeMatch; // use the same 
             m_mergeLanduseWayMatch = m_clipLanduseWayMatch; // use the same
+            m_retraceAreaMatch = m_reuseExistingLanduseNodeMatch;
         } 
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile pattern"));
@@ -120,6 +123,7 @@ public class LpisModule implements TracerModule  {
         private final boolean m_shift;
         private final boolean m_performClipping;
         private final boolean m_performWayMerging;
+        private final boolean m_performRetrace;
 
         private LpisRecord m_record;
         private boolean m_cancelled;
@@ -137,6 +141,7 @@ public class LpisModule implements TracerModule  {
 
             this.m_performClipping = !m_ctrl;
             this.m_performWayMerging = !m_ctrl;
+            this.m_performRetrace = !m_ctrl;
         }
 
         @Override
@@ -282,6 +287,20 @@ public class LpisModule implements TracerModule  {
             GeomUtils geom = new GeomUtils();
             WayEditor editor = new WayEditor (data_set, geom);
 
+            // Look for object to retrace
+            EdObject retrace_object = null;
+            if (m_performRetrace) {
+                Pair<EdObject, Boolean> repl = getObjectToRetrace(editor, m_pos);
+                retrace_object = repl.a;
+                boolean ambiguous_retrace = repl.b;
+
+                // #### Don't allow any retrace, yet
+                if (ambiguous_retrace || retrace_object != null) {
+                    this.addPostTraceNotification(tr("LPIS polygon already exists, retracing is not supported yet."));
+                    return;
+                }
+            }
+
             // Create outer way
             List<EdNode> outer_nodes = new ArrayList<> ();
             LatLon prev_coor = null;
@@ -410,6 +429,46 @@ public class LpisModule implements TracerModule  {
             way.setKeys(map);
         }
 
+        private Pair<EdObject, Boolean> getObjectToRetrace(WayEditor editor, LatLon pos) {
+            AreaPredicate filter = new AreaPredicate(m_retraceAreaMatch);
+            Set<EdObject> areas = editor.useNonEditedAreasContainingPoint(pos, filter);
+            
+            String lpisref = Long.toString(m_record.getLpisID());
+            
+            // restrict to LPIS areas only, yet ... #### improve in the future
+            boolean multiple_areas = false;
+            EdObject lpis_area = null;
+            for (EdObject area: areas) {
+                String source = area.get("source");
+                if (source == null || !source.equals("lpis"))
+                    continue;
+
+                if (area instanceof EdWay)
+                    System.out.println("Retrace candidate EdWay: " + Long.toString(area.getUniqueId()));
+                else if (area instanceof EdMultipolygon)
+                    System.out.println("Retrace candidate EdMultipolygon: " + Long.toString(area.getUniqueId()));
+                
+                String ref = area.get("ref");
+                if (ref != null && ref.equals(lpisref)) // exact match ;)
+                    return new Pair<>(area, false);
+                                
+                if (lpis_area == null)
+                    lpis_area = area;
+                else
+                    multiple_areas = true;
+            }
+            
+            if (multiple_areas) {                
+                return new Pair<>(null, true);
+            }
+            
+            if (lpis_area != null) {
+                return new Pair<>(lpis_area, false);
+            }
+            
+            return new Pair<>(null, false);
+        }
+        
         private void clipLanduseAreasSimpleClip(WayEditor editor, EdWay clip_way) {
 
             AreaPredicate filter = new AreaPredicate (m_clipLanduseWayMatch);

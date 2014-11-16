@@ -37,6 +37,7 @@ import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.tools.Geometry;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 
@@ -474,6 +475,37 @@ public class WayEditor {
         return result;
     }
     
+    public Set<EdObject> useNonEditedAreasContainingPoint(LatLon pos, IEdAreaPredicate filter) {
+        Set<EdObject> areas = new HashSet<>();
+        BBox bbox = new BBox(pos, pos);
+        Node posnode = new Node (pos);
+
+        // look for non-edited multipolygons
+        for (Relation rel: getDataSet().searchRelations(bbox)) {
+            if (!rel.isUsable() || rel.hasIncompleteMembers() || isEdited(rel))
+                continue;
+            if (!filter.evaluate(rel))
+                continue;
+            if (!Geometry.isNodeInsideMultiPolygon(posnode, rel, null))
+                continue;
+            areas.add(this.useMultipolygon(rel));
+        }
+
+        // look for non-edited ways
+        for (Way w : getDataSet().searchWays(bbox)) {
+            if (!w.isUsable() || isEdited(w) || w.hasIncompleteNodes())
+                continue;
+            if (!filter.evaluate(w))
+                continue;
+            if (!Geometry.nodeInsidePolygon(posnode, w.getNodes()))
+                continue;
+
+            areas.add(useWay(w));
+        }
+
+        return areas;
+    }
+    
     public Set<EdObject> useAllAreasInBBox(BBox bbox, IEdAreaPredicate filter) {
         Set<EdObject> areas = new HashSet<>();
 
@@ -501,7 +533,7 @@ public class WayEditor {
             // Way is member of a multipolygon, so it was already implicitly included
             // as a part of EdMultipolygon above, or it's a tagged member of
             // multipolygon that doesn't match given filter. Which can be dangerous
-            // and we ignore it (for now).
+            // and we ignore it (for now). #### review this note
             if (w.isMemberOfAnyMultipolygon())
                 continue;
             

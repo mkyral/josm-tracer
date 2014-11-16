@@ -168,6 +168,10 @@ public abstract class EdObject {
         return currentPrimitive().isTagged();
     }
 
+    public final String get(String key) {
+        return currentPrimitive().get(key);
+    }
+    
     /**
      * Checks if the given EdObject is the only one referrer of this EdObject.
      * That is, if the object has only this given editor referrer and no
