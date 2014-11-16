@@ -24,7 +24,7 @@ public class AngPolygonClipper {
     private List<List<EdNode>> m_outers;
     private List<List<EdNode>> m_inners;
     
-    private Map<Point2d, EdNode> m_nodesMap;
+    private Map<LatLon, EdNode> m_nodesMap;
 
     public AngPolygonClipper (WayEditor editor) {
         
@@ -33,7 +33,6 @@ public class AngPolygonClipper {
         m_outers = null;
         m_inners = null;
         m_nodesMap = null;
-        
     }
 
     public List<List<EdNode>> outerPolygons() {
@@ -54,7 +53,7 @@ public class AngPolygonClipper {
         // initialize collections
         m_outers = new ArrayList<>();
         m_inners = new ArrayList<>();
-        m_nodesMap = new HashMap<>();        
+        m_nodesMap = new HashMap<>();
     
         try {
        
@@ -201,20 +200,26 @@ public class AngPolygonClipper {
         long x = (long)(en.getX() * fixedPointScale);
         long y = (long)(en.getY() * fixedPointScale);
         Point2d pt = new Point2d(x, y);
-        m_nodesMap.put(pt, node);
+        m_nodesMap.put(node.getCoor(), node);
         return pt;
     }
     
     private EdNode point2dToNode(Point2d pt) {
-        EdNode node = m_nodesMap.get(pt);
-        if (node != null)
-            return node;
+        // perform inverse projection to LatLon
         double x = ((double)pt.X) / fixedPointScale;
         double y = ((double)pt.Y) / fixedPointScale;
         EastNorth en = new EastNorth (x,y);
-        LatLon ll = Projections.inverseProject(en);
+        LatLon ll = Projections.inverseProject(en).getRoundedToOsmPrecision();
+
+        // lookup in LatLon map, projection + rounding errors
+        // might cause false negative match in point map
+        EdNode node = m_nodesMap.get(ll);
+        if (node != null)
+            return node;
+
+        // create new node
         node = m_editor.newNode(ll);
-        m_nodesMap.put(pt, node);
+        m_nodesMap.put(ll, node);
         return node;
     }
     
