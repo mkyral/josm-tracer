@@ -303,7 +303,6 @@ public class LpisModule implements TracerModule  {
 
             // Create outer way
             List<EdNode> outer_nodes = new ArrayList<> ();
-            LatLon prev_coor = null;
             // m_record.getCoorCount() - 1 - omit last node
             for (int i = 0; i < m_record.getOuter().size() - 1; i++) {
                 EdNode node = editor.newNode(m_record.getOuter().get(i));
@@ -313,10 +312,7 @@ public class LpisModule implements TracerModule  {
                     return;
                 }
 
-                if (!geom.duplicateNodes(node.getCoor(), prev_coor)) {
-                    outer_nodes.add(node);
-                    prev_coor = node.getCoor();
-                }
+                outer_nodes.add(node);
             }
 
             // close way
@@ -339,13 +335,9 @@ public class LpisModule implements TracerModule  {
 
                 for (List<LatLon> in: m_record.getInners()) {
                     List<EdNode> inner_nodes = new ArrayList<>(in.size());
-                    prev_coor = null;
                     for (int j = 0; j < in.size() - 1; j++) {
                         EdNode node = editor.newNode(in.get(j));
-                        if (!geom.duplicateNodes(node.getCoor(), prev_coor)) {
-                            inner_nodes.add(node);
-                            prev_coor = node.getCoor();
-                        }
+                        inner_nodes.add(node);
                     }
 
                     // close way
