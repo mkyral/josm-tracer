@@ -38,6 +38,7 @@ package org.openstreetmap.josm.plugins.tracer.clipper;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Collections;
 import java.util.List;
 
 enum JoinType { jtSquare, jtRound, jtMiter };
@@ -2445,7 +2446,7 @@ public class Clipper extends ClipperBase {
         //pre-condition: intersections are sorted bottom-most first.
         //Now it's crucial that intersections are made only between adjacent edges,
         //so to ensure this the order of intersections may need adjusting ...
-        m_IntersectList.sort(m_IntersectNodeComparer);
+        Collections.sort(m_IntersectList, m_IntersectNodeComparer);
 
         copyAELToSEL();
         int cnt = m_IntersectList.size();

@@ -74,12 +74,7 @@ public class Point2d {
     public Point2d clone() {
         return new Point2d(this);
     }
-    
-    @Override
-    public int hashCode() {
-        return Long.hashCode(X) ^ Long.hashCode(Y);
-    }
-    
+        
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -92,6 +87,14 @@ public class Point2d {
         if (Y != other.Y)
             return false;
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 83 * hash + (int) (this.X ^ (this.X >>> 32));
+        hash = 83 * hash + (int) (this.Y ^ (this.Y >>> 32));
+        return hash;
     }
 
 }
