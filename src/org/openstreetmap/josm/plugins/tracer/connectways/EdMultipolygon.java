@@ -7,6 +7,7 @@ import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
+import org.openstreetmap.josm.data.osm.Way;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 // #### TODO: explicitly enforce that every way in a multipolygon is not a member of another edited or external multipolygon.
@@ -138,6 +139,48 @@ public class EdMultipolygon extends EdObject {
         return m_relation;
     }
 
+    @Override
+    protected void updateModifiedFlag() {
+        checkEditable();
+        if (!hasOriginal() || isDeleted() || !isModified())
+            return;
+        Relation orig = originalMultipolygon();
+        
+        if (orig.getUniqueId() != m_relation.getUniqueId())
+            return;
+        if (!hasIdenticalKeys(orig))
+            return;
+        if (orig.getMembersCount() != m_outerWays.size() + m_innerWays.size())
+            return;
+
+        for (RelationMember member: orig.getMembers()) {            
+            if (!member.isWay() || !member.hasRole())
+                throw new AssertionError("Original relation changed since ctor checks!");
+            switch (member.getRole()) {
+                case "outer":
+                    if (!containsWayWithUniqueId(m_outerWays, member.getWay().getUniqueId()))
+                        return;
+                    break;
+                case "inner":
+                    if (!containsWayWithUniqueId(m_innerWays, member.getWay().getUniqueId()))
+                        return;
+                    break;
+                default:
+                    throw new AssertionError("Original relation changed since ctor checks!");
+            }
+        }
+        
+        resetModified();
+    }
+    
+    private boolean containsWayWithUniqueId(List<EdWay> ways, long id) {
+        for (EdWay w: ways) {
+            if (w.getUniqueId() == id)
+                return true;
+        }
+        return false;
+    }
+    
     @Override
     public void setKeys(Map<String,String> keys) {
         checkEditable();

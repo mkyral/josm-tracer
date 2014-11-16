@@ -60,6 +60,10 @@ public abstract class EdObject {
         m_finalized = true;
     }
 
+    protected void resetModified() {
+        m_modified = false;
+    }
+    
     public boolean isFinalized() {
         return m_finalized;
     }
@@ -185,6 +189,15 @@ public abstract class EdObject {
         return new HashMap<> (currentPrimitive().getKeys());
     }
     
+    protected boolean hasIdenticalKeys(OsmPrimitive other) {
+        checkEditable();
+        OsmPrimitive cur = currentPrimitive();
+        if (cur.hasKeys() != other.hasKeys())
+            return false;
+        return cur.getKeys().equals(other.getKeys());
+    }
+    
+    abstract void updateModifiedFlag();
     
     /**
      * Checks if the given EdObject is the only one referrer of this EdObject.

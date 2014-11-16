@@ -170,6 +170,27 @@ public class EdWay extends EdObject {
         }
         return m_way;
     }
+    
+    @Override
+    protected void updateModifiedFlag() {
+        checkEditable();
+        if (!hasOriginal() || isDeleted() || !isModified())
+            return;
+        Way orig = originalWay();        
+        
+        if (orig.getUniqueId() != m_way.getUniqueId())
+            return;
+        if (orig.getNodesCount() != m_nodes.size())
+            return;
+        for (int i = 0; i < m_nodes.size(); i++) {
+            if (m_nodes.get(i).getUniqueId() != orig.getNode(i).getUniqueId())
+                return;
+        }
+        if (!hasIdenticalKeys(orig))
+            return;
+        
+        resetModified();
+    }
 
     /**
      * Returns a final way that can be referenced in EdMultipolygon finalization.

@@ -83,6 +83,21 @@ public class EdNode extends EdObject {
         return m_node;
     }
     
+    @Override
+    void updateModifiedFlag() {
+        checkEditable();
+        if (!hasOriginal() || isDeleted() || !isModified())
+            return;
+        Node orig = originalNode();
+
+        if (orig.getUniqueId() != m_node.getUniqueId())
+            return;
+        if (!orig.getCoor().equals(m_node.getCoor()))
+            return;
+        if (!hasIdenticalKeys(orig))
+            return;
+        resetModified();
+    }
     
     /**
      * Returns all way referrers of this EdNode that match given

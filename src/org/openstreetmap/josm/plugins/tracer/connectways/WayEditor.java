@@ -306,10 +306,21 @@ public class WayEditor {
         return node3;
     }
 
+    public void updateModifiedFlags() {
+        for (EdNode n: m_nodes)
+            n.updateModifiedFlag();
+        for (EdWay w: m_ways)
+            w.updateModifiedFlag();
+        for (EdMultipolygon mp: m_multipolygons)
+            mp.updateModifiedFlag();
+    }
+    
     public List<Command> finalizeEdit () {
 
         System.out.println("WayEditor.finalizeEdit(): ");
         
+        // reset modified flags, if possible
+        updateModifiedFlags();
         
         // get ways and nodes required in the resulting DataSet
         Set<EdWay> required_ways = new HashSet<> ();
