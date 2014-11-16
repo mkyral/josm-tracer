@@ -294,9 +294,8 @@ public class LpisModule implements TracerModule  {
                 retrace_object = repl.a;
                 boolean ambiguous_retrace = repl.b;
 
-                // #### Don't allow any retrace, yet
-                if (ambiguous_retrace || retrace_object != null) {
-                    this.addPostTraceNotification(tr("LPIS polygon already exists, retracing is not supported yet."));
+                if (ambiguous_retrace) {
+                    this.addPostTraceNotification(tr("Multiple existing LPIS polygons found, retrace is not possible."));
                     return;
                 }
             }
@@ -308,9 +307,20 @@ public class LpisModule implements TracerModule  {
             EdWay outer_way = trobj.a;
             EdMultipolygon multipolygon = trobj.b;
 
+            // Retrace simple ways - just use the old way
+            if (retrace_object != null) {
+                if (!(retrace_object instanceof EdWay) || (multipolygon != null)) {
+                    this.addPostTraceNotification(tr("Multipolygon retrace is not supported yet."));
+                    return;
+                }
+                EdWay retrace_way = (EdWay)retrace_object;
+                retrace_way.setNodes(outer_way.getNodes());
+                outer_way = retrace_way;
+            }
+            
             // Tag object
             tagTracedObject(multipolygon == null ? outer_way : multipolygon);
-            
+
             // Connect to touching nodes of near landuse polygons            
             if (multipolygon == null)
                 connectExistingTouchingNodesSimple(editor, outer_way);
@@ -368,7 +378,16 @@ public class LpisModule implements TracerModule  {
         }
 
         private void tagTracedObject (EdObject obj) {
-            Map <String, String> map = new HashMap <> (m_record.getUsageOsm());
+
+            Map <String, String> map = obj.getKeys();
+            
+            Map <String, String> new_keys = new HashMap <> (m_record.getUsageOsm());
+            for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
+                map.put(new_key.getKey(), new_key.getValue());
+            }
+            
+            // #### delete any existing retraced tags??
+            
             map.put("source", source);
             map.put("ref", Long.toString(m_record.getLpisID()));
             obj.setKeys(map);
