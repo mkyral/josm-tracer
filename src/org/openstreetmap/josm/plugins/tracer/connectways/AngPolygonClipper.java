@@ -56,8 +56,10 @@ public class AngPolygonClipper {
         m_nodesMap = new HashMap<>();
     
         try {
-       
-            Clipper clipper = new Clipper(Clipper.ioStrictlySimple);
+            // Note: always preserve collinear nodes! Otherwise, clipper disconnects
+            // non-intersecting touching nodes of the subject from other polygons!
+            
+            Clipper clipper = new Clipper(Clipper.ioStrictlySimple + Clipper.ioPreserveCollinear);
             clipper.addPath(wayToPath(clip_way), PolyType.ptClip, true);
             clipper.addPaths(edObjectToPaths(subj), PolyType.ptSubject, true);
 
