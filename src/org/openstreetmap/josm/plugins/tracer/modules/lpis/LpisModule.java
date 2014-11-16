@@ -301,56 +301,20 @@ public class LpisModule implements TracerModule  {
                 }
             }
 
-            // Create outer way
-            List<EdNode> outer_nodes = new ArrayList<> ();
-            // m_record.getCoorCount() - 1 - omit last node
-            for (int i = 0; i < m_record.getOuter().size() - 1; i++) {
-                EdNode node = editor.newNode(m_record.getOuter().get(i));
+            // Create traced object
+            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
+            if (trobj == null)
+                return;
+            EdWay outer_way = trobj.a;
+            EdMultipolygon multipolygon = trobj.b;
+            EdObject traced_object = multipolygon == null ? outer_way : multipolygon;
 
-                if (!editor.insideDataSourceBounds(node)) {
-                    wayIsOutsideDownloadedAreaDialog();
-                    return;
-                }
-
-                outer_nodes.add(node);
-            }
-
-            // close way
-            if (outer_nodes.size() > 0)
-                outer_nodes.add(outer_nodes.get(0));
-            EdWay outer_way = editor.newWay(outer_nodes);
-
-            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
-            outer_way.reuseExistingNodes(reuse_filter);
-
-            if (!m_record.hasInners())
+            // Tag object
+            if (multipolygon == null)
                 tagOuterWay(outer_way);
-
-            // Create multipolygon?
-            EdMultipolygon multipolygon = null;
-            if (m_record.hasInners()) {
-                multipolygon = editor.newMultipolygon();
+            else
                 tagMultipolygon(multipolygon);
-                multipolygon.addOuterWay(outer_way);
-
-                for (List<LatLon> in: m_record.getInners()) {
-                    List<EdNode> inner_nodes = new ArrayList<>(in.size());
-                    for (int j = 0; j < in.size() - 1; j++) {
-                        EdNode node = editor.newNode(in.get(j));
-                        inner_nodes.add(node);
-                    }
-
-                    // close way
-                    if (!inner_nodes.isEmpty())
-                        inner_nodes.add(inner_nodes.get(0));
-                    EdWay way = editor.newWay(inner_nodes);
-
-                    way.reuseExistingNodes(reuse_filter);
-
-                    multipolygon.addInnerWay(way);
-                }
-            }
-
+            
             // Connect to touching nodes of near landuse polygons            
             if (multipolygon == null)
                 connectExistingTouchingNodesSimple(editor, outer_way);
@@ -421,6 +385,58 @@ public class LpisModule implements TracerModule  {
             way.setKeys(map);
         }
 
+        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
+
+            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);           
+            
+            // Prepare outer way nodes
+            List<LatLon> outer_lls = m_record.getOuter();
+            List<EdNode> outer_nodes = new ArrayList<> (outer_lls.size());
+            for (int i = 0; i < outer_lls.size() - 1; i++) {
+                EdNode node = editor.newNode(outer_lls.get(i));
+
+                if (!editor.insideDataSourceBounds(node)) {
+                    wayIsOutsideDownloadedAreaDialog();
+                    return null;
+                }
+
+                outer_nodes.add(node);
+            }
+            if (outer_nodes.size() < 3)
+                throw new AssertionError(tr("Outer way consists of less than 3 nodes"));
+            
+            // Close & create outer way
+            outer_nodes.add(outer_nodes.get(0));
+            EdWay outer_way = editor.newWay(outer_nodes);
+            outer_way.reuseExistingNodes(reuse_filter);
+
+            // Simple way?
+            if (!m_record.hasInners())
+                return new Pair<>(outer_way, null);
+
+            // Create multipolygon
+            EdMultipolygon multipolygon = editor.newMultipolygon();
+            multipolygon.addOuterWay(outer_way);
+
+            for (List<LatLon> inner_lls: m_record.getInners()) {
+                List<EdNode> inner_nodes = new ArrayList<>(inner_lls.size());
+                for (int i = 0; i < inner_lls.size() - 1; i++) {
+                    inner_nodes.add(editor.newNode(inner_lls.get(i)));
+                }
+
+                // Close & create inner way
+                if (inner_nodes.size() < 3)
+                    throw new AssertionError(tr("Inner way consists of less than 3 nodes"));
+                inner_nodes.add(inner_nodes.get(0));
+                EdWay way = editor.newWay(inner_nodes);
+                way.reuseExistingNodes(reuse_filter);
+
+                multipolygon.addInnerWay(way);
+            }
+            
+            return new Pair<>(outer_way, multipolygon);
+        }
+        
         private Pair<EdObject, Boolean> getObjectToRetrace(WayEditor editor, LatLon pos) {
             AreaPredicate filter = new AreaPredicate(m_retraceAreaMatch);
             Set<EdObject> areas = editor.useNonEditedAreasContainingPoint(pos, filter);
