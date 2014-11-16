@@ -202,20 +202,19 @@ public class AngPolygonClipper {
         long x = (long)(en.getX() * fixedPointScale);
         long y = (long)(en.getY() * fixedPointScale);
         Point2d pt = new Point2d(x, y);
-        m_nodesMap.put(node.getCoor(), node);
+        m_nodesMap.put(node.getCoor().getRoundedToOsmPrecision(), node);
         return pt;
     }
-    
+
     private EdNode point2dToNode(Point2d pt) {
         // perform inverse projection to LatLon
         double x = ((double)pt.X) / fixedPointScale;
         double y = ((double)pt.Y) / fixedPointScale;
         EastNorth en = new EastNorth (x,y);
-        LatLon ll = Projections.inverseProject(en).getRoundedToOsmPrecision();
+        LatLon ll = Projections.inverseProject(en);
 
-        // lookup in LatLon map, projection + rounding errors
-        // might cause false negative match in point map
-        EdNode node = m_nodesMap.get(ll);
+        // lookup in LatLon map
+        EdNode node = m_nodesMap.get(ll.getRoundedToOsmPrecision());
         if (node != null)
             return node;
 
