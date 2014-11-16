@@ -309,7 +309,7 @@ public class LpisModule implements TracerModule  {
 
             // Retrace simple ways - just use the old way
             if (retrace_object != null) {
-                if (!(retrace_object instanceof EdWay) || (multipolygon != null)) {
+                if ((multipolygon != null) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
                     this.addPostTraceNotification(tr("Multipolygon retrace is not supported yet."));
                     return;
                 }

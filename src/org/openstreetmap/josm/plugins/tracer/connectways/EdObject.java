@@ -274,6 +274,10 @@ public abstract class EdObject {
         return false;
     }
     
+    public boolean hasReferrers() {
+        return hasEditorReferrers() || hasExternalReferrers();
+    }
+    
     public abstract BBox getBBox();
     
     public BBox getBBox(double oversize) {
