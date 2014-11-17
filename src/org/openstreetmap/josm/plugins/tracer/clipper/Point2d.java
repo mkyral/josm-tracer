@@ -43,38 +43,38 @@ public class Point2d {
     public Point2d() {
         X = 0;
         Y = 0;
-    }  
-    
+    }
+
     public Point2d(long x, long y) {
         X = x;
         Y = y;
     }
-    
+
     public Point2d(Point2d p) {
         X = p.X;
         Y = p.Y;
-    }    
-    
+    }
+
     public boolean equals(Point2d p) {
-        return p != null && 
-                p.X == this.X && 
+        return p != null &&
+                p.X == this.X &&
                 p.Y == this.Y;
     }
-    
+
     public boolean not_equals(Point2d p) {
         return !this.equals(p);
     }
-    
+
     public void assign(Point2d p) {
         X = p.X;
         Y = p.Y;
     }
-     
+
     @Override
     public Point2d clone() {
         return new Point2d(this);
     }
-        
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj)

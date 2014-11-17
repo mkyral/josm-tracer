@@ -33,7 +33,7 @@ public class MergeIdenticalWays {
     private final WayEditor m_editor;
     private final IEdAreaPredicate m_filter;
     private final IEdAreaPredicate m_negatedFilter;
-    
+
     public MergeIdenticalWays (WayEditor editor, IEdAreaPredicate filter) {
         m_editor = editor;
         m_filter = filter;
@@ -43,18 +43,18 @@ public class MergeIdenticalWays {
     public EdWay mergeWays(Set<EdWay> ways, boolean allow_inverted_orientation, EdWay watch_way) {
         Set<EdWay> inserted = new HashSet<>();
         List<List<EdWay>> bundles = new ArrayList<>(ways.size());
-        
+
         for (EdWay way: ways) {
             // skip already included ways and ways that don't match given predicate
             if (inserted.contains(way) || !m_filter.evaluate(way))
                 continue;
-            
+
             // get all matching referrers of a way's node (mergeable ways are expected
             // to have EdNode-identical geometry, so all of them must obviously be referrers
             // of any way's node).
             EdNode node = way.getNode(0);
             List<EdWay> referrers = node.getAllAreaWayReferrers(m_filter);
-            
+
             List<EdWay> bundle = new ArrayList<>();
             for (EdWay refway: referrers) {
                 if (refway == way)
@@ -74,7 +74,7 @@ public class MergeIdenticalWays {
                 bundles.add(bundle);
             }
         }
-        
+
         // For every bundle of identical ways, try to merge them into minimal
         // possible number of ways.
         for (List<EdWay> bundle: bundles) {
@@ -98,10 +98,10 @@ public class MergeIdenticalWays {
                 }
             }
         }
-        
+
         return watch_way;
     }
-        
+
     /**
      * @param way1 first way to merge
      * @param way2 second way to merge
@@ -115,7 +115,7 @@ public class MergeIdenticalWays {
         else
             return mergeIdenticalWayTo(way1, way2) ? 1 : 0;
     }
-    
+
     /**
      * Selects which of the given ways should be the destination way of merge.
      * It prefers original ways over newly added ways and tagged ways over
@@ -131,7 +131,7 @@ public class MergeIdenticalWays {
             return false;
         return way1.isTagged();
     }
-    
+
     private boolean mergeIdenticalWayTo(EdWay src, EdWay dst) {
         // Merge all interesting tags into destination EdWay.
         // If there's a collision, give up and don't merge ways.
@@ -149,24 +149,24 @@ public class MergeIdenticalWays {
         dst.setKeys(tags);
 
         System.out.println("Merging identical ways: " + Long.toString(src.getUniqueId()) + " => " + Long.toString(dst.getUniqueId()));
-        
+
         // load all external multipolygons
         // (we've already checked that all referrers match the area filter)
         List<Relation> rels = src.getExternalReferrers(Relation.class);
         for (Relation rel: rels)
-            m_editor.useMultipolygon(rel);        
-        
+            m_editor.useMultipolygon(rel);
+
         // replace all relation memberships of the source EdWay with destination EdWay memberships
         List<EdMultipolygon> mps = src.getEditorReferrers(EdMultipolygon.class);
         for (EdMultipolygon mp: mps)
             mp.replaceWay (src, dst);
-        
+
         // remove all tags of the source EdWay
         src.setKeys(new HashMap<String,String>());
-                
+
         return true;
     }
-    
+
     private Pair<Boolean, String> mergeTagValues(String key, Map<String, String> set1, Map<String, String> set2) {
         String val1 = set1.get(key);
         String val2 = set2.get(key);
@@ -180,16 +180,16 @@ public class MergeIdenticalWays {
             System.out.println("Cannot merge interesting tags: " + key + "=" + val1 + ", " + key + "=" + val2);
             return new Pair<>(false, null);
         }
-        
+
         if (key.equals("source") || key.equals("fixme"))
             return new Pair<>(true, combineTagValues(val1, val2));
-        
+
         return new Pair<>(true, val1);
     }
-    
+
     private String combineTagValues(String val1, String val2) {
         String[] list1 = val1.split(";");
-        String[] list2 = val2.split(";");        
+        String[] list2 = val2.split(";");
         Set<String> set = new HashSet<>();
         for (String s: list1) {
             s = s.trim();
@@ -202,7 +202,7 @@ public class MergeIdenticalWays {
             if (s.isEmpty())
                 continue;
             set.add(s);
-        }        
+        }
         StringBuilder sb = new StringBuilder();
         for (String s: set) {
             if (sb.length() > 0)

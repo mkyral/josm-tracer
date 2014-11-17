@@ -100,7 +100,7 @@ public class ClassicModule implements TracerModule {
     {
         return new PleaseWaitRunnable(tr("Tracing")) {
             protected void realRun() throws SAXException {
-                ClassicModule.this.traceImpl(pos, ctrl, alt, shift, 
+                ClassicModule.this.traceImpl(pos, ctrl, alt, shift,
                     progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
             }
 

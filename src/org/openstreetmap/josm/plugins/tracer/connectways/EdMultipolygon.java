@@ -51,7 +51,7 @@ public class EdMultipolygon extends EdObject {
 
         m_outerWays = new ArrayList<>();
         m_innerWays = new ArrayList<>();
-        
+
         for (RelationMember member: original_rel.getMembers()) {
             if (!member.isWay())
                 throw new IllegalArgumentException(tr("Cannot edit multipolygon with non-Way members!"));
@@ -68,13 +68,13 @@ public class EdMultipolygon extends EdObject {
                     throw new IllegalArgumentException(tr("Cannot edit multipolygon member with unknown role: {0}", member.getRole()));
             }
         }
-        
+
         for (EdWay w: m_outerWays)
             w.addRef(this);
         for (EdWay w: m_innerWays)
             w.addRef(this);
     }
-    
+
     public void addOuterWay(EdWay edway) {
         checkEditable();
         if (edway == null)
@@ -111,24 +111,24 @@ public class EdMultipolygon extends EdObject {
             throw new IllegalArgumentException();
         if (!m_outerWays.remove(edway))
             return false;
-        
+
         edway.removeRef(this);
         setModified();
         return true;
     }
-    
+
     public boolean removeInnerWay(EdWay edway) {
         checkEditable();
         if (edway == null)
             throw new IllegalArgumentException();
         if (!m_innerWays.remove(edway))
             return false;
-        
+
         edway.removeRef(this);
         setModified();
-        return true;        
+        return true;
     }
-    
+
     public Relation originalMultipolygon() {
         if (!hasOriginal())
             throw new IllegalStateException(tr("EdMultipolygon has no original Relation"));
@@ -161,7 +161,7 @@ public class EdMultipolygon extends EdObject {
         if (!hasOriginal() || isDeleted() || !isModified())
             return;
         Relation orig = originalMultipolygon();
-        
+
         if (orig.getUniqueId() != m_relation.getUniqueId())
             return;
         if (!hasIdenticalKeys(orig))
@@ -169,7 +169,7 @@ public class EdMultipolygon extends EdObject {
         if (orig.getMembersCount() != m_outerWays.size() + m_innerWays.size())
             return;
 
-        for (RelationMember member: orig.getMembers()) {            
+        for (RelationMember member: orig.getMembers()) {
             if (!member.isWay() || !member.hasRole())
                 throw new AssertionError("Original relation changed since ctor checks!");
             switch (member.getRole()) {
@@ -185,10 +185,10 @@ public class EdMultipolygon extends EdObject {
                     throw new AssertionError("Original relation changed since ctor checks!");
             }
         }
-        
+
         resetModified();
     }
-    
+
     private boolean containsWayWithUniqueId(List<EdWay> ways, long id) {
         for (EdWay w: ways) {
             if (w.getUniqueId() == id)
@@ -196,7 +196,7 @@ public class EdMultipolygon extends EdObject {
         }
         return false;
     }
-    
+
     @Override
     public void setKeys(Map<String,String> keys) {
         checkEditable();
@@ -231,7 +231,7 @@ public class EdMultipolygon extends EdObject {
 
     public boolean replaceWay(EdWay src, EdWay dst) {
         checkEditable();
-        
+
         int i = m_outerWays.indexOf(src);
         if (i >= 0) {
             src.removeRef(this);
@@ -250,10 +250,10 @@ public class EdMultipolygon extends EdObject {
             setModified();
             return true;
         }
-        
+
         return false;
     }
-        
+
     public boolean containsWay(EdWay way) {
         checkEditable();
         for (EdWay w: m_outerWays)
@@ -264,7 +264,7 @@ public class EdMultipolygon extends EdObject {
                 return true;
         return false;
     }
-    
+
     public boolean containsNonClosedWays() {
         checkEditable();
         for (EdWay w: m_outerWays)
@@ -273,20 +273,20 @@ public class EdMultipolygon extends EdObject {
         for (EdWay w: m_innerWays)
             if (!w.isClosed())
                 return true;
-        return false;        
-    }    
-    
+        return false;
+    }
+
     @Override
     protected OsmPrimitive currentPrimitive() {
         return m_relation;
     }
-    
+
     @Override
     public BBox getBBox() {
         checkNotDeleted();
         if (isFinalized())
             return m_relation.getBBox();
-        
+
         BBox box = null;
         for (EdWay w: m_outerWays) {
             if (box == null)
@@ -301,12 +301,12 @@ public class EdMultipolygon extends EdObject {
             else
                 box.add(w.getBBox());
         }
-        
+
         if (box == null)
             throw new IllegalStateException("EdMultipolygon contains no ways");
         return box;
     }
-    
+
     /**
      * Add all existing nodes that touch this multipolygon (i.e. are very close to
      * any of its ways' segments) and satisfy given predicate.
@@ -328,7 +328,7 @@ public class EdMultipolygon extends EdObject {
         for (EdWay way: m_innerWays)
             if (way.connectExistingTouchingNodes(filter))
                 r = true;
-        
+
         return r;
-    }    
+    }
 }

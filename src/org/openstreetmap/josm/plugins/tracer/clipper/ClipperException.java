@@ -40,5 +40,5 @@ public class ClipperException extends Exception {
 
     public ClipperException(String message) {
         super(message);
-    }    
+    }
 }

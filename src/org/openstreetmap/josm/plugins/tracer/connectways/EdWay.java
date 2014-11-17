@@ -124,7 +124,7 @@ public class EdWay extends EdObject {
         m_nodes.add(offs, ednode); // throws exception if offs is out or range
 
         setModified();
-        ednode.addRef(this);        
+        ednode.addRef(this);
     }
 
     public int getNodesCount() {
@@ -144,7 +144,7 @@ public class EdWay extends EdObject {
     @Override
     protected OsmPrimitive currentPrimitive() {
         return m_way;
-    }    
+    }
 
     public Way originalWay() {
         if (!hasOriginal())
@@ -166,19 +166,19 @@ public class EdWay extends EdObject {
             ArrayList<Node> nodes = new ArrayList<>(m_nodes.size());
             for (EdNode en: m_nodes)
                 nodes.add(en.finalNode());
-            fin.setNodes(nodes);            
+            fin.setNodes(nodes);
             m_way = fin;
         }
         return m_way;
     }
-    
+
     @Override
     protected void updateModifiedFlag() {
         checkEditable();
         if (!hasOriginal() || isDeleted() || !isModified())
             return;
-        Way orig = originalWay();        
-        
+        Way orig = originalWay();
+
         if (orig.getUniqueId() != m_way.getUniqueId())
             return;
         if (orig.getNodesCount() != m_nodes.size())
@@ -189,7 +189,7 @@ public class EdWay extends EdObject {
         }
         if (!hasIdenticalKeys(orig))
             return;
-        
+
         resetModified();
     }
 
@@ -201,7 +201,7 @@ public class EdWay extends EdObject {
      * just copies it's contents, EdMultipolygon must be finalized with a reference to
      * the original way. Command ordering in WayEditor.finalizeEdit() guarantees that
      * the original way is changed prior the multipolygon uses it.
-     * @return final Way 
+     * @return final Way
      */
     Way finalReferenceableWay() {
         checkNotDeleted();
@@ -211,7 +211,7 @@ public class EdWay extends EdObject {
         else
             return fin;
     }
-    
+
     @Override
     public BBox getBBox() {
         checkNotDeleted();
@@ -286,13 +286,13 @@ public class EdWay extends EdObject {
     }
 
 
-    
+
     /**
      * Add all nodes occurring in other EdWay that touch this way.
      * Nodes are added to the right positions into way segments.
      * This function doesn't impose any additional restrictions to matching nodes,
      * except those provided by "filter" predicate.
-     * 
+     *
      * @param other EdWay whose nodes will be tested and added
      * @param filter predicate to rule out unwanted nodes
      * @return true if any touching nodes were added; false if no nodes
@@ -304,10 +304,10 @@ public class EdWay extends EdObject {
 
         if (this == other)
             return false;
-        
-        final double tolerance_degs = getEditor().geomUtils().pointOnLineToleranceDegrees();        
+
+        final double tolerance_degs = getEditor().geomUtils().pointOnLineToleranceDegrees();
         final BBox way_bbox = this.getBBox(tolerance_degs);
-        
+
         // filter nodes
         Set<EdNode> other_nodes = new HashSet<>();
         for (EdNode node: other.m_nodes) {
@@ -316,21 +316,21 @@ public class EdWay extends EdObject {
             if (filter.evaluate(node))
                other_nodes.add(node);
         }
-        
+
         if (other_nodes.isEmpty())
             return false;
-        
+
         Map<EdNode, Pair<Double, Integer>> nodes_map = new HashMap<>();
 
         // get every node touching the way, assign it to closest way segment
         for (int i = 0; i < m_nodes.size() - 1; i++) {
             final EdNode x = m_nodes.get(i);
             final EdNode y = m_nodes.get(i+1);
-            
+
             BBox seg_bbox = new BBox(x.currentNodeUnsafe());
             seg_bbox.add(y.getCoor());
             BBoxUtils.extendBBox(seg_bbox, tolerance_degs);
-            
+
             for (EdNode node: other_nodes) {
                 if (!seg_bbox.bounds(node.getCoor()))
                     continue;
@@ -346,7 +346,7 @@ public class EdWay extends EdObject {
 
         if (nodes_map.size() <= 0)
             return false;
-        
+
         insertTouchingNodesIntoWaySegments(nodes_map);
         return true;
     }
@@ -385,7 +385,7 @@ public class EdWay extends EdObject {
             }
         }
 
-        this.setNodes(new_nodes);        
+        this.setNodes(new_nodes);
     }
 
     /**
@@ -408,7 +408,7 @@ public class EdWay extends EdObject {
         for (Relation rel: relations)
             if (MultipolygonMatch.match(rel))
                 return true;
-        
+
         return false;
     }
 
@@ -430,8 +430,8 @@ public class EdWay extends EdObject {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 if (identicalEdNodeGeometryFromOffsets(m_nodes, list, n, i, j, false))
-                    return true;                
-                if (allow_inverted_orientation && 
+                    return true;
+                if (allow_inverted_orientation &&
                     identicalEdNodeGeometryFromOffsets(m_nodes, list, n, i, j, true))
                     return true;
             }
@@ -451,7 +451,7 @@ public class EdWay extends EdObject {
         }
         return true;
     }
-    
+
     /**
      * Returns the number of unique nodes that occur both in this way
      * and in the given list of nodes.
@@ -474,7 +474,7 @@ public class EdWay extends EdObject {
         }
         return count;
     }
-    
+
     /**
      * Returns true if EdWay has at least one referrer that matches
      * given area predicate. Both editor and external referrers are tested.
@@ -487,13 +487,13 @@ public class EdWay extends EdObject {
             if (filter.evaluate(edmp))
                 return true;
         }
-        
+
         List<Relation> rels = this.getExternalReferrers(Relation.class);
         for (Relation rel: rels) {
             if (filter.evaluate(rel))
                 return true;
         }
-        
+
         return false;
     }
 }

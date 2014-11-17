@@ -231,16 +231,16 @@ public class LpisRecord {
     public BBox getBBox() {
         List<LatLon> outer = getOuter();
         LatLon p0 = outer.get(0);
-      
+
         BBox bbox = new BBox(p0.lon(), p0.lat());
         for (int i = 1; i < outer.size(); i++) {
             LatLon p = outer.get(i);
             bbox.add(p.lon(), p.lat());
         }
- 
+
         return bbox;
     }
-  
+
     /**
      *  Return usage
      *  @return usage

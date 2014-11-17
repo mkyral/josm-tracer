@@ -140,38 +140,38 @@ class ClipperBase {
 
     protected static final long loRange = 0x3FFFFFFF;
     protected static final long hiRange = 0x3FFFFFFFFFFFFFFFL;
-    
+
     private boolean m_preserveCollinear = false;
-    
+
     public boolean getPreserveCollinear() {
         return m_preserveCollinear;
     }
-    
+
     public void setPreserveCollinear(boolean v) {
         m_preserveCollinear = v;
     }
-    
+
     static boolean nearZero(double val) {
         return (val > -tolerance) && (val < tolerance);
     }
-    
+
     LocalMinima m_MinimaList;
     LocalMinima m_CurrentLM;
     List<List<TEdge>> m_edges = new ArrayList<>();
     boolean m_UseFullRange;
     boolean m_HasOpenPaths;
-    
+
     static boolean isHorizontal(TEdge e)
     {
         return e.iDelta.Y == 0;
     }
-    
+
     private static BigInteger Int128Mul(long x, long y) {
         BigInteger bx = BigInteger.valueOf(x);
         BigInteger by = BigInteger.valueOf(y);
         return bx.multiply(by);
     }
-    
+
     //------------------------------------------------------------------------------
 
     boolean pointIsVertex(Point2d pt, OutPt pp)
@@ -184,10 +184,10 @@ class ClipperBase {
             pp2 = pp2.Next;
         }
         while (pp2 != pp);
-        
+
         return false;
     }
-    
+
     boolean pointOnLineSegment(Point2d pt, Point2d linePt1, Point2d linePt2, boolean UseFullRange)
     {
       if (UseFullRange)
@@ -220,7 +220,7 @@ class ClipperBase {
         }
         return false;
     }
-    
+
     static boolean slopesEqual(TEdge e1, TEdge e2, boolean UseFullRange)
     {
         if (UseFullRange)
@@ -239,7 +239,7 @@ class ClipperBase {
         else return
           (long)(pt1.Y - pt2.Y) * (pt2.X - pt3.X) - (long)(pt1.X - pt2.X) * (pt2.Y - pt3.Y) == 0;
     }
-    
+
     //------------------------------------------------------------------------------
 
     static boolean slopesEqual(Point2d pt1, Point2d pt2, Point2d pt3, Point2d pt4, boolean UseFullRange)
@@ -250,7 +250,7 @@ class ClipperBase {
         else return
           (long)(pt1.Y - pt2.Y) * (pt3.X - pt4.X) - (long)(pt1.X - pt2.X) * (pt3.Y - pt4.Y) == 0;
     }
-    
+
     ClipperBase() //constructor (nb: no external instantiation)
     {
         m_MinimaList = null;
@@ -258,7 +258,7 @@ class ClipperBase {
         m_UseFullRange = false;
         m_HasOpenPaths = false;
     }
-    
+
     public void clear()
     {
         disposeLocalMinimaList();
@@ -266,7 +266,7 @@ class ClipperBase {
         m_UseFullRange = false;
         m_HasOpenPaths = false;
     }
-    
+
     private void disposeLocalMinimaList()
     {
         while (m_MinimaList != null)
@@ -277,31 +277,31 @@ class ClipperBase {
         }
         m_CurrentLM = null;
     }
-        
+
     boolean rangeTest(Point2d Pt, boolean useFullRange) throws ClipperException
     {
       if (useFullRange)
       {
-        if (Pt.X > hiRange || Pt.Y > hiRange || -Pt.X > hiRange || -Pt.Y > hiRange) 
+        if (Pt.X > hiRange || Pt.Y > hiRange || -Pt.X > hiRange || -Pt.Y > hiRange)
           throw new ClipperException("Coordinate outside allowed range");
       }
-      else if (Pt.X > loRange || Pt.Y > loRange || -Pt.X > loRange || -Pt.Y > loRange) 
+      else if (Pt.X > loRange || Pt.Y > loRange || -Pt.X > loRange || -Pt.Y > loRange)
       {
         useFullRange = true;
         rangeTest(Pt, useFullRange);
-      }      
+      }
       return useFullRange;
     }
-    
-    
+
+
     private void initEdge(TEdge e, TEdge eNext, TEdge ePrev, Point2d pt)
     {
       e.Next = eNext;
       e.Prev = ePrev;
       e.iCurr.assign(pt);
-      e.OutIdx = Unassigned;    
+      e.OutIdx = Unassigned;
     }
-    
+
     //------------------------------------------------------------------------------
 
     private void initEdge2(TEdge e, PolyType polyType)
@@ -319,7 +319,7 @@ class ClipperBase {
       setDx(e);
       e.PolyTyp = polyType;
     }
-    
+
     private TEdge findNextLocMin(TEdge E)
     {
       TEdge E2;
@@ -336,9 +336,9 @@ class ClipperBase {
       }
       return E;
     }
-    
-    
-    
+
+
+
     private TEdge processBound(TEdge E, boolean LeftBoundIsForward)
     {
       TEdge EStart, Result = E;
@@ -423,11 +423,11 @@ class ClipperBase {
         while (E != Result)
         {
           E.NextInLML = E.Next;
-          if (E.Dx == horizontal && E != EStart && E.iBot.X != E.Prev.iTop.X) 
+          if (E.Dx == horizontal && E != EStart && E.iBot.X != E.Prev.iTop.X)
             reverseHorizontal(E);
           E = E.Next;
         }
-        if (E.Dx == horizontal && E != EStart && E.iBot.X != E.Prev.iTop.X) 
+        if (E.Dx == horizontal && E != EStart && E.iBot.X != E.Prev.iTop.X)
           reverseHorizontal(E);
         Result = Result.Next; //move to the edge just beyond current bound
       }
@@ -449,18 +449,18 @@ class ClipperBase {
         while (E != Result)
         {
           E.NextInLML = E.Prev;
-          if (E.Dx == horizontal && E != EStart && E.iBot.X != E.Next.iTop.X) 
+          if (E.Dx == horizontal && E != EStart && E.iBot.X != E.Next.iTop.X)
             reverseHorizontal(E);
           E = E.Prev;
         }
-        if (E.Dx == horizontal && E != EStart && E.iBot.X != E.Next.iTop.X) 
+        if (E.Dx == horizontal && E != EStart && E.iBot.X != E.Next.iTop.X)
           reverseHorizontal(E);
         Result = Result.Prev; //move to the edge just beyond current bound
       }
       return Result;
     }
     //------------------------------------------------------------------------------
-    
+
     public boolean addPath(Path pg, PolyType polyType, boolean Closed) throws ClipperException
     {
       if (!Closed && polyType == PolyType.ptClip)
@@ -474,7 +474,7 @@ class ClipperBase {
       //create a new edge array ...
       List<TEdge> edges = new ArrayList<>(highI+1);
       for (int i = 0; i <= highI; i++) edges.add(new TEdge());
-          
+
       boolean IsFlat = true;
 
       //1. Basic (first) edge initialization ...
@@ -503,12 +503,12 @@ class ClipperBase {
           eLoopStop = E;
           continue;
         }
-        if (E.Prev == E.Next) 
+        if (E.Prev == E.Next)
           break; //only two vertices
         else if (Closed &&
-          slopesEqual(E.Prev.iCurr, E.iCurr, E.Next.iCurr, m_UseFullRange) && 
+          slopesEqual(E.Prev.iCurr, E.iCurr, E.Next.iCurr, m_UseFullRange) &&
           (!getPreserveCollinear() ||
-          !Pt2IsBetweenPt1AndPt3(E.Prev.iCurr, E.iCurr, E.Next.iCurr))) 
+          !Pt2IsBetweenPt1AndPt3(E.Prev.iCurr, E.iCurr, E.Next.iCurr)))
         {
           //Collinear edges are allowed for open paths but in closed paths
           //the default is to merge adjacent collinear edges into a single edge.
@@ -547,7 +547,7 @@ class ClipperBase {
 
       //Totally flat paths must be handled differently when adding them
       //to LocalMinima list to avoid endless loops etc ...
-      if (IsFlat) 
+      if (IsFlat)
       {
         if (Closed) return false;
         E.Prev.OutIdx = Skip;
@@ -589,7 +589,7 @@ class ClipperBase {
         LocalMinima locMin = new LocalMinima();
         locMin.Next = null;
         locMin.Y = E.iBot.Y;
-        if (E.Dx < E.Prev.Dx) 
+        if (E.Dx < E.Prev.Dx)
         {
           locMin.LeftBound = E.Prev;
           locMin.RightBound = E;
@@ -626,7 +626,7 @@ class ClipperBase {
 
     }
     //------------------------------------------------------------------------------
-    
+
     public boolean addPaths(Paths ppg, PolyType polyType, boolean closed) throws ClipperException
     {
       boolean result = false;
@@ -701,10 +701,10 @@ class ClipperBase {
 
       aux = e.iTop.X;
       e.iTop.X = e.iBot.X;
-      e.iBot.X = aux;      
+      e.iBot.X = aux;
     }
     //------------------------------------------------------------------------------
-    
+
     protected void reset()
     {
       m_CurrentLM = m_MinimaList;
@@ -798,7 +798,7 @@ public class Clipper extends ClipperBase {
       //------------------------------------------------------------------------------
 
     private boolean m_reverseSolution = false;
-    
+
     public final boolean getReverseSolution() {
         return m_reverseSolution;
     }
@@ -806,10 +806,10 @@ public class Clipper extends ClipperBase {
     public final void setReverseSolution(boolean v) {
         m_reverseSolution = v;
     }
-    
-      //------------------------------------------------------------------------------      
+
+      //------------------------------------------------------------------------------
     private boolean m_strictlySimple = false;
-    
+
     public final boolean getStrictlySimple() {
         return m_strictlySimple;
     }
@@ -817,8 +817,8 @@ public class Clipper extends ClipperBase {
     public final void setStrictlySimple(boolean v) {
         m_strictlySimple = v;
     }
-    
-    
+
+
 
       //------------------------------------------------------------------------------
     private void insertScanbeam(long Y) {
@@ -929,7 +929,7 @@ public class Clipper extends ClipperBase {
         outRec.FirstLeft = orfl;
       }
       //------------------------------------------------------------------------------
-      
+
       private boolean executeInternal() throws ClipperException
       {
         try
@@ -967,14 +967,14 @@ public class Clipper extends ClipperBase {
           return true;
         }
         //catch { return false; }
-        finally 
+        finally
         {
           m_Joins.clear();
           m_GhostJoins.clear();
         }
       }
       //------------------------------------------------------------------------------
-      
+
       //------------------------------------------------------------------------------
 
       private long popScanbeam()
@@ -1017,7 +1017,7 @@ public class Clipper extends ClipperBase {
         m_GhostJoins.add(j);
       }
       //------------------------------------------------------------------------------
-      
+
       private void insertLocalMinimaIntoAEL(long botY)
       {
         while(  m_CurrentLM != null  && ( m_CurrentLM.Y == botY ) )
@@ -1065,7 +1065,7 @@ public class Clipper extends ClipperBase {
           if (lb == null || rb == null) continue;
 
           //if output polygons share an Edge with a horizontal rb, they'll need joining later ...
-          if (Op1 != null && isHorizontal(rb) && 
+          if (Op1 != null && isHorizontal(rb) &&
             m_GhostJoins.size() > 0 && rb.WindDelta != 0)
           {
               for (Join j : m_GhostJoins) {
@@ -1107,7 +1107,7 @@ public class Clipper extends ClipperBase {
           }
         }
       }
-     
+
       //------------------------------------------------------------------------------
 
       private void insertEdgeIntoAEL(TEdge edge, TEdge startEdge)
@@ -1151,19 +1151,19 @@ public class Clipper extends ClipperBase {
       }
       //------------------------------------------------------------------------------
 
-      private boolean isEvenOddFillType(TEdge edge) 
+      private boolean isEvenOddFillType(TEdge edge)
       {
         if (edge.PolyTyp == PolyType.ptSubject)
-            return m_SubjFillType == PolyFillType.pftEvenOdd; 
+            return m_SubjFillType == PolyFillType.pftEvenOdd;
         else
             return m_ClipFillType == PolyFillType.pftEvenOdd;
       }
       //------------------------------------------------------------------------------
 
-      private boolean isEvenOddAltFillType(TEdge edge) 
+      private boolean isEvenOddAltFillType(TEdge edge)
       {
         if (edge.PolyTyp == PolyType.ptSubject)
-            return m_ClipFillType == PolyFillType.pftEvenOdd; 
+            return m_ClipFillType == PolyFillType.pftEvenOdd;
         else
             return m_SubjFillType == PolyFillType.pftEvenOdd;
       }
@@ -1196,7 +1196,7 @@ public class Clipper extends ClipperBase {
                   if (edge.WindCnt != 1) return false;
                   break;
               default: //PolyFillType.pftNegative
-                  if (edge.WindCnt != -1) return false; 
+                  if (edge.WindCnt != -1) return false;
                   break;
           }
 
@@ -1264,7 +1264,7 @@ public class Clipper extends ClipperBase {
           }
           return true;
       }
-      
+
       //------------------------------------------------------------------------------
 
       private void setWindingCount(TEdge edge)
@@ -1317,7 +1317,7 @@ public class Clipper extends ClipperBase {
             if (Math.abs(e.WindCnt) > 1)
             {
               //outside prev poly but still inside another.
-              //when reversing direction of prev poly use the same WC 
+              //when reversing direction of prev poly use the same WC
               if (e.WindDelta * edge.WindDelta < 0) edge.WindCnt = e.WindCnt;
               //otherwise continue to 'decrease' WC ...
               else edge.WindCnt = e.WindCnt + edge.WindDelta;
@@ -1397,13 +1397,13 @@ public class Clipper extends ClipperBase {
           }
       }
       //------------------------------------------------------------------------------
-      
+
       private void swapPositionsInAEL(TEdge edge1, TEdge edge2)
       {
         //check that one or other edge hasn't already been removed from AEL ...
           if (edge1.NextInAEL == edge1.PrevInAEL ||
             edge2.NextInAEL == edge2.PrevInAEL) return;
-        
+
           if (edge1.NextInAEL == edge2)
           {
               TEdge next = edge2.NextInAEL;
@@ -1517,7 +1517,7 @@ public class Clipper extends ClipperBase {
       private void addLocalMaxPoly(TEdge e1, TEdge e2, final Point2d _pt)
       {
           final Point2d pt = _pt.clone();
-          
+
           addOutPt(e1, pt);
           if (e2.WindDelta == 0) addOutPt(e2, pt);
           if (e1.OutIdx == e2.OutIdx)
@@ -1525,9 +1525,9 @@ public class Clipper extends ClipperBase {
               e1.OutIdx = Unassigned;
               e2.OutIdx = Unassigned;
           }
-          else if (e1.OutIdx < e2.OutIdx) 
+          else if (e1.OutIdx < e2.OutIdx)
               appendPolygon(e1, e2);
-          else 
+          else
               appendPolygon(e2, e1);
       }
       //------------------------------------------------------------------------------
@@ -1535,7 +1535,7 @@ public class Clipper extends ClipperBase {
       private OutPt addLocalMinPoly(TEdge e1, TEdge e2, final Point2d _pt)
       {
         final Point2d pt = _pt;
-        
+
         OutPt result;
         TEdge e, prevE;
         if (isHorizontal(e2) || (e1.Dx > e2.Dx))
@@ -1546,7 +1546,7 @@ public class Clipper extends ClipperBase {
           e2.Side = EdgeSide.esRight;
           e = e1;
           if (e.PrevInAEL == e2)
-            prevE = e2.PrevInAEL; 
+            prevE = e2.PrevInAEL;
           else
             prevE = e.PrevInAEL;
         }
@@ -1574,7 +1574,7 @@ public class Clipper extends ClipperBase {
         return result;
       }
       //------------------------------------------------------------------------------
-      
+
       private OutRec createOutRec()
       {
         OutRec result = new OutRec();
@@ -1594,7 +1594,7 @@ public class Clipper extends ClipperBase {
       private OutPt addOutPt(TEdge e, Point2d _pt)
       {
         final Point2d pt = _pt;
-          
+
         boolean ToFront = (e.Side == EdgeSide.esLeft);
         if(  e.OutIdx < 0 )
         {
@@ -1630,7 +1630,7 @@ public class Clipper extends ClipperBase {
         }
       }
       //------------------------------------------------------------------------------
-      
+
       private boolean horzSegmentsOverlap(long seg1a, long seg1b, long seg2a, long seg2b)
       {
         if (seg1a > seg1b)
@@ -1648,14 +1648,14 @@ public class Clipper extends ClipperBase {
         return (seg1a < seg2b) && (seg2a < seg1b);
       }
       //------------------------------------------------------------------------------
-  
+
       private void setHoleState(TEdge e, OutRec outRec)
       {
           boolean isHole = false;
           TEdge e2 = e.PrevInAEL;
           while (e2 != null)
           {
-              if (e2.OutIdx >= 0 && e2.WindDelta != 0) 
+              if (e2.OutIdx >= 0 && e2.WindDelta != 0)
               {
                   isHole = !isHole;
                   if (outRec.FirstLeft == null)
@@ -1663,7 +1663,7 @@ public class Clipper extends ClipperBase {
               }
               e2 = e2.PrevInAEL;
           }
-          if (isHole) 
+          if (isHole)
             outRec.IsHole = true;
       }
       //------------------------------------------------------------------------------
@@ -1735,9 +1735,9 @@ public class Clipper extends ClipperBase {
       private OutRec getLowermostRec(OutRec outRec1, OutRec outRec2)
       {
           //work out which polygon fragment has the correct hole state ...
-          if (outRec1.BottomPt == null) 
+          if (outRec1.BottomPt == null)
               outRec1.BottomPt = getBottomPt(outRec1.Pts);
-          if (outRec2.BottomPt == null) 
+          if (outRec2.BottomPt == null)
               outRec2.BottomPt = getBottomPt(outRec2.Pts);
           OutPt bPt1 = outRec1.BottomPt;
           OutPt bPt2 = outRec2.BottomPt;
@@ -1771,7 +1771,7 @@ public class Clipper extends ClipperBase {
         return outrec;
       }
       //------------------------------------------------------------------------------
-      
+
       private void appendPolygon(TEdge e1, TEdge e2)
       {
         //get the start and ends of both output polygons ...
@@ -1779,7 +1779,7 @@ public class Clipper extends ClipperBase {
         OutRec outRec2 = m_PolyOuts.get(e2.OutIdx);
 
         OutRec holeStateRec;
-        if (param1RightOfParam2(outRec1, outRec2)) 
+        if (param1RightOfParam2(outRec1, outRec2))
             holeStateRec = outRec2;
         else if (param1RightOfParam2(outRec2, outRec1))
             holeStateRec = outRec1;
@@ -1835,7 +1835,7 @@ public class Clipper extends ClipperBase {
           side = EdgeSide.esRight;
         }
 
-        outRec1.BottomPt = null; 
+        outRec1.BottomPt = null;
         if (holeStateRec == outRec2)
         {
             if (outRec2.FirstLeft != outRec1)
@@ -1899,11 +1899,11 @@ public class Clipper extends ClipperBase {
           edge2.OutIdx = outIdx;
       }
       //------------------------------------------------------------------------------
-      
+
       private void intersectEdges(TEdge e1, TEdge e2, final Point2d _pt)
       {
         final Point2d pt = _pt.clone();
-          
+
           //e1 will be to the left of e2 BELOW the intersection. Therefore e1 is before
           //e2 in AEL except when e1 is being inserted at the intersection point ...
 
@@ -1917,7 +1917,7 @@ public class Clipper extends ClipperBase {
             //are both open paths, AND they are both 'contributing maximas' ...
             if (e1.WindDelta == 0 && e2.WindDelta == 0) return;
             //if intersecting a subj line with a subj poly ...
-            else if (e1.PolyTyp == e2.PolyTyp && 
+            else if (e1.PolyTyp == e2.PolyTyp &&
               e1.WindDelta != e2.WindDelta && m_ClipType == ClipType.ctUnion)
             {
               if (e1.WindDelta == 0)
@@ -1939,13 +1939,13 @@ public class Clipper extends ClipperBase {
             }
             else if (e1.PolyTyp != e2.PolyTyp)
             {
-              if ((e1.WindDelta == 0) && Math.abs(e2.WindCnt) == 1 && 
+              if ((e1.WindDelta == 0) && Math.abs(e2.WindCnt) == 1 &&
                 (m_ClipType != ClipType.ctUnion || e2.WindCnt2 == 0))
               {
                 addOutPt(e1, pt);
                 if (e1Contributing) e1.OutIdx = Unassigned;
               }
-              else if ((e2.WindDelta == 0) && (Math.abs(e1.WindCnt) == 1) && 
+              else if ((e2.WindDelta == 0) && (Math.abs(e1.WindCnt) == 1) &&
                 (m_ClipType != ClipType.ctUnion || e1.WindCnt2 == 0))
               {
                 addOutPt(e2, pt);
@@ -2167,13 +2167,13 @@ public class Clipper extends ClipperBase {
       }
       //------------------------------------------------------------------------------
 
-      class HorzDir 
+      class HorzDir
       {
           Direction dir;
           long horzLeft;
           long horzRight;
       }
-      
+
       void getHorzDirection(TEdge HorzEdge, HorzDir hd)
       {
         if (HorzEdge.iBot.X < HorzEdge.iTop.X)
@@ -2188,7 +2188,7 @@ public class Clipper extends ClipperBase {
           hd.dir = Direction.dRightToLeft;
         }
       }
-      
+
       //------------------------------------------------------------------------
 
       private void processHorizontal(TEdge horzEdge, boolean isTopOfScanbeam) throws ClipperException
@@ -2198,7 +2198,7 @@ public class Clipper extends ClipperBase {
         getHorzDirection(horzEdge, hd);
 
         TEdge eLastHorz = horzEdge, eMaxPair = null;
-        while (eLastHorz.NextInLML != null && isHorizontal(eLastHorz.NextInLML)) 
+        while (eLastHorz.NextInLML != null && isHorizontal(eLastHorz.NextInLML))
           eLastHorz = eLastHorz.NextInLML;
         if (eLastHorz.NextInLML == null)
           eMaxPair = getMaximaPair(eLastHorz);
@@ -2211,7 +2211,7 @@ public class Clipper extends ClipperBase {
           {
             //Break if we've got to the end of an intermediate horizontal edge ...
             //nb: Smaller Dx's are to the right of larger Dx's ABOVE the horizontal.
-            if (e.iCurr.X == horzEdge.iTop.X && horzEdge.NextInLML != null && 
+            if (e.iCurr.X == horzEdge.iTop.X && horzEdge.NextInLML != null &&
               e.Dx < horzEdge.NextInLML.Dx) break;
 
             TEdge eNext = getNextInAEL(e, hd.dir); //saves eNext for later
@@ -2302,7 +2302,7 @@ public class Clipper extends ClipperBase {
           }
           else
           {
-            horzEdge = updateEdgeIntoAEL_REFreturned(horzEdge); 
+            horzEdge = updateEdgeIntoAEL_REFreturned(horzEdge);
           }
         }
         else
@@ -2311,14 +2311,14 @@ public class Clipper extends ClipperBase {
           deleteFromAEL(horzEdge);
         }
       }
-      
+
       //------------------------------------------------------------------------------
 
       private TEdge getNextInAEL(TEdge e, Direction direction)
       {
           return direction == Direction.dLeftToRight ? e.NextInAEL: e.PrevInAEL;
       }
-      
+
       //------------------------------------------------------------------------------
 
       private boolean isMinima(TEdge e)
@@ -2359,9 +2359,9 @@ public class Clipper extends ClipperBase {
         try {
           buildIntersectList(topY);
           if (m_IntersectList.isEmpty()) return true;
-          if (m_IntersectList.size() == 1 || fixupIntersectionOrder()) 
+          if (m_IntersectList.size() == 1 || fixupIntersectionOrder())
               processIntersectList();
-          else 
+          else
               return false;
         }
         catch (Exception e) {
@@ -2417,10 +2417,10 @@ public class Clipper extends ClipperBase {
           else break;
         }
         m_SortedEdges = null;
-      }      
-      
+      }
+
       //------------------------------------------------------------------------------
-      
+
       private boolean edgesAdjacent(IntersectNode inode)
       {
         return (inode.Edge1.NextInSEL == inode.Edge2) ||
@@ -2484,7 +2484,7 @@ public class Clipper extends ClipperBase {
       {
         final Point2d ip = new Point2d();
         double b1, b2;
-        //nb: with very large coordinate values, it's possible for SlopesEqual() to 
+        //nb: with very large coordinate values, it's possible for SlopesEqual() to
         //return false but for the edge.Dx value be equal due to double precision rounding.
         if (edge1.Dx == edge2.Dx)
         {
@@ -2548,19 +2548,19 @@ public class Clipper extends ClipperBase {
         {
           ip.Y = edge1.iCurr.Y;
           //better to use the more vertical edge to derive X ...
-          if (Math.abs(edge1.Dx) > Math.abs(edge2.Dx)) 
+          if (Math.abs(edge1.Dx) > Math.abs(edge2.Dx))
             ip.X = topX(edge2, ip.Y);
-          else 
+          else
             ip.X = topX(edge1, ip.Y);
         }
-        
+
         System.out.println("IntersectionPoint(2): " + Long.toString(ip.X) + ", " + Long.toString(ip.Y));
         return ip;
       }
-      
-      
+
+
       //------------------------------------------------------------------------------
-      
+
       private void processEdgesAtTopOfScanbeam(long topY) throws ClipperException
       {
         TEdge e = m_ActiveEdges;
@@ -2592,7 +2592,7 @@ public class Clipper extends ClipperBase {
               if (e.OutIdx >= 0)
                 addOutPt(e, e.iBot);
               addEdgeToSEL(e);
-            } 
+            }
             else
             {
               e.iCurr.X = topX( e, topY );
@@ -2629,7 +2629,7 @@ public class Clipper extends ClipperBase {
           if(isIntermediate(e, topY))
           {
             OutPt op = null;
-            if( e.OutIdx >= 0 ) 
+            if( e.OutIdx >= 0 )
               op = addOutPt(e, e.iTop);
             e = updateEdgeIntoAEL_REFreturned(e);
 
@@ -2692,7 +2692,7 @@ public class Clipper extends ClipperBase {
         }
         else if (e.WindDelta == 0)
         {
-          if (e.OutIdx >= 0) 
+          if (e.OutIdx >= 0)
           {
             addOutPt(e, e.iTop);
             e.OutIdx = Unassigned;
@@ -2705,7 +2705,7 @@ public class Clipper extends ClipperBase {
             eMaxPair.OutIdx = Unassigned;
           }
           deleteFromAEL(eMaxPair);
-        } 
+        }
         else throw new ClipperException("DoMaxima error");
       }
       //------------------------------------------------------------------------------
@@ -2756,7 +2756,7 @@ public class Clipper extends ClipperBase {
             polyg.add(pg);
         }
     }
-    
+
     //------------------------------------------------------------------------------
 
     private void buildResult2(PolyTree polytree) {
@@ -2793,7 +2793,7 @@ public class Clipper extends ClipperBase {
             }
         }
     }
-    
+
     //------------------------------------------------------------------------------
 
       private void fixupOutPolygon(OutRec outRec)
@@ -2842,7 +2842,7 @@ public class Clipper extends ClipperBase {
           result.Prev = outPt;
           outPt.Next.Prev = result;
           outPt.Next = result;
-        } 
+        }
         else
         {
           result.Prev = outPt.Prev;
@@ -2853,20 +2853,20 @@ public class Clipper extends ClipperBase {
         return result;
       }
       //------------------------------------------------------------------------------
-      
+
       class OverlapResult
       {
           long Left;
           long Right;
       }
-      
+
       private boolean getOverlap(long a1, long a2, long b1, long b2, OverlapResult or)
       {
         if (a1 < a2)
         {
           if (b1 < b2) {or.Left = Math.max(a1,b1); or.Right = Math.min(a2,b2);}
           else {or.Left = Math.max(a1,b2); or.Right = Math.min(a2,b1);}
-        } 
+        }
         else
         {
           if (b1 < b2) {or.Left = Math.max(a2,b1); or.Right = Math.min(a1,b2);}
@@ -2876,12 +2876,12 @@ public class Clipper extends ClipperBase {
       }
       //------------------------------------------------------------------------------
 
-      boolean joinHorz(OutPt op1, OutPt op1b, OutPt op2, OutPt op2b, 
+      boolean joinHorz(OutPt op1, OutPt op1b, OutPt op2, OutPt op2b,
         final Point2d _Pt, boolean DiscardLeft)
       {
         final Point2d Pt = _Pt.clone();
-          
-        Direction Dir1 = (op1.iPt.X > op1b.iPt.X ? 
+
+        Direction Dir1 = (op1.iPt.X > op1b.iPt.X ?
           Direction.dRightToLeft : Direction.dLeftToRight);
         Direction Dir2 = (op2.iPt.X > op2b.iPt.X ?
           Direction.dRightToLeft : Direction.dLeftToRight);
@@ -2892,24 +2892,24 @@ public class Clipper extends ClipperBase {
         //So, to facilitate this while inserting Op1b and Op2b ...
         //when DiscardLeft, make sure we're AT or RIGHT of Pt before adding Op1b,
         //otherwise make sure we're AT or LEFT of Pt. (Likewise with Op2b.)
-        if (Dir1 == Direction.dLeftToRight) 
+        if (Dir1 == Direction.dLeftToRight)
         {
-          while (op1.Next.iPt.X <= Pt.X && 
-            op1.Next.iPt.X >= op1.iPt.X && op1.Next.iPt.Y == Pt.Y)  
+          while (op1.Next.iPt.X <= Pt.X &&
+            op1.Next.iPt.X >= op1.iPt.X && op1.Next.iPt.Y == Pt.Y)
               op1 = op1.Next;
           if (DiscardLeft && (op1.iPt.X != Pt.X)) op1 = op1.Next;
           op1b = dupOutPt(op1, !DiscardLeft);
-          if (op1b.iPt.not_equals(Pt)) 
+          if (op1b.iPt.not_equals(Pt))
           {
             op1 = op1b;
             op1.iPt.assign(Pt);
             op1b = dupOutPt(op1, !DiscardLeft);
           }
-        } 
+        }
         else
         {
-          while (op1.Next.iPt.X >= Pt.X && 
-            op1.Next.iPt.X <= op1.iPt.X && op1.Next.iPt.Y == Pt.Y) 
+          while (op1.Next.iPt.X >= Pt.X &&
+            op1.Next.iPt.X <= op1.iPt.X && op1.Next.iPt.Y == Pt.Y)
               op1 = op1.Next;
           if (!DiscardLeft && (op1.iPt.X != Pt.X)) op1 = op1.Next;
           op1b = dupOutPt(op1, DiscardLeft);
@@ -2923,7 +2923,7 @@ public class Clipper extends ClipperBase {
 
         if (Dir2 == Direction.dLeftToRight)
         {
-          while (op2.Next.iPt.X <= Pt.X && 
+          while (op2.Next.iPt.X <= Pt.X &&
             op2.Next.iPt.X >= op2.iPt.X && op2.Next.iPt.Y == Pt.Y)
               op2 = op2.Next;
           if (DiscardLeft && (op2.iPt.X != Pt.X)) op2 = op2.Next;
@@ -2936,8 +2936,8 @@ public class Clipper extends ClipperBase {
           }
         } else
         {
-          while (op2.Next.iPt.X >= Pt.X && 
-            op2.Next.iPt.X <= op2.iPt.X && op2.Next.iPt.Y == Pt.Y) 
+          while (op2.Next.iPt.X >= Pt.X &&
+            op2.Next.iPt.X <= op2.iPt.X && op2.Next.iPt.Y == Pt.Y)
               op2 = op2.Next;
           if (!DiscardLeft && (op2.iPt.X != Pt.X)) op2 = op2.Next;
           op2b = dupOutPt(op2, DiscardLeft);
@@ -2982,15 +2982,15 @@ public class Clipper extends ClipperBase {
         boolean isHorizontal = (j.OutPt1.iPt.Y == j.iOffPt.Y);
 
         if (isHorizontal && (j.iOffPt.equals(j.OutPt1.iPt)) && (j.iOffPt.equals(j.OutPt2.iPt)))
-        {          
+        {
           //Strictly Simple join ...
           if (outRec1 != outRec2) return false;
           op1b = j.OutPt1.Next;
-          while (op1b != op1 && (op1b.iPt.equals(j.iOffPt))) 
+          while (op1b != op1 && (op1b.iPt.equals(j.iOffPt)))
             op1b = op1b.Next;
           boolean reverse1 = (op1b.iPt.Y > j.iOffPt.Y);
           op2b = j.OutPt2.Next;
-          while (op2b != op2 && (op2b.iPt.equals(j.iOffPt))) 
+          while (op2b != op2 && (op2b.iPt.equals(j.iOffPt)))
             op2b = op2b.Next;
           boolean reverse2 = (op2b.iPt.Y > j.iOffPt.Y);
           if (reverse1 == reverse2) return false;
@@ -3017,7 +3017,7 @@ public class Clipper extends ClipperBase {
             j.OutPt2 = op1b;
             return true;
           }
-        } 
+        }
         else if (isHorizontal)
         {
           //treat horizontal joins differently to non-horizontal joins since with
@@ -3047,18 +3047,18 @@ public class Clipper extends ClipperBase {
           //on the discard Side as either may still be needed for other joins ...
           final Point2d Pt = new Point2d();
           boolean DiscardLeftSide;
-          if (op1.iPt.X >= or.Left && op1.iPt.X <= or.Right) 
+          if (op1.iPt.X >= or.Left && op1.iPt.X <= or.Right)
           {
             Pt.assign(op1.iPt); DiscardLeftSide = (op1.iPt.X > op1b.iPt.X);
-          } 
-          else if (op2.iPt.X >= or.Left && op2.iPt.X <= or.Right) 
+          }
+          else if (op2.iPt.X >= or.Left && op2.iPt.X <= or.Right)
           {
             Pt.assign(op2.iPt); DiscardLeftSide = (op2.iPt.X > op2b.iPt.X);
-          } 
+          }
           else if (op1b.iPt.X >= or.Left && op1b.iPt.X <= or.Right)
           {
             Pt.assign(op1b.iPt); DiscardLeftSide = op1b.iPt.X > op1.iPt.X;
-          } 
+          }
           else
           {
             Pt.assign(op2b.iPt); DiscardLeftSide = (op2b.iPt.X > op2.iPt.X);
@@ -3125,11 +3125,11 @@ public class Clipper extends ClipperBase {
         }
       }
       //----------------------------------------------------------------------
-      
+
       public static int pointInPolygon(final Point2d _pt, Path path)
       {
         final Point2d pt = _pt;
-          
+
         //returns 0 if false, +1 if true, -1 if pt ON polygon boundary
         //See "The Point in Polygon Problem for Arbitrary Polygons" by Hormann & Agathos
         //http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.88.5498&rep=rep1&type=pdf
@@ -3178,7 +3178,7 @@ public class Clipper extends ClipperBase {
       private static int pointInPolygon(final Point2d _pt, OutPt op)
       {
         final Point2d pt = _pt.clone();
-          
+
         //returns 0 if false, +1 if true, -1 if pt ON polygon boundary
         //See "The Point in Polygon Problem for Arbitrary Polygons" by Hormann & Agathos
         //http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.88.5498&rep=rep1&type=pdf
@@ -3225,7 +3225,7 @@ public class Clipper extends ClipperBase {
         return result;
       }
       //------------------------------------------------------------------------------
-      
+
       private static boolean poly2ContainsPoly1(OutPt outPt1, OutPt outPt2)
       {
         OutPt op = outPt1;
@@ -3242,7 +3242,7 @@ public class Clipper extends ClipperBase {
       //----------------------------------------------------------------------
 
       private void fixupFirstLefts1(OutRec OldOutRec, OutRec NewOutRec)
-      { 
+      {
         for (OutRec outRec : m_PolyOuts) {
             if (outRec.Pts == null || outRec.FirstLeft == null) continue;
             OutRec firstLeft = parseFirstLeft(outRec.FirstLeft);
@@ -3256,7 +3256,7 @@ public class Clipper extends ClipperBase {
       //----------------------------------------------------------------------
 
       private void fixupFirstLefts2(OutRec OldOutRec, OutRec NewOutRec)
-      { 
+      {
           for (OutRec outRec: m_PolyOuts)
               if (outRec.FirstLeft == OldOutRec) outRec.FirstLeft = NewOutRec;
       }
@@ -3264,11 +3264,11 @@ public class Clipper extends ClipperBase {
 
       private static OutRec parseFirstLeft(OutRec FirstLeft)
       {
-        while (FirstLeft != null && FirstLeft.Pts == null) 
+        while (FirstLeft != null && FirstLeft.Pts == null)
           FirstLeft = FirstLeft.FirstLeft;
         return FirstLeft;
       }
-      
+
     //------------------------------------------------------------------------------
     private void joinCommonEdges() {
         for (Join join : m_Joins) {
@@ -3382,12 +3382,12 @@ public class Clipper extends ClipperBase {
             }
         }
     }
-    
+
     //------------------------------------------------------------------------------
-      
-    
+
+
       private void updateOutPtIdxs(OutRec outrec)
-      {  
+      {
         OutPt op = outrec.Pts;
         do
         {
@@ -3401,7 +3401,7 @@ public class Clipper extends ClipperBase {
       private void doSimplePolygons()
       {
         int i = 0;
-        while (i < m_PolyOuts.size()) 
+        while (i < m_PolyOuts.size())
         {
           OutRec outrec = m_PolyOuts.get(i++);
           OutPt op = outrec.Pts;
@@ -3409,9 +3409,9 @@ public class Clipper extends ClipperBase {
           do //for each Pt in Polygon until duplicate found do ...
           {
             OutPt op2 = op.Next;
-            while (op2 != outrec.Pts) 
+            while (op2 != outrec.Pts)
             {
-              if ((op.iPt.equals(op2.iPt)) && op2.Next != op && op2.Prev != op) 
+              if ((op.iPt.equals(op2.iPt)) && op2.Next != op && op2.Prev != op)
               {
                 //split the polygon into two ...
                 OutPt op3 = op.Prev;
@@ -3496,8 +3496,8 @@ public class Clipper extends ClipperBase {
           return simplifyPolygon(poly, PolyFillType.pftEvenOdd);
       }
 
-      
-      public static Paths simplifyPolygon(Path poly, 
+
+      public static Paths simplifyPolygon(Path poly,
             PolyFillType fillType) throws ClipperException
       {
           Paths result = new Paths();
@@ -3512,8 +3512,8 @@ public class Clipper extends ClipperBase {
       public static Paths simplifyPolygons(Paths polys) throws ClipperException
       {
           return simplifyPolygons(polys, PolyFillType.pftEvenOdd);
-      }      
-      
+      }
+
       public static Paths simplifyPolygons(Paths polys,
           PolyFillType fillType) throws ClipperException
       {
@@ -3524,9 +3524,9 @@ public class Clipper extends ClipperBase {
           c.execute(ClipType.ctUnion, result, fillType, fillType);
           return result;
       }
-      
+
       //------------------------------------------------------------------------------
-    
+
       private static double distanceFromLineSqrd(Point2d pt, Point2d ln1, Point2d ln2)
       {
         //The equation of a line in general form (Ax + By + C = 0)
@@ -3543,12 +3543,12 @@ public class Clipper extends ClipperBase {
       }
       //---------------------------------------------------------------------------
 
-      private static boolean slopesNearCollinear(Point2d pt1, 
+      private static boolean slopesNearCollinear(Point2d pt1,
           Point2d pt2, Point2d pt3, double distSqrd)
       {
-        //this function is more accurate when the point that's GEOMETRICALLY 
-        //between the other 2 points is the one that's tested for distance.  
-        //nb: with 'spikes', either pt1 or pt3 is geometrically between the other pts                    
+        //this function is more accurate when the point that's GEOMETRICALLY
+        //between the other 2 points is the one that's tested for distance.
+        //nb: with 'spikes', either pt1 or pt3 is geometrically between the other pts
         if (Math.abs(pt1.X - pt2.X) > Math.abs(pt1.Y - pt2.Y))
 	      {
           if ((pt1.X > pt2.X) == (pt1.X < pt3.X))
@@ -3592,11 +3592,11 @@ public class Clipper extends ClipperBase {
       {
           return cleanPolygon (path,  1.415);
       }
-            
+
       public static Path cleanPolygon(Path path, double distance)
       {
-        //distance = proximity in units/pixels below which vertices will be stripped. 
-        //Default ~= sqrt(2) so when adjacent vertices or semi-adjacent vertices have 
+        //distance = proximity in units/pixels below which vertices will be stripped.
+        //Default ~= sqrt(2) so when adjacent vertices or semi-adjacent vertices have
         //both x & y coords within 1 unit, then the second vertex will be stripped.
 
         int cnt = path.size();
@@ -3656,7 +3656,7 @@ public class Clipper extends ClipperBase {
       {
           return cleanPolygons(polys, 1.415);
       }
-            
+
       public static Paths cleanPolygons(Paths polys,
           double distance)
       {
@@ -3717,7 +3717,7 @@ public class Clipper extends ClipperBase {
       }
       //------------------------------------------------------------------------------
 
-      private static Path translatePath(Path path, Point2d delta) 
+      private static Path translatePath(Path path, Point2d delta)
       {
         Path outPath = new Path();
         for (final Point2d pt : path) {
@@ -3741,7 +3741,7 @@ public class Clipper extends ClipperBase {
             c.addPath(path, PolyType.ptClip, true);
           }
         }
-        c.execute(ClipType.ctUnion, solution, 
+        c.execute(ClipType.ctUnion, solution,
           PolyFillType.pftNonZero, PolyFillType.pftNonZero);
         return solution;
       }
@@ -3801,5 +3801,5 @@ public class Clipper extends ClipperBase {
         return result;
       }
       //------------------------------------------------------------------------------
-      
+
 }

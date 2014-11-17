@@ -75,9 +75,9 @@ public class WayEditor {
     public DataSet getDataSet() {
         return m_dataSet;
     }
-    
+
     public EdNode newNode(LatLon latlon) {
-        EdNode node = new EdNode(this, latlon);        
+        EdNode node = new EdNode(this, latlon);
         m_nodes.add(node);
         return node;
     }
@@ -102,8 +102,8 @@ public class WayEditor {
         if (node.getDataSet() != this.getDataSet())
             throw new IllegalArgumentException(tr("Cannot use Node from with a different/null DataSet"));
         if (!node.isUsable())
-            throw new IllegalArgumentException(tr("Cannot edit unusable Node"));            
-        
+            throw new IllegalArgumentException(tr("Cannot edit unusable Node"));
+
         EdNode en = m_originalNodes.get(node.getUniqueId());
         if (en != null) {
             if (en.originalNode() != node)
@@ -151,20 +151,20 @@ public class WayEditor {
             throw new IllegalArgumentException(tr("Cannot edit unusable/incomplete Relation"));
         if (!MultipolygonMatch.match(rel))
             throw new IllegalArgumentException(tr("Relation is not a multipolygon"));
-        
+
         EdMultipolygon emp = m_originalMultipolygons.get(rel.getUniqueId());
         if (emp != null) {
             if (emp.originalMultipolygon() != rel)
                 throw new IllegalArgumentException(tr("Original Relation ID mapped to a different Relation object"));
             return emp;
         }
-        
+
         emp = new EdMultipolygon(this, rel);
         m_originalMultipolygons.put(rel.getUniqueId(), emp);
         m_multipolygons.add(emp);
         return emp;
     }
-    
+
     boolean isEdited(OsmPrimitive prim) {
         if (prim instanceof Node) {
             EdNode en = m_originalNodes.get(prim.getUniqueId());
@@ -275,7 +275,7 @@ public class WayEditor {
         if (node1 != null)
             return useNode(node1);
 
-        // (2) look in edited nodes; prefer nodes having an original Node over new nodes, 
+        // (2) look in edited nodes; prefer nodes having an original Node over new nodes,
         //     use a matching one with the highest ID
         EdNode ornode2 = null;
         EdNode nwnode2 = null;
@@ -314,14 +314,14 @@ public class WayEditor {
         for (EdMultipolygon mp: m_multipolygons)
             mp.updateModifiedFlag();
     }
-    
+
     public List<Command> finalizeEdit () {
 
         System.out.println("WayEditor.finalizeEdit(): ");
-        
+
         // reset modified flags, if possible
         updateModifiedFlags();
-        
+
         // get ways and nodes required in the resulting DataSet
         Set<EdWay> required_ways = new HashSet<> ();
         Set<EdNode> required_nodes = new HashSet<> ();
@@ -410,7 +410,7 @@ public class WayEditor {
         for (EdMultipolygon emp: m_multipolygons) {
             if (!emp.hasOriginal() && !emp.isDeleted()) {
                 cmds.add(new AddCommand(emp.finalMultipolygon()));
-                System.out.println(" - add multipolygon: " + Long.toString(emp.getUniqueId()));    
+                System.out.println(" - add multipolygon: " + Long.toString(emp.getUniqueId()));
             }
             else if (emp.hasOriginal() && !emp.isDeleted() && emp.isModified()) {
                 cmds.add(new ChangeCommand(emp.originalMultipolygon(), emp.finalMultipolygon()));
@@ -418,7 +418,7 @@ public class WayEditor {
             }
             else if (emp.hasOriginal() && emp.isDeleted()) {
                 cmds.add(new DeleteCommand(emp.finalMultipolygon()));
-                System.out.println(" - delete multipolygon: " + Long.toString(emp.getUniqueId()));    
+                System.out.println(" - delete multipolygon: " + Long.toString(emp.getUniqueId()));
             }
         }
 
@@ -456,7 +456,7 @@ public class WayEditor {
         }
         return result;
     }
-    
+
     private List<EdWay> searchEdWays(BBox bbox) {
         List<EdWay> result = new ArrayList<>();
         for (EdWay edw: m_ways) {
@@ -466,8 +466,8 @@ public class WayEditor {
                 result.add(edw);
         }
         return result;
-    }    
-    
+    }
+
     public boolean insideDataSourceBounds(EdNode node) {
         List<Bounds> bounds = getDataSet().getDataSourceBounds();
         for (Bounds b: bounds) {
@@ -485,7 +485,7 @@ public class WayEditor {
         }
         return result;
     }
-    
+
     public Set<EdObject> useNonEditedAreasContainingPoint(LatLon pos, IEdAreaPredicate filter) {
         Set<EdObject> areas = new HashSet<>();
         BBox bbox = new BBox(pos, pos);
@@ -516,7 +516,7 @@ public class WayEditor {
 
         return areas;
     }
-    
+
     public Set<EdObject> useAllAreasInBBox(BBox bbox, IEdAreaPredicate filter) {
         Set<EdObject> areas = new HashSet<>();
 
@@ -527,7 +527,7 @@ public class WayEditor {
             if (filter.evaluate(rel))
                 areas.add(this.useMultipolygon(rel));
         }
-        
+
         // look for edited multipolygons
         for (EdMultipolygon mp: this.searchEdMultipolygons(bbox)) {
             if (areas.contains(mp))
@@ -535,19 +535,19 @@ public class WayEditor {
             if (filter.evaluate(mp))
                 areas.add(mp);
         }
-        
+
         // look for edited ways
         for (EdWay w: this.searchEdWays(bbox)) {
             if (!filter.evaluate(w))
                 continue;
-            
+
             // Way is member of a multipolygon, so it was already implicitly included
             // as a part of EdMultipolygon above, or it's a tagged member of
             // multipolygon that doesn't match given filter. Which can be dangerous
             // and we ignore it (for now). #### review this note
             if (w.isMemberOfAnyMultipolygon())
                 continue;
-            
+
             areas.add(w);
         }
 

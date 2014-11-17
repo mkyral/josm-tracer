@@ -39,5 +39,5 @@ package org.openstreetmap.josm.plugins.tracer.clipper;
 import java.util.ArrayList;
 
 public class Paths extends ArrayList<Path>{
-    
+
 }

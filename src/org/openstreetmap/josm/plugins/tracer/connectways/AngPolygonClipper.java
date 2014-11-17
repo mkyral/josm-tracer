@@ -39,16 +39,16 @@ import org.openstreetmap.josm.plugins.tracer.clipper.PolyType;
 
 public class AngPolygonClipper {
     private final WayEditor m_editor;
-    
+
     private List<List<EdNode>> m_outers;
     private List<List<EdNode>> m_inners;
-    
+
     private Map<LatLon, EdNode> m_nodesMap;
 
     public AngPolygonClipper (WayEditor editor) {
-        
+
         m_editor = editor;
-        
+
         m_outers = null;
         m_inners = null;
         m_nodesMap = null;
@@ -59,13 +59,13 @@ public class AngPolygonClipper {
             throw new IllegalStateException();
         return m_outers;
     }
-    
+
     public List<List<EdNode>> innerPolygons() {
         if (m_inners == null)
             throw new IllegalStateException();
         return m_inners;
     }
-    
+
     @SuppressWarnings("CallToPrintStackTrace")
     public void polygonDifference (EdWay clip_way, EdObject subj) {
 
@@ -73,11 +73,11 @@ public class AngPolygonClipper {
         m_outers = new ArrayList<>();
         m_inners = new ArrayList<>();
         m_nodesMap = new HashMap<>();
-    
+
         try {
             // Note: always preserve collinear nodes! Otherwise, clipper disconnects
             // non-intersecting touching nodes of the subject from other polygons!
-            
+
             Clipper clipper = new Clipper(Clipper.ioStrictlySimple + Clipper.ioPreserveCollinear);
             clipper.addPath(wayToPath(clip_way), PolyType.ptClip, true);
             clipper.addPaths(edObjectToPaths(subj), PolyType.ptSubject, true);
@@ -97,12 +97,12 @@ public class AngPolygonClipper {
             m_inners = null;
             throw new AssertionError("AngPolygonClipper.polygonDifference failed, ClipperException", e);
         }
-        
+
         m_nodesMap = null;
         m_outers = Collections.unmodifiableList(m_outers);
         m_inners = Collections.unmodifiableList(m_inners);
     }
-    
+
     private void processPolyNode(PolyNode pn) {
         Path path = pn.getContour();
         boolean hole = pn.isHole();
@@ -113,15 +113,15 @@ public class AngPolygonClipper {
             else
                 m_outers.add(Collections.unmodifiableList(nodes));
         }
-        
-        if (pn.getChildCount() > 0) {        
+
+        if (pn.getChildCount() > 0) {
             List<PolyNode> children = pn.getChilds();
             for (PolyNode child: children) {
                 processPolyNode(child);
             }
         }
     }
-    
+
     private List<EdNode> pathToEdNodes (Path p)
     {
         //System.out.println("d: poly:");
@@ -196,26 +196,26 @@ public class AngPolygonClipper {
 
         return list;
     }
-    
-    
+
+
     private Path wayToPath(EdWay w) {
         if (!w.isClosed())
             throw new IllegalArgumentException ("Way must be closed");
 
         Path p = new Path();
-        
+
         for (int i = 0; i < w.getNodesCount(); i++)
         {
             EdNode node = w.getNode(i);
             p.add (nodeToPoint2d(node));
         }
         return p;
-    }    
+    }
 
     // #### improve! the scale must be derived from EastNorth precision, which depends on
     // present JOSM projection! Or try to rewrite clipper to floating point...
     private final static double fixedPointScale = 10000000000.0;
-    
+
     private Point2d nodeToPoint2d(EdNode node) {
         EastNorth en = node.getEastNorth();
         long x = (long)(en.getX() * fixedPointScale);
@@ -242,7 +242,7 @@ public class AngPolygonClipper {
         m_nodesMap.put(ll, node);
         return node;
     }
-    
+
     private Paths edObjectToPaths(EdObject obj) {
         if (obj instanceof EdWay) {
             Path p = wayToPath((EdWay)obj);
@@ -263,6 +263,6 @@ public class AngPolygonClipper {
             pp.add(wayToPath(w));
         return pp;
     }
-    
+
 }
 

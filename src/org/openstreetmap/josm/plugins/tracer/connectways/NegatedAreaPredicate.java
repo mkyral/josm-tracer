@@ -25,11 +25,11 @@ import org.openstreetmap.josm.data.osm.Way;
 public class NegatedAreaPredicate implements IEdAreaPredicate {
 
     private final IEdAreaPredicate m_filter;
-    
+
     public NegatedAreaPredicate (IEdAreaPredicate filter) {
         m_filter = filter;
     }
-    
+
     @Override
     public boolean evaluate(EdWay way) {
         return !m_filter.evaluate(way);
@@ -48,5 +48,5 @@ public class NegatedAreaPredicate implements IEdAreaPredicate {
     @Override
     public boolean evaluate(Relation mp) {
         return !m_filter.evaluate(mp);
-    }    
+    }
 }

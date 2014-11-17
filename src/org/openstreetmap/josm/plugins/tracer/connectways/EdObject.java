@@ -63,7 +63,7 @@ public abstract class EdObject {
     protected void resetModified() {
         m_modified = false;
     }
-    
+
     public boolean isFinalized() {
         return m_finalized;
     }
@@ -177,7 +177,7 @@ public abstract class EdObject {
     public final String get(String key) {
         return currentPrimitive().get(key);
     }
-    
+
     public void setKeys(Map<String,String> keys) {
         checkEditable();
         currentPrimitive().setKeys(keys);
@@ -188,7 +188,7 @@ public abstract class EdObject {
         checkNotDeleted();
         return new HashMap<> (currentPrimitive().getKeys());
     }
-    
+
     protected boolean hasIdenticalKeys(OsmPrimitive other) {
         checkEditable();
         OsmPrimitive cur = currentPrimitive();
@@ -196,9 +196,9 @@ public abstract class EdObject {
             return false;
         return cur.getKeys().equals(other.getKeys());
     }
-    
+
     abstract void updateModifiedFlag();
-    
+
     /**
      * Checks if the given EdObject is the only one referrer of this EdObject.
      * That is, if the object has only this given editor referrer and no
@@ -216,8 +216,8 @@ public abstract class EdObject {
         if (this.hasExternalReferrers())
             return false;
         return true;
-    }    
-    
+    }
+
     public <T extends EdObject> List<T> getEditorReferrers(Class<T> type) {
         if (m_refs == null)
             return Collections.emptyList();
@@ -229,7 +229,7 @@ public abstract class EdObject {
             result.add(type.cast(m_refs));
             return result;
         }
-        
+
         EdObject[] refs = (EdObject[])m_refs;
         List<T> result = new ArrayList<> ();
         for (EdObject obj: refs) {
@@ -244,12 +244,12 @@ public abstract class EdObject {
         List<T> objs = getEditorReferrers(type);
         return objs.isEmpty();
     }
-    
+
     public <T extends OsmPrimitive> List<T> getExternalReferrers(Class<T> type) {
 
         if (!hasOriginal())
             return Collections.emptyList();
-            
+
         List<OsmPrimitive> parents = m_original.getReferrers();
         List<T> result = new ArrayList<> ();
         for (OsmPrimitive parent: parents) {
@@ -273,23 +273,23 @@ public abstract class EdObject {
         }
         return false;
     }
-    
+
     public boolean hasReferrers() {
         return hasEditorReferrers() || hasExternalReferrers();
     }
-    
+
     public abstract BBox getBBox();
-    
+
     public BBox getBBox(double oversize) {
         BBox box = this.getBBox();
         BBoxUtils.extendBBox(box, oversize);
         return box;
     }
-    
+
     public long getUniqueId() {
         checkNotDeleted();
         return currentPrimitive().getUniqueId();
-    }    
+    }
 }
 
 

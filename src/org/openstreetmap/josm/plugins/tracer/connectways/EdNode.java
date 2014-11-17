@@ -83,7 +83,7 @@ public class EdNode extends EdObject {
         // Be careful, never modify returned Node!!
         return m_node;
     }
-    
+
     @Override
     void updateModifiedFlag() {
         checkEditable();
@@ -99,29 +99,29 @@ public class EdNode extends EdObject {
             return;
         resetModified();
     }
-    
+
     /**
      * Returns all way referrers of this EdNode that match given
-     * area filter predicate. Non-edited matching ways are automatically 
+     * area filter predicate. Non-edited matching ways are automatically
      * included into node's WayEditor.
      * @param filter area ways filter
      * @return list of all EdWay referrers of this EdNode that match given predicate
      */
     List<EdWay> getAllAreaWayReferrers(IEdAreaPredicate filter) {
         List<EdWay> result = new ArrayList<>();
-        
+
         List<EdWay> edways = this.getEditorReferrers(EdWay.class);
         for (EdWay way: edways) {
             if (filter.evaluate(way))
                 result.add(way);
         }
-        
+
         List<Way> ways = this.getExternalReferrers(Way.class);
         for (Way way: ways) {
             if (filter.evaluate(way))
                 result.add(getEditor().useWay(way));
         }
-        
+
         return result;
     }
 }

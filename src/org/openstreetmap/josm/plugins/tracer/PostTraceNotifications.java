@@ -45,5 +45,5 @@ public class PostTraceNotifications {
             m_list.clear();
         }
         TracerUtils.showNotification(sb.toString(), "warning");
-    }    
+    }
 }

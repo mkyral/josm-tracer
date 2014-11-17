@@ -41,5 +41,5 @@ import java.util.Collections;
 public class Path extends ArrayList<Point2d> {
     void reverse() {
         Collections.reverse(this);
-    }    
+    }
 }

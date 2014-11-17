@@ -44,10 +44,10 @@ public final class ExcludeEdNodesPredicate implements IEdNodePredicate {
                 List<EdNode> nodes = way.getNodes();
                 for (EdNode node: nodes)
                     m_nodes.add(node);
-            }            
+            }
         }
         else if (obj instanceof EdWay) {
-            m_nodes = new HashSet<>(((EdWay)obj).getNodes());                    
+            m_nodes = new HashSet<>(((EdWay)obj).getNodes());
         }
         else if (obj instanceof EdNode) {
             m_nodes = new HashSet<>();
@@ -57,7 +57,7 @@ public final class ExcludeEdNodesPredicate implements IEdNodePredicate {
             throw new AssertionError("Unknown EdObject instance");
         }
     }
-    
+
     @Override
     public boolean evaluate(EdNode ednode) {
         return !m_nodes.contains(ednode);

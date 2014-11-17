@@ -33,15 +33,15 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 import org.openstreetmap.josm.tools.Pair;
 
 public class ClipAreas {
-    
+
     private final WayEditor m_editor;
     private final PostTraceNotifications m_postTraceNotifications;
-    
+
     public ClipAreas (WayEditor editor, PostTraceNotifications notifications) {
         m_editor = editor;
         m_postTraceNotifications = notifications;
     }
-    
+
     public void clipAreas(EdWay clip_way, AreaPredicate filter) {
 
         Set<EdObject> areas = m_editor.useAllAreasInBBox(clip_way.getBBox(), filter);
@@ -53,7 +53,7 @@ public class ClipAreas {
                 }
 
                 clipSimpleMulti(clip_way, subject_mp);
-                
+
             } else if (obj instanceof EdWay) {
                 EdWay subject_way = (EdWay) obj;
                 if (subject_way == clip_way) {
@@ -64,7 +64,7 @@ public class ClipAreas {
             }
         }
     }
-    
+
     private void clipSimpleSimple(EdWay clip_way, EdWay subject_way) {
         // First, connect touching nodes of subject_way to clip_way. This is necessary because
         // LPIS polygons series contain very small gaps that need to be elliminated before
@@ -91,7 +91,7 @@ public class ClipAreas {
             throw new AssertionError(tr("PolygonClipper.polygonDifference returned nonsense!"));
         }
     }
-    
+
     private void clipSimpleMulti(EdWay clip_way, EdMultipolygon subject_mp) {
 
         boolean subject_has_nonclosed_ways = subject_mp.containsNonClosedWays();
@@ -153,7 +153,7 @@ public class ClipAreas {
             return;
         }
 
-        // If modified ways have no (interesting) tags and no other referrers, we can 
+        // If modified ways have no (interesting) tags and no other referrers, we can
         // replace multipolygon's geometry quite agressively.
         if (!subject_has_nonclosed_ways
                 && untaggedSingleReferrerWays(unmapped_old_outers, subject_mp)
@@ -182,7 +182,7 @@ public class ClipAreas {
         }
         return true;
     }
-    
+
     private static void mapIdenticalWays(List<EdWay> unmapped_old, List<List<EdNode>> unmapped_new) {
         int iold = 0;
         while (iold < unmapped_old.size()) {
@@ -227,14 +227,14 @@ public class ClipAreas {
             return -Integer.compare(this.src.getNodesCount(), t.src.getNodesCount());
         }
     }
-    
+
     /**
      * For every source EdWay, it tries to find the most similar dest way;
      * for every dest way, it tries to find the most similar source EdWay.
      * Ways with no suitable similar ways are excluded from the results.
      * Forward mapping is guaranteed to be a bijection (suitable for
      * way updates), reverse mapping can contain duplicate values (surjection).
-     * 
+     *
      * @param srcs list of source EdWays
      * @param dsts list of dest ways
      * @return a pair, first element is a map of source EdWays to most similar
@@ -276,7 +276,7 @@ public class ClipAreas {
 
         return new Pair<>(res1, res2);
     }
-    
+
     private void handleSimpleSimpleSimple(EdWay clip_way, EdWay subject_way, List<EdNode> result) {
         // ** Easiest case - simple way clipped by a simple way produced a single polygon **
 
@@ -297,7 +297,7 @@ public class ClipAreas {
         // intersection nodes will be included in both ways.
         clip_way.connectNonIncludedTouchingNodes(subject_way);
     }
-    
+
     private void handleSimpleMultiOneOuterModified (EdWay clip_way, EdMultipolygon subject_mp, EdWay old_outer_way, List<EdNode> result) {
         // ** Easy case - clip of a multipolygon modified exactly one outer way and nothing else **
 
@@ -308,10 +308,10 @@ public class ClipAreas {
 
         // Connect clip_way to subject_way, this step guarantees that all newly created
         // intersection nodes will be included in both ways.
-        clip_way.connectNonIncludedTouchingNodes(old_outer_way);            
+        clip_way.connectNonIncludedTouchingNodes(old_outer_way);
     }
 
-    private void handleSimpleSimpleMulti(EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers, List<List<EdNode>> inners) {        
+    private void handleSimpleSimpleMulti(EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers, List<List<EdNode>> inners) {
         // ** Simple way clipped by a simple way produced multiple polygons **
 
         if (inners.isEmpty()) {
@@ -324,7 +324,7 @@ public class ClipAreas {
             addPostTraceNotification(tr("Clipping changes simple way {0} to multipolygon, not supported yet.", subject_way.getUniqueId()));
         }
     }
-    
+
     private void handleSimpleSimpleMultiOuters(EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers) {
         // ** Simple subject clipped by a simple way produced multiple simple (outer) polygons **
 
@@ -363,8 +363,8 @@ public class ClipAreas {
                 clip_way.connectNonIncludedTouchingNodes(new_way);
             }
         }
-    }        
-    
+    }
+
     private void handleSimpleMultiAgressiveUpdate(EdWay clip_way, EdMultipolygon subject_mp, List<EdWay> unmapped_old_outers, List<EdWay> unmapped_old_inners, List<List<EdNode>> unmapped_new_outers, List<List<EdNode>> unmapped_new_inners) {
         // ** Agressive update of a multipolygon clipped by a simple way
 
@@ -397,7 +397,7 @@ public class ClipAreas {
             }
 
             // Remove old outer ways that weren't mapped to new ways
-            // (We assume that the ways have no interesting tags and referrers, 
+            // (We assume that the ways have no interesting tags and referrers,
             // and will be automatically deleted by WayEditor.)
             for (EdWay old_way: unmapped_old_outers) {
                 subject_mp.removeOuterWay(old_way);
@@ -434,7 +434,7 @@ public class ClipAreas {
             }
 
             // Remove old inner ways that weren't mapped to new ways
-            // (We assume that the ways have no interesting tags and referrers, 
+            // (We assume that the ways have no interesting tags and referrers,
             // and will be automatically deleted by WayEditor.)
             for (EdWay old_way: unmapped_old_inners) {
                 subject_mp.removeInnerWay(old_way);
@@ -442,7 +442,7 @@ public class ClipAreas {
             }
         }
     }
-    
+
     private static double getWayArea(List<EdNode> nodes) {
 
         int count = nodes.size();
@@ -471,7 +471,7 @@ public class ClipAreas {
             return;
         m_postTraceNotifications.add(msg);
     }
-    
+
 }
 
 

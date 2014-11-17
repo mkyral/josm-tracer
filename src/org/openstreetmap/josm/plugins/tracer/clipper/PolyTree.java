@@ -42,13 +42,13 @@ import java.util.List;
   public class PolyTree extends PolyNode
   {
       List<PolyNode> m_AllPolys = new ArrayList<>();
-        
-      public void clear() 
+
+      public void clear()
       {
-          m_AllPolys.clear(); 
-          m_Childs.clear(); 
+          m_AllPolys.clear();
+          m_Childs.clear();
       }
-        
+
       public PolyNode getFirst()
       {
           if (m_Childs.size() > 0)

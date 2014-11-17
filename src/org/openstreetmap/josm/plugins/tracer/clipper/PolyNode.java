@@ -80,12 +80,12 @@ public class PolyNode {
 
       public PolyNode getNext()
       {
-          if (m_Childs.size() > 0) 
-              return m_Childs.get(0); 
+          if (m_Childs.size() > 0)
+              return m_Childs.get(0);
           else
-              return getNextSiblingUp();        
+              return getNextSiblingUp();
       }
-  
+
       PolyNode getNextSiblingUp()
       {
           if (m_Parent == null)
@@ -114,5 +114,5 @@ public class PolyNode {
       public boolean isOpen()
       {
           return m_isOpen;
-      }    
+      }
 }

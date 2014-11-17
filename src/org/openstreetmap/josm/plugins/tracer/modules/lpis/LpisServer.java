@@ -81,7 +81,7 @@ public class LpisServer {
         System.out.println("Reply: " + content);
         LpisRecord lpis = new LpisRecord();
         lpis.parseXML("basic", content);
-        
+
         // get additional information for given ID
         if (lpis.getLpisID() > 0) {
             request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
