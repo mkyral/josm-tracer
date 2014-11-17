@@ -64,6 +64,8 @@ public class LpisModule implements TracerModule  {
     private static final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
     private static final String reuseExistingLanduseNodePattern =
         "((landuse=* -landuse=no) | natural=scrub | natural=wood | natural=grassland | natural=wood | leisure=garden)";
+    private static final String retraceAreaPattern =
+        "(landuse=farmland | landuse=meadow | landuse=orchard | landuse=vineyard | landuse=plant_nursery | (landuse=forest source=lpis))";
     
     private static final Match m_reuseExistingLanduseNodeMatch;
     private static final Match m_clipLanduseWayMatch;
@@ -75,7 +77,7 @@ public class LpisModule implements TracerModule  {
             m_reuseExistingLanduseNodeMatch = SearchCompiler.compile(reuseExistingLanduseNodePattern, false, false);
             m_clipLanduseWayMatch = m_reuseExistingLanduseNodeMatch; // use the same 
             m_mergeLanduseWayMatch = m_clipLanduseWayMatch; // use the same
-            m_retraceAreaMatch = m_reuseExistingLanduseNodeMatch;
+            m_retraceAreaMatch = SearchCompiler.compile(retraceAreaPattern, false, false);
         } 
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile pattern"));
