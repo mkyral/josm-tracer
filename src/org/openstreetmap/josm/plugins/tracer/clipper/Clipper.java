@@ -2466,9 +2466,8 @@ public class Clipper extends ClipperBase {
       }
       //------------------------------------------------------------------------------
 
-      static long Round(double value)
+      private static long Round(double value)
       {
-          // #### inspect callers!!
           return value < 0 ? (long)(value - 0.5) : (long)(value + 0.5);
       }
       //------------------------------------------------------------------------------
