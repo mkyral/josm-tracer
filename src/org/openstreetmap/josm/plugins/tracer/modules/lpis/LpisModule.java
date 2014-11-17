@@ -692,7 +692,7 @@ public class LpisModule implements TracerModule  {
                 for (List<EdNode> nw: dsts) {
                     int shared_nodes = w.getSharedNodesCount(nw);
                     if (shared_nodes > 0) {
-                        double similarity = shared_nodes / w.getNodesCount();
+                        double similarity = (double)shared_nodes / w.getNodesCount();
                         queue.add(new SimilarWaysPair(w, nw, similarity));
                     }
                 }
