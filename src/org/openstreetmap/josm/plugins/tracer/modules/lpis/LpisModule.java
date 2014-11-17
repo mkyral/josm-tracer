@@ -297,10 +297,7 @@ public class LpisModule implements TracerModule  {
             tagTracedObject(multipolygon == null ? outer_way : multipolygon);
 
             // Connect to touching nodes of near landuse polygons            
-            if (multipolygon == null)
-                connectExistingTouchingNodesSimple(editor, outer_way);
-            else
-                connectExistingTouchingNodesMulti(editor, multipolygon);
+            connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
 
             // Clip other areas
             if (m_performClipping) {
@@ -462,31 +459,18 @@ public class LpisModule implements TracerModule  {
             return new Pair<>(null, false);
         }
 
-        private void connectExistingTouchingNodesMulti(WayEditor editor, EdMultipolygon multipolygon) {
-            // Setup filters - include landuse nodes only, exclude all nodes of the multipolygon itself
+        private void connectExistingTouchingNodes(EdObject obj) {
+            // Setup filters - include landuse nodes only, exclude all nodes of the object itself
             IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
-            IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(multipolygon);
+            IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(obj);
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
 
-            // Connect all outer ways
-            List<EdWay> outer_ways = multipolygon.outerWays();
-            for (EdWay way: outer_ways)
-                way.connectExistingTouchingNodes(filter);
-
-            // Connect all inner ways
-            List<EdWay> inner_ways = multipolygon.innerWays();
-            for (EdWay way: inner_ways)
-                way.connectExistingTouchingNodes(filter);
-        }
-
-        private void connectExistingTouchingNodesSimple(WayEditor editor, EdWay way) {
-            // Setup filters - include landuse nodes only, exclude all nodes of the way itself
-            IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
-            IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(way);
-            IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
-
-            // Connect nodes
-            way.connectExistingTouchingNodes(filter);
+            if (obj instanceof EdWay)
+                ((EdWay)obj).connectExistingTouchingNodes(filter);
+            else if (obj instanceof EdMultipolygon)
+                ((EdMultipolygon)obj).connectExistingTouchingNodes(filter);
+            else
+                throw new AssertionError("Unsupported EdObject instance");
         }
     }
 }

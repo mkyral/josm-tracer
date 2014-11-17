@@ -306,4 +306,29 @@ public class EdMultipolygon extends EdObject {
             throw new IllegalStateException("EdMultipolygon contains no ways");
         return box;
     }
+    
+    /**
+     * Add all existing nodes that touch this multipolygon (i.e. are very close to
+     * any of its ways' segments) and satisfy given predicate.
+     * Nodes are added to the right positions into way segments.
+     *
+     * This function doesn't impose any additional restrictions to matching nodes,
+     * except those provided by "filter" predicate.
+     *
+     * @param filter EdNode predicate to filter existing nodes
+     * @return true if any existing nodes were connected, false otherwise
+     */
+    public boolean connectExistingTouchingNodes(IEdNodePredicate filter) {
+        checkEditable();
+        boolean r = false;
+
+        for (EdWay way: m_outerWays)
+            if (way.connectExistingTouchingNodes(filter))
+                r = true;
+        for (EdWay way: m_innerWays)
+            if (way.connectExistingTouchingNodes(filter))
+                r = true;
+        
+        return r;
+    }    
 }
