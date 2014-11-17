@@ -34,7 +34,6 @@ import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
@@ -52,9 +51,6 @@ import static org.openstreetmap.josm.tools.I18n.*;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Pair;
 import org.xml.sax.SAXException;
-
-// #### TODO: zjistit proc diference s relaci 24399 vzdy vede k modifikaci multipolygonu, i kdyz trasovana cesta je od nej 
-// nekolik kilometru daleko :-) Patrne chyby v geometrii vstupniho multipolygonu, s kterymi clip provadi buhvico...
 
 public class LpisModule implements TracerModule  {
 

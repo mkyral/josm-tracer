@@ -45,7 +45,7 @@ public class PolyNode {
       int m_Index;
       JoinType m_jointype;
       EndType m_endtype;
-      List<PolyNode> m_Childs = new ArrayList<PolyNode>();
+      List<PolyNode> m_Childs = new ArrayList<>();
       boolean m_isOpen;
 
       private boolean isHoleNode()

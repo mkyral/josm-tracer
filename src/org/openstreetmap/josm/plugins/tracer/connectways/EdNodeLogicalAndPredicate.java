@@ -31,10 +31,12 @@ public final class EdNodeLogicalAndPredicate implements IEdNodePredicate {
         m_pred2 = pred2;
     }
 
+    @Override
     public boolean evaluate(EdNode ednode) {
         return m_pred1.evaluate(ednode) && m_pred2.evaluate(ednode);
     }
 
+    @Override
     public boolean evaluate(Node node) {
         return m_pred1.evaluate(node) && m_pred2.evaluate(node);
     }

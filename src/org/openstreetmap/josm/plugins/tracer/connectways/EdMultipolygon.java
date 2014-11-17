@@ -7,7 +7,6 @@ import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
-import org.openstreetmap.josm.data.osm.Way;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 // #### TODO: explicitly enforce that every way in a multipolygon is not a member of another edited or external multipolygon.

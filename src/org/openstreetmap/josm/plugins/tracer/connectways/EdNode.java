@@ -44,6 +44,7 @@ public class EdNode extends EdObject {
         m_node = new Node(original_node);
     }
 
+    @Override
     protected OsmPrimitive currentPrimitive() {
         return m_node;
     }

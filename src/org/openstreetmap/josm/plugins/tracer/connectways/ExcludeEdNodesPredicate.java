@@ -30,15 +30,15 @@ public final class ExcludeEdNodesPredicate implements IEdNodePredicate {
     private final Set<EdNode> m_nodes;
 
     public ExcludeEdNodesPredicate(Set<EdNode> nodes) {
-        m_nodes = new HashSet<EdNode>(nodes);
+        m_nodes = new HashSet<>(nodes);
     }
 
     public ExcludeEdNodesPredicate(EdWay way) {
-        m_nodes = new HashSet<EdNode>(way.getNodes());        
+        m_nodes = new HashSet<>(way.getNodes());        
     }
 
     public ExcludeEdNodesPredicate(EdMultipolygon mp) {
-        m_nodes = new HashSet<EdNode>();
+        m_nodes = new HashSet<>();
         List<EdWay> outer_ways = mp.outerWays();
         for (EdWay way: outer_ways) {
             List<EdNode> nodes = way.getNodes();
@@ -53,10 +53,12 @@ public final class ExcludeEdNodesPredicate implements IEdNodePredicate {
         }
     }
 
+    @Override
     public boolean evaluate(EdNode ednode) {
         return !m_nodes.contains(ednode);
     }
 
+    @Override
     public boolean evaluate(Node node) {
         return true;
     }

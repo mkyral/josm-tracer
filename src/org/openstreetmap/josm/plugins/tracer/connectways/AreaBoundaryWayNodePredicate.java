@@ -34,6 +34,7 @@ public final class AreaBoundaryWayNodePredicate implements IEdNodePredicate {
         m_areaFilter = new AreaPredicate(filter);
     }
 
+    @Override
     public boolean evaluate(EdNode ednode) {
         List<EdWay> edways = ednode.getEditorReferrers(EdWay.class);
         for (EdWay way: edways) {
@@ -49,6 +50,7 @@ public final class AreaBoundaryWayNodePredicate implements IEdNodePredicate {
         return false;
     }
 
+    @Override
     public boolean evaluate(Node node) {
         List<Way> ways = OsmPrimitive.getFilteredList(node.getReferrers(), Way.class);
         for (Way way: ways) {

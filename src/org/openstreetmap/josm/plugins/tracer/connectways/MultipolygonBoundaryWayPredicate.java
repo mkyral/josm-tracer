@@ -36,6 +36,7 @@ public final class MultipolygonBoundaryWayPredicate implements IEdWayPredicate {
         m_filter = filter;
     }
 
+    @Override
     public boolean evaluate(EdWay way) {
         List<EdMultipolygon> mps = way.getEditorReferrers(EdMultipolygon.class);
         for (EdMultipolygon mp: mps) {
@@ -58,6 +59,7 @@ public final class MultipolygonBoundaryWayPredicate implements IEdWayPredicate {
         return false;
     }
 
+    @Override
     public boolean evaluate(Way way) {
 
         boolean way_match = m_filter.match(way);

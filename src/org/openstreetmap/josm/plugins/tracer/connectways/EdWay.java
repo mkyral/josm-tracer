@@ -57,9 +57,9 @@ public class EdWay extends EdObject {
             throw new IllegalArgumentException(tr("EdNode(s) from a different WayEditor"));
 
         if (ednodes != null)
-            m_nodes = new ArrayList<EdNode>(ednodes);
+            m_nodes = new ArrayList<>(ednodes);
         else
-            m_nodes = new ArrayList<EdNode>();
+            m_nodes = new ArrayList<>();
 
         for (EdNode en: m_nodes)
             en.addRef(this);
@@ -70,7 +70,7 @@ public class EdWay extends EdObject {
         m_way = new Way(original_way);
         m_way.setNodes(null);
 
-        m_nodes = new ArrayList<EdNode>(original_way.getNodesCount());
+        m_nodes = new ArrayList<>(original_way.getNodesCount());
         for (int i = 0; i < original_way.getNodesCount(); i++)
             m_nodes.add(editor.useNode(original_way.getNode(i)));
 
@@ -80,13 +80,13 @@ public class EdWay extends EdObject {
 
     public void removeAllNodes() {
         checkEditable();
-        if (m_nodes.size() == 0)
+        if (m_nodes.isEmpty())
             return;
 
         for (EdNode en: m_nodes)
             en.removeRef(this);
 
-        m_nodes = new ArrayList<EdNode>();
+        m_nodes = new ArrayList<>();
         setModified();
     }
 
@@ -105,7 +105,7 @@ public class EdWay extends EdObject {
         for (EdNode en: m_nodes)
             en.removeRef(this);
 
-        m_nodes = new ArrayList<EdNode>(ednodes);
+        m_nodes = new ArrayList<>(ednodes);
 
         for (EdNode en: m_nodes)
             en.addRef(this);
@@ -141,6 +141,7 @@ public class EdWay extends EdObject {
         return (m_nodes.size() >= 3) && (m_nodes.get(0) == m_nodes.get(m_nodes.size() - 1));
     }
 
+    @Override
     protected OsmPrimitive currentPrimitive() {
         return m_way;
     }    
@@ -162,7 +163,7 @@ public class EdWay extends EdObject {
         }
         else {
             Way fin = new Way(m_way);
-            ArrayList<Node> nodes = new ArrayList<Node>(m_nodes.size());
+            ArrayList<Node> nodes = new ArrayList<>(m_nodes.size());
             for (EdNode en: m_nodes)
                 nodes.add(en.finalNode());
             fin.setNodes(nodes);            
@@ -211,6 +212,7 @@ public class EdWay extends EdObject {
             return fin;
     }
     
+    @Override
     public BBox getBBox() {
         checkNotDeleted();
         if (isFinalized())
@@ -227,7 +229,7 @@ public class EdWay extends EdObject {
             throw new IllegalArgumentException(tr("No filter specified"));
 
         boolean modified = false;
-        List<EdNode> new_nodes = new ArrayList<EdNode> (m_nodes.size());
+        List<EdNode> new_nodes = new ArrayList<> (m_nodes.size());
         for (EdNode en: m_nodes) {
             EdNode nn = getEditor().findExistingNodeForDuplicateMerge(en, filter);
             if (nn != null) {
@@ -260,7 +262,7 @@ public class EdWay extends EdObject {
         if (filter == null)
             throw new IllegalArgumentException(tr("No filter specified"));
 
-        Map<EdNode, Pair<Double, Integer>> nodes_map = new HashMap<EdNode, Pair<Double, Integer>>();
+        Map<EdNode, Pair<Double, Integer>> nodes_map = new HashMap<>();
 
         // get every node touching the way, assign it to closest way segment
         for (int i = 0; i < m_nodes.size() - 1; i++) {
@@ -271,7 +273,7 @@ public class EdWay extends EdObject {
                 Pair<Double, Integer> best_segment = nodes_map.get(node);
                 double dist = getEditor().geomUtils().distanceToSegmentMeters(node, x, y);
                 if (best_segment == null || best_segment.a > dist) {
-                    nodes_map.put(node, new Pair<Double, Integer> (dist, i));
+                    nodes_map.put(node, new Pair<> (dist, i));
                 }
             }
         }
@@ -307,7 +309,7 @@ public class EdWay extends EdObject {
         final BBox way_bbox = this.getBBox(tolerance_degs);
         
         // filter nodes
-        Set<EdNode> other_nodes = new HashSet<EdNode>();
+        Set<EdNode> other_nodes = new HashSet<>();
         for (EdNode node: other.m_nodes) {
             if (!way_bbox.bounds(node.getCoor()))
                 continue;
@@ -318,7 +320,7 @@ public class EdWay extends EdObject {
         if (other_nodes.isEmpty())
             return false;
         
-        Map<EdNode, Pair<Double, Integer>> nodes_map = new HashMap<EdNode, Pair<Double, Integer>>();
+        Map<EdNode, Pair<Double, Integer>> nodes_map = new HashMap<>();
 
         // get every node touching the way, assign it to closest way segment
         for (int i = 0; i < m_nodes.size() - 1; i++) {
@@ -337,7 +339,7 @@ public class EdWay extends EdObject {
                 Pair<Double, Integer> best_segment = nodes_map.get(node);
                 double dist = getEditor().geomUtils().distanceToSegmentMeters(node, x, y);
                 if (best_segment == null || best_segment.a > dist) {
-                    nodes_map.put(node, new Pair<Double, Integer> (dist, i));
+                    nodes_map.put(node, new Pair<> (dist, i));
                 }
             }
         }
@@ -352,7 +354,7 @@ public class EdWay extends EdObject {
     private void insertTouchingNodesIntoWaySegments(Map<EdNode, Pair<Double, Integer>> nodes_map) {
 
         Set<Map.Entry<EdNode, Pair<Double, Integer>>> entry_set = nodes_map.entrySet();
-        List<EdNode> new_nodes = new ArrayList<EdNode>(m_nodes.size() + nodes_map.size());
+        List<EdNode> new_nodes = new ArrayList<>(m_nodes.size() + nodes_map.size());
 
         // go through all way segments and add touching nodes
         for (int i = 0; i < m_nodes.size(); i++) {
@@ -360,7 +362,7 @@ public class EdWay extends EdObject {
             new_nodes.add(m_nodes.get(i));
 
             // get all nodes mapped to this way segment
-            List<EdNode> add_nodes = new ArrayList<EdNode> ();
+            List<EdNode> add_nodes = new ArrayList<> ();
             for (Map.Entry<EdNode, Pair<Double, Integer>> entry: entry_set) {
                 if (entry.getValue().b != i)
                     continue;
@@ -372,6 +374,7 @@ public class EdWay extends EdObject {
 
             // sort nodes according to the distance from segment's first node
             Collections.sort(add_nodes, new Comparator<EdNode>(){
+                @Override
                 public int compare(EdNode d1, EdNode d2) {
                     return Double.compare(x.getCoor().distance(d1.getCoor()), x.getCoor().distance(d2.getCoor()));
                 }

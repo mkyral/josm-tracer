@@ -225,13 +225,13 @@ public abstract class EdObject {
             if (!type.isInstance(m_refs))
                 return Collections.emptyList();
 
-            List<T> result = new ArrayList<T>(1);
+            List<T> result = new ArrayList<>(1);
             result.add(type.cast(m_refs));
             return result;
         }
         
         EdObject[] refs = (EdObject[])m_refs;
-        List<T> result = new ArrayList<T> ();
+        List<T> result = new ArrayList<> ();
         for (EdObject obj: refs) {
             if (type.isInstance(obj)) {
                 result.add(type.cast(obj));
@@ -251,7 +251,7 @@ public abstract class EdObject {
             return Collections.emptyList();
             
         List<OsmPrimitive> parents = m_original.getReferrers();
-        List<T> result = new ArrayList<T> ();
+        List<T> result = new ArrayList<> ();
         for (OsmPrimitive parent: parents) {
             if (!type.isInstance(parent))
                 continue;
