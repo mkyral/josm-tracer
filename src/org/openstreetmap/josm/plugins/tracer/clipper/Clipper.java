@@ -698,16 +698,10 @@ class ClipperBase {
       //progression of the bounds - ie so their xbots will align with the
       //adjoining lower edge. [Helpful in the ProcessHorizontal() method.]
       long aux;
-        
+
       aux = e.iTop.X;
       e.iTop.X = e.iBot.X;
       e.iBot.X = aux;      
-      
-      /* #### Z-values
-      aux= e.iTop.Z;
-      e.iTop.Z = e.iBot.Z;
-      e.iBot.Z = aux;
-              */
     }
     //------------------------------------------------------------------------------
     
@@ -1023,11 +1017,6 @@ public class Clipper extends ClipperBase {
         m_GhostJoins.add(j);
       }
       //------------------------------------------------------------------------------
-
-      void setZ(final Point2d pt, TEdge e1, TEdge e2)
-      {
-          // #### add Z-support
-      }
       
       private void insertLocalMinimaIntoAEL(long botY)
       {
@@ -1920,8 +1909,6 @@ public class Clipper extends ClipperBase {
 
         boolean e1Contributing = (e1.OutIdx >= 0);
         boolean e2Contributing = (e2.OutIdx >= 0);
-
-        setZ(pt, e1, e2);
 
           //if either edge is on an OPEN path ...
           if (e1.WindDelta == 0 || e2.WindDelta == 0)
