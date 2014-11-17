@@ -344,7 +344,7 @@ public class ClipAreas {
         List<EdNode> maxnodes = null;
         double maxarea = Double.NEGATIVE_INFINITY;
         for (List<EdNode> nodes: outers) {
-            double area = getClosedWayArea(nodes);
+            double area = getWayArea(nodes);
             if (area < maxarea)
                 continue;
             maxnodes = nodes;
@@ -443,23 +443,27 @@ public class ClipAreas {
         }
     }
     
-    private static double getClosedWayArea(List<EdNode> nodes) {
-        // Joseph O'Rourke, Computational Geometry in C, copied from GPCJ2
+    private static double getWayArea(List<EdNode> nodes) {
 
-        if (nodes.size() < 4)
-            return 0;
+        int count = nodes.size();
 
-        double area = 0;
-        EastNorth a = nodes.get(0).getEastNorth();
-
-        for (int i = 1; i < nodes.size() - 2; i++) {
-            EastNorth b = nodes.get(i).getEastNorth();
-            EastNorth c = nodes.get(i+1).getEastNorth();
-            double t = ((c.getX() - b.getX()) * (a.getY() - b.getY())) - ((a.getX() - b.getX()) * (c.getY() - b.getY()));
-            area += t;
+        // for closed ways, ignore last node (
+        if (count > 1 && nodes.get(0).equals(nodes.get(count - 1))) {
+            --count;
         }
 
-        return Math.abs(area) / 2;
+        if (count <= 2) {
+            return 0;
+        }
+
+        double area = 0;
+        EastNorth ej = nodes.get(count - 1).getEastNorth();
+        for (int i = 0; i < count; ++i) {
+            EastNorth ei = nodes.get(i).getEastNorth();
+            area += (ej.getX() + ei.getX()) * (ej.getY() - ei.getY());
+            ej = ei;
+        }
+        return Math.abs(area / 2);
     }
 
     private void addPostTraceNotification(String msg) {
