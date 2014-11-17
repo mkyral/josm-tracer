@@ -1,6 +1,6 @@
 /**
  *  Tracer - plugin for JOSM
- *  Jan Bilak, Marian Kyral
+ *  Jan Bilak, Marian Kyral, Martin Svec
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
 
 package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
