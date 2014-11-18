@@ -456,8 +456,8 @@ public class RuianRecord {
   }
 
   /**
-   *  Return type of building
-   *  @return Type of building
+   *  Return Ruian ID of the building
+   *  @return Building Ruian ID
    */
   public long getBuildingID() {
     return m_ruian_id;

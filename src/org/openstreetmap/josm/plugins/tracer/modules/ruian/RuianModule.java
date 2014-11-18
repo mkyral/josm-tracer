@@ -23,7 +23,6 @@ import java.awt.Point;
 import java.util.*;
 
 import javax.swing.JOptionPane;
-// import javax.swing.SwingUtilities;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.search.SearchCompiler;
@@ -31,7 +30,6 @@ import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
-// import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
@@ -132,7 +130,6 @@ public class RuianModule implements TracerModule {
         private final boolean m_performRetrace;
 
         private RuianRecord m_record;
-        private Exception m_asyncException;
         private boolean m_cancelled;
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
@@ -144,7 +141,6 @@ public class RuianModule implements TracerModule {
             this.m_alt = alt;
             this.m_shift = shift;
             this.m_record = null;
-            this.m_asyncException = null;
             this.m_cancelled = false;
 
             this.m_performClipping = !m_ctrl;
@@ -170,7 +166,7 @@ public class RuianModule implements TracerModule {
             System.out.println("-----------------");
             System.out.println("");
 
-            progressMonitor.indeterminateSubTask(tr("Downloading RUIAN buidling data..."));
+            progressMonitor.indeterminateSubTask(tr("Downloading RUIAN building data..."));
             try {
                 RuianServer server = new RuianServer();
                 m_record = server.trace(m_pos, sUrl);
@@ -283,7 +279,7 @@ public class RuianModule implements TracerModule {
             // Look for object to retrace
             EdObject retrace_object = null;
             if (m_performRetrace) {
-                Pair<EdObject, Boolean> repl = getObjectToRetrace(editor, m_pos);
+                Pair<EdObject, Boolean> repl = getObjectToRetrace(editor, m_pos, m_retraceAreaMatch);
                 retrace_object = repl.a;
                 boolean ambiguous_retrace = repl.b;
 
@@ -456,8 +452,8 @@ public class RuianModule implements TracerModule {
 //             return new Pair<>(outer_way, multipolygon);
         }
 
-        private Pair<EdObject, Boolean> getObjectToRetrace(WayEditor editor, LatLon pos) {
-            AreaPredicate filter = new AreaPredicate(m_retraceAreaMatch);
+        private Pair<EdObject, Boolean> getObjectToRetrace(WayEditor editor, LatLon pos, Match retraceAreaMatch) {
+            AreaPredicate filter = new AreaPredicate(retraceAreaMatch);
             Set<EdObject> areas = editor.useNonEditedAreasContainingPoint(pos, filter);
 
             String ruianref = Long.toString(m_record.getBuildingID());
@@ -466,9 +462,10 @@ public class RuianModule implements TracerModule {
             boolean multiple_areas = false;
             EdObject building_area = null;
             for (EdObject area: areas) {
-                String source = area.get("source");
-                if (source == null || !source.equals("cuzk:ruian"))
-                    continue;
+                  // Retrace all building if possible
+//                 String source = area.get("source");
+//                 if (source == null || !source.equals("cuzk:ruian"))
+//                     continue;
 
                 if (area instanceof EdWay)
                     System.out.println("Retrace candidate EdWay: " + Long.toString(area.getUniqueId()));
