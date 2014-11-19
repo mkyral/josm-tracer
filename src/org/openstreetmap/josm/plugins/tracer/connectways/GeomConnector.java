@@ -28,18 +28,21 @@ import org.openstreetmap.josm.data.projection.Projections;
 import org.openstreetmap.josm.tools.Geometry;
 
 
-public class GeomUtils {
+public class GeomConnector {
 
     private final double m_duplicateNodesPrecision;
 
     private final double m_metersPerDegree = 111120.00071117;
-    private final double m_pointOnLineToleranceMeters = 0.20;        // #### magic, tuned for LPIS, make it optional
-    private final double m_pointOnLineMaxLateralAngle = Math.PI / 3; // #### magic, tuned for LPIS, make it optional, must be < Pi/2
+    private final double m_pointOnLineToleranceMeters;        // 0.2 for LPIS
+    private final double m_pointOnLineMaxLateralAngle;        // Math.PI / 3 for LPIS, must be < Pi/2
 
-	private final double m_pointOnLineToleranceDegrees = m_pointOnLineToleranceMeters/m_metersPerDegree;
+    private final double m_pointOnLineToleranceDegrees;
 
-    public GeomUtils () {
-        m_duplicateNodesPrecision = Main.pref.getDouble("validator.duplicatenodes.precision", 0.);
+    public GeomConnector (double point_on_line_tolerance_meters, double point_on_line_max_lateral_angle) {
+        m_duplicateNodesPrecision = Main.pref.getDouble("validator.duplicatenodes.precision", 0.0);
+        m_pointOnLineToleranceMeters = point_on_line_tolerance_meters;
+        m_pointOnLineMaxLateralAngle = point_on_line_max_lateral_angle;
+        m_pointOnLineToleranceDegrees = m_pointOnLineToleranceMeters/m_metersPerDegree;
     }
 
     public double pointOnLineToleranceDegrees() {

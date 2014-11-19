@@ -35,10 +35,12 @@ import org.openstreetmap.josm.tools.Pair;
 public class ClipAreas {
 
     private final WayEditor m_editor;
+    private final GeomConnector m_gconn;
     private final PostTraceNotifications m_postTraceNotifications;
 
-    public ClipAreas (WayEditor editor, PostTraceNotifications notifications) {
+    public ClipAreas (WayEditor editor, GeomConnector gconn, PostTraceNotifications notifications) {
         m_editor = editor;
+        m_gconn = gconn;
         m_postTraceNotifications = notifications;
     }
 
@@ -70,11 +72,11 @@ public class ClipAreas {
         // LPIS polygons series contain very small gaps that need to be elliminated before
         // clipping is performed. Also, there are false joint points on LPIS polygons' edges
         // where nodes must be added too.
-        subject_way.connectNonIncludedTouchingNodes(clip_way);
+        subject_way.connectNonIncludedTouchingNodes(m_gconn, clip_way);
 
         System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_way=" + Long.toString(subject_way.getUniqueId()));
 
-        AngPolygonClipper clipper = new AngPolygonClipper(m_editor);
+        AngPolygonClipper clipper = new AngPolygonClipper(m_editor, m_gconn);
         clipper.polygonDifference(clip_way, subject_way);
         List<List<EdNode>> outers = clipper.outerPolygons();
         List<List<EdNode>> inners = clipper.innerPolygons();
@@ -107,12 +109,12 @@ public class ClipAreas {
         // clipping is performed. Also, there are false joint points on LPIS polygons' edges
         // where nodes must be added too.
         for (EdWay way : subject_mp.allWays()) {
-            way.connectNonIncludedTouchingNodes(clip_way);
+            way.connectNonIncludedTouchingNodes(m_gconn, clip_way);
         }
 
         System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_relation=" + Long.toString(subject_mp.getUniqueId()));
 
-        AngPolygonClipper clipper = new AngPolygonClipper(m_editor);
+        AngPolygonClipper clipper = new AngPolygonClipper(m_editor, m_gconn);
         clipper.polygonDifference(clip_way, subject_mp);
         List<List<EdNode>> unmapped_new_outers = new ArrayList<>(clipper.outerPolygons());
         List<List<EdNode>> unmapped_new_inners = new ArrayList<>(clipper.innerPolygons());
@@ -295,7 +297,7 @@ public class ClipAreas {
 
         // Connect clip_way to subject_way, this step guarantees that all newly created
         // intersection nodes will be included in both ways.
-        clip_way.connectNonIncludedTouchingNodes(subject_way);
+        clip_way.connectNonIncludedTouchingNodes(m_gconn, subject_way);
     }
 
     private void handleSimpleMultiOneOuterModified (EdWay clip_way, EdMultipolygon subject_mp, EdWay old_outer_way, List<EdNode> result) {
@@ -308,7 +310,7 @@ public class ClipAreas {
 
         // Connect clip_way to subject_way, this step guarantees that all newly created
         // intersection nodes will be included in both ways.
-        clip_way.connectNonIncludedTouchingNodes(old_outer_way);
+        clip_way.connectNonIncludedTouchingNodes(m_gconn, old_outer_way);
     }
 
     private void handleSimpleSimpleMulti(EdWay clip_way, EdWay subject_way, List<List<EdNode>> outers, List<List<EdNode>> inners) {
@@ -355,12 +357,12 @@ public class ClipAreas {
         for (List<EdNode> nodes: outers) {
             if (nodes == maxnodes) {
                 subject_way.setNodes(nodes);
-                clip_way.connectNonIncludedTouchingNodes(subject_way);
+                clip_way.connectNonIncludedTouchingNodes(m_gconn, subject_way);
             }
             else {
                 EdWay new_way = m_editor.newWay(nodes);
                 new_way.setKeys(subject_way.getKeys());
-                clip_way.connectNonIncludedTouchingNodes(new_way);
+                clip_way.connectNonIncludedTouchingNodes(m_gconn, new_way);
             }
         }
     }
@@ -378,7 +380,7 @@ public class ClipAreas {
                 EdWay old_way = pair.getKey();
                 List<EdNode> new_nodes = pair.getValue();
                 old_way.setNodes(new_nodes);
-                clip_way.connectNonIncludedTouchingNodes(old_way);
+                clip_way.connectNonIncludedTouchingNodes(m_gconn, old_way);
                 unmapped_old_outers.remove(old_way);
                 unmapped_new_outers.remove(new_nodes);
                 System.out.println("Changing outer geometry " + Long.toString(old_way.getUniqueId()));
@@ -391,7 +393,7 @@ public class ClipAreas {
                 EdWay old_way = outer_revs.get(new_nodes);
                 if (old_way != null)
                     new_way.setKeys(old_way.getKeys());
-                clip_way.connectNonIncludedTouchingNodes(new_way);
+                clip_way.connectNonIncludedTouchingNodes(m_gconn, new_way);
                 subject_mp.addOuterWay(new_way);
                 System.out.println("Adding outer way " + Long.toString(new_way.getUniqueId()));
             }
@@ -415,7 +417,7 @@ public class ClipAreas {
                 EdWay old_way = pair.getKey();
                 List<EdNode> new_nodes = pair.getValue();
                 old_way.setNodes(new_nodes);
-                clip_way.connectNonIncludedTouchingNodes(old_way);
+                clip_way.connectNonIncludedTouchingNodes(m_gconn, old_way);
                 unmapped_old_inners.remove(old_way);
                 unmapped_new_inners.remove(new_nodes);
                 System.out.println("Changing inner geometry " + Long.toString(old_way.getUniqueId()));
@@ -428,7 +430,7 @@ public class ClipAreas {
                 EdWay old_way = inner_revs.get(new_nodes);
                 if (old_way != null)
                     new_way.setKeys(old_way.getKeys());
-                clip_way.connectNonIncludedTouchingNodes(new_way);
+                clip_way.connectNonIncludedTouchingNodes(m_gconn, new_way);
                 subject_mp.addInnerWay(new_way);
                 System.out.println("Adding inner way " + Long.toString(new_way.getUniqueId()));
             }

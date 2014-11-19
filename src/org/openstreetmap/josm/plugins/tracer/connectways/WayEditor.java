@@ -47,7 +47,6 @@ public class WayEditor {
 
     private final long m_idGuard;
     private final DataSet m_dataSet;
-    private final GeomUtils m_geomUtils;
 
     private final Set<EdNode> m_nodes;
     private final Set<EdWay> m_ways;
@@ -56,20 +55,15 @@ public class WayEditor {
     private final HashMap<Long, EdWay> m_originalWays;
     private final HashMap<Long, EdMultipolygon> m_originalMultipolygons;
 
-    public WayEditor(DataSet dataset, GeomUtils geom_utils) {
+    public WayEditor(DataSet dataset) {
         m_dataSet = dataset;
         m_idGuard = (new Node()).getUniqueId();
-        m_geomUtils = geom_utils;
         m_nodes = new HashSet<> ();
         m_ways = new HashSet<> ();
         m_multipolygons = new HashSet<> ();
         m_originalNodes = new HashMap<> ();
         m_originalWays = new HashMap<> ();
         m_originalMultipolygons = new HashMap<> ();
-    }
-
-    public GeomUtils geomUtils() {
-        return m_geomUtils;
     }
 
     public DataSet getDataSet() {
@@ -196,8 +190,8 @@ public class WayEditor {
         return obj.getEditor() == this;
     }
 
-    Set<EdNode> findExistingNodesTouchingWaySegment(EdNode x, EdNode y, IEdNodePredicate filter) {
-        double oversize = geomUtils().pointOnLineToleranceDegrees() * 10;
+    Set<EdNode> findExistingNodesTouchingWaySegment(GeomConnector gconn, EdNode x, EdNode y, IEdNodePredicate filter) {
+        double oversize = gconn.pointOnLineToleranceDegrees() * 10;
         Node nx = new Node(x.currentNodeUnsafe());
         Node ny = new Node(y.currentNodeUnsafe());
         BBox bbox = new BBox (nx);
@@ -214,7 +208,7 @@ public class WayEditor {
                 continue;
             if (!filter.evaluate(nd))
                 continue;
-            if (!geomUtils().pointOnLine(nd, nx, ny))
+            if (!gconn.pointOnLine(nd, nx, ny))
                 continue;
             result.add(useNode(nd));
         }
@@ -225,7 +219,7 @@ public class WayEditor {
                 continue;
             if (!filter.evaluate(ednd))
                 continue;
-            if (!geomUtils().pointOnLine(ednd.currentNodeUnsafe(), nx, ny))
+            if (!gconn.pointOnLine(ednd.currentNodeUnsafe(), nx, ny))
                 continue;
             result.add(ednd);
         }
@@ -233,7 +227,7 @@ public class WayEditor {
         return result;
     }
 
-    EdNode findExistingNodeForDuplicateMerge(EdNode src, IEdNodePredicate filter) {
+    EdNode findExistingNodeForDuplicateMerge(GeomConnector gconn, EdNode src, IEdNodePredicate filter) {
         if (src == null || src.isDeleted())
             throw new IllegalArgumentException();
 
@@ -250,7 +244,7 @@ public class WayEditor {
             if (ednd != null) {
                 if (ednd.isDeleted())
                     continue;
-                if (src == ednd || ((m_geomUtils.duplicateNodes(ednd.getCoor(), src.getCoor()) && filter.evaluate(ednd)))) {
+                if (src == ednd || ((gconn.duplicateNodes(ednd.getCoor(), src.getCoor()) && filter.evaluate(ednd)))) {
                     if (ednode1 == null)
                         ednode1 = ednd;
                     else if (ednd.originalNode().getUniqueId() > ednode1.originalNode().getUniqueId())
@@ -258,7 +252,7 @@ public class WayEditor {
                 }
             }
             else {
-                if ((m_geomUtils.duplicateNodes(nd.getCoor(), src.getCoor()) && filter.evaluate(nd))) {
+                if ((gconn.duplicateNodes(nd.getCoor(), src.getCoor()) && filter.evaluate(nd))) {
                     if (node1 == null)
                         node1 = nd;
                     else if (nd.getUniqueId() > node1.getUniqueId())
@@ -284,7 +278,7 @@ public class WayEditor {
                 continue;
             if (!ednd.hasEditorReferrers())
                 continue;
-            if (src == ednd || ((m_geomUtils.duplicateNodes(ednd.getCoor(), src.getCoor()) && filter.evaluate(ednd)))) {
+            if (src == ednd || ((gconn.duplicateNodes(ednd.getCoor(), src.getCoor()) && filter.evaluate(ednd)))) {
                 if (ednd.hasOriginal()) {
                     if (ornode2 == null)
                         ornode2 = ednd;

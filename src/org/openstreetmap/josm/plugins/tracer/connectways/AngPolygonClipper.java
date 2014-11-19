@@ -39,15 +39,17 @@ import org.openstreetmap.josm.plugins.tracer.clipper.PolyType;
 
 public class AngPolygonClipper {
     private final WayEditor m_editor;
+    private final GeomConnector m_gconn;
 
     private List<List<EdNode>> m_outers;
     private List<List<EdNode>> m_inners;
 
     private Map<LatLon, EdNode> m_nodesMap;
 
-    public AngPolygonClipper (WayEditor editor) {
+    public AngPolygonClipper (WayEditor editor, GeomConnector gconn) {
 
         m_editor = editor;
+        m_gconn = gconn;
 
         m_outers = null;
         m_inners = null;
@@ -131,7 +133,7 @@ public class AngPolygonClipper {
         for (Point2d point : p) {
             EdNode node = point2dToNode(point);
             // avoid two consecutive duplicate nodes ..x,x..
-            if (!m_editor.geomUtils().duplicateNodes(node.getCoor(), prev_coor)) {
+            if (!m_gconn.duplicateNodes(node.getCoor(), prev_coor)) {
                 list.add(node);
                 prev_coor = node.getCoor();
                 //System.out.println(" - d: node " + Long.toString(node.getUniqueId()));
@@ -140,7 +142,7 @@ public class AngPolygonClipper {
 
         // Avoid consecutive duplicate nodes around the end of polygon
         while ((list.size() >= 2) &&
-               (m_editor.geomUtils().duplicateNodes(list.get(0).getCoor(), list.get(list.size() - 1).getCoor())))
+               (m_gconn.duplicateNodes(list.get(0).getCoor(), list.get(list.size() - 1).getCoor())))
             list.remove(list.size() - 1);
 
         boolean changed;
@@ -156,8 +158,8 @@ public class AngPolygonClipper {
                 EdNode p0 = list.get(i);
                 EdNode p1 = list.get(i1);
                 EdNode p2 = list.get(i2);
-                if (m_editor.geomUtils().pointOnLine(p2, p0, p1) ||
-                    m_editor.geomUtils().pointOnLine(p0, p1, p2)) {
+                if (m_gconn.pointOnLine(p2, p0, p1) ||
+                    m_gconn.pointOnLine(p0, p1, p2)) {
                     list.remove(i1);
                     i = i >= 1 ? i - 1 : 0;
                     changed = true;
@@ -172,7 +174,7 @@ public class AngPolygonClipper {
             while ((list.size() >= 3) && i < list.size ()) {
                 int i1 = (i + 1) % list.size();
                 int i2 = (i + 2) % list.size();
-                if (m_editor.geomUtils().duplicateNodes(list.get(i).getCoor(), list.get(i2).getCoor())) {
+                if (m_gconn.duplicateNodes(list.get(i).getCoor(), list.get(i2).getCoor())) {
                     System.out.println(" x d: tail " + Long.toString(list.get(i).getUniqueId()));
                     list.remove(i1);
                     list.remove(i2 > i1 ? i1 : 0);

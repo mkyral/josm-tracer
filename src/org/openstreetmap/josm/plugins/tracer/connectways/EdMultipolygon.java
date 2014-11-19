@@ -318,15 +318,15 @@ public class EdMultipolygon extends EdObject {
      * @param filter EdNode predicate to filter existing nodes
      * @return true if any existing nodes were connected, false otherwise
      */
-    public boolean connectExistingTouchingNodes(IEdNodePredicate filter) {
+    public boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter) {
         checkEditable();
         boolean r = false;
 
         for (EdWay way: m_outerWays)
-            if (way.connectExistingTouchingNodes(filter))
+            if (way.connectExistingTouchingNodes(gconn, filter))
                 r = true;
         for (EdWay way: m_innerWays)
-            if (way.connectExistingTouchingNodes(filter))
+            if (way.connectExistingTouchingNodes(gconn, filter))
                 r = true;
 
         return r;

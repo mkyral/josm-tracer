@@ -223,7 +223,7 @@ public class EdWay extends EdObject {
         return bbox;
     }
 
-    public void reuseExistingNodes(IEdNodePredicate filter) {
+    public void reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
         checkEditable ();
         if (filter == null)
             throw new IllegalArgumentException(tr("No filter specified"));
@@ -231,7 +231,7 @@ public class EdWay extends EdObject {
         boolean modified = false;
         List<EdNode> new_nodes = new ArrayList<> (m_nodes.size());
         for (EdNode en: m_nodes) {
-            EdNode nn = getEditor().findExistingNodeForDuplicateMerge(en, filter);
+            EdNode nn = getEditor().findExistingNodeForDuplicateMerge(gconn, en, filter);
             if (nn != null) {
                 new_nodes.add (nn);
                 modified = true;
@@ -257,7 +257,7 @@ public class EdWay extends EdObject {
      * except those provided by "filter" predicate.
      *
      */
-    public boolean connectExistingTouchingNodes(IEdNodePredicate filter) {
+    public boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter) {
         checkEditable();
         if (filter == null)
             throw new IllegalArgumentException(tr("No filter specified"));
@@ -268,10 +268,10 @@ public class EdWay extends EdObject {
         for (int i = 0; i < m_nodes.size() - 1; i++) {
             final EdNode x = m_nodes.get(i);
             final EdNode y = m_nodes.get(i+1);
-            Set<EdNode> tn = getEditor().findExistingNodesTouchingWaySegment(x, y, filter);
+            Set<EdNode> tn = getEditor().findExistingNodesTouchingWaySegment(gconn, x, y, filter);
             for (EdNode node: tn) {
                 Pair<Double, Integer> best_segment = nodes_map.get(node);
-                double dist = getEditor().geomUtils().distanceToSegmentMeters(node, x, y);
+                double dist = gconn.distanceToSegmentMeters(node, x, y);
                 if (best_segment == null || best_segment.a > dist) {
                     nodes_map.put(node, new Pair<> (dist, i));
                 }
@@ -298,14 +298,14 @@ public class EdWay extends EdObject {
      * @return true if any touching nodes were added; false if no nodes
      * were added.
      */
-    public boolean connectTouchingNodes(EdWay other, IEdNodePredicate filter) {
+    public boolean connectTouchingNodes(GeomConnector gconn, EdWay other, IEdNodePredicate filter) {
         checkEditable();
         other.checkEditable();
 
         if (this == other)
             return false;
 
-        final double tolerance_degs = getEditor().geomUtils().pointOnLineToleranceDegrees();
+        final double tolerance_degs = gconn.pointOnLineToleranceDegrees();
         final BBox way_bbox = this.getBBox(tolerance_degs);
 
         // filter nodes
@@ -334,10 +334,10 @@ public class EdWay extends EdObject {
             for (EdNode node: other_nodes) {
                 if (!seg_bbox.bounds(node.getCoor()))
                     continue;
-                if (!getEditor().geomUtils().pointOnLine(node, x, y))
+                if (!gconn.pointOnLine(node, x, y))
                     continue;
                 Pair<Double, Integer> best_segment = nodes_map.get(node);
-                double dist = getEditor().geomUtils().distanceToSegmentMeters(node, x, y);
+                double dist = gconn.distanceToSegmentMeters(node, x, y);
                 if (best_segment == null || best_segment.a > dist) {
                     nodes_map.put(node, new Pair<> (dist, i));
                 }
@@ -394,9 +394,9 @@ public class EdWay extends EdObject {
      * Nodes are added to the right positions into way segments.
      *
      */
-    public boolean connectNonIncludedTouchingNodes(EdWay other) {
+    public boolean connectNonIncludedTouchingNodes(GeomConnector gconn, EdWay other) {
         IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(this);
-        return connectTouchingNodes(other, exclude_my_nodes);
+        return connectTouchingNodes(gconn, other, exclude_my_nodes);
     }
 
     public boolean isMemberOfAnyMultipolygon() {

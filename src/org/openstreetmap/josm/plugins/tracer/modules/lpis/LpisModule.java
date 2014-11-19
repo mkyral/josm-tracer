@@ -259,8 +259,8 @@ public class LpisModule implements TracerModule  {
             System.out.println("  LPIS ID: " + m_record.getLpisID());
             System.out.println("  LPIS usage: " + m_record.getUsage());
 
-            GeomUtils geom = new GeomUtils();
-            WayEditor editor = new WayEditor (data_set, geom);
+            GeomConnector gconn = new GeomConnector(0.2, Math.PI / 3);
+            WayEditor editor = new WayEditor (data_set);
 
             // Look for object to retrace
             EdObject retrace_object = null;
@@ -276,7 +276,7 @@ public class LpisModule implements TracerModule  {
             }
 
             // Create traced object
-            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
+            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor, gconn);
             if (trobj == null)
                 return;
             EdWay outer_way = trobj.a;
@@ -297,13 +297,13 @@ public class LpisModule implements TracerModule  {
             tagTracedObject(multipolygon == null ? outer_way : multipolygon);
 
             // Connect to touching nodes of near landuse polygons
-            connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
+            connectExistingTouchingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
 
             // Clip other areas
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipLanduseWayMatch);
-                ClipAreas clip = new ClipAreas(editor, m_postTraceNotifications);
+                ClipAreas clip = new ClipAreas(editor, gconn, m_postTraceNotifications);
                 clip.clipAreas(outer_way, filter);
             }
 
@@ -367,7 +367,7 @@ public class LpisModule implements TracerModule  {
             obj.setKeys(map);
         }
 
-        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
+        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor, GeomConnector gconn) {
 
             IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
 
@@ -390,7 +390,7 @@ public class LpisModule implements TracerModule  {
             // Close & create outer way
             outer_nodes.add(outer_nodes.get(0));
             EdWay outer_way = editor.newWay(outer_nodes);
-            outer_way.reuseExistingNodes(reuse_filter);
+            outer_way.reuseExistingNodes(gconn, reuse_filter);
 
             // Simple way?
             if (!m_record.hasInners())
@@ -411,7 +411,7 @@ public class LpisModule implements TracerModule  {
                     throw new AssertionError(tr("Inner way consists of less than 3 nodes"));
                 inner_nodes.add(inner_nodes.get(0));
                 EdWay way = editor.newWay(inner_nodes);
-                way.reuseExistingNodes(reuse_filter);
+                way.reuseExistingNodes(gconn, reuse_filter);
 
                 multipolygon.addInnerWay(way);
             }
@@ -459,16 +459,16 @@ public class LpisModule implements TracerModule  {
             return new Pair<>(null, false);
         }
 
-        private void connectExistingTouchingNodes(EdObject obj) {
+        private void connectExistingTouchingNodes(GeomConnector gconn, EdObject obj) {
             // Setup filters - include landuse nodes only, exclude all nodes of the object itself
             IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
             IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(obj);
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
 
             if (obj instanceof EdWay)
-                ((EdWay)obj).connectExistingTouchingNodes(filter);
+                ((EdWay)obj).connectExistingTouchingNodes(gconn, filter);
             else if (obj instanceof EdMultipolygon)
-                ((EdMultipolygon)obj).connectExistingTouchingNodes(filter);
+                ((EdMultipolygon)obj).connectExistingTouchingNodes(gconn, filter);
             else
                 throw new AssertionError("Unsupported EdObject instance");
         }

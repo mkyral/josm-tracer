@@ -273,8 +273,8 @@ public class RuianModule implements TracerModule {
 
             System.out.println("  RUIAN keys: " + m_record.getKeys(m_alt));
 
-            GeomUtils geom = new GeomUtils();
-            WayEditor editor = new WayEditor (data_set, geom);
+            GeomConnector gconn = new GeomConnector(0.2, Math.PI / 3);
+            WayEditor editor = new WayEditor (data_set);
 
             // Look for object to retrace
             EdObject retrace_object = null;
@@ -290,7 +290,7 @@ public class RuianModule implements TracerModule {
             }
 
             // Create traced object
-            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
+            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor, gconn);
             if (trobj == null)
                 return;
             EdWay outer_way = trobj.a;
@@ -311,13 +311,13 @@ public class RuianModule implements TracerModule {
             tagTracedObject(multipolygon == null ? outer_way : multipolygon);
 
             // Connect to touching nodes of near building polygons
-            connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
+            connectExistingTouchingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
 
             // Clip other areas
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipBuildingWayMatch);
-                ClipAreas clip = new ClipAreas(editor, m_postTraceNotifications);
+                ClipAreas clip = new ClipAreas(editor, gconn, m_postTraceNotifications);
                 clip.clipAreas(outer_way, filter);
             }
 
@@ -377,11 +377,10 @@ public class RuianModule implements TracerModule {
             obj.setKeys(map);
         }
 
-        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
+        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor, GeomConnector gconn) {
 
             IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingBuildingNodeMatch);
 
-            GeomUtils geom = new GeomUtils();
             TracerPreferences pref = TracerPreferences.getInstance();
 
             double dAdjX = 0, dAdjY = 0;
@@ -411,7 +410,7 @@ public class RuianModule implements TracerModule {
                     return null;
                 }
 
-                if (!geom.duplicateNodes(node.getCoor(), prev_coor)) {
+                if (!gconn.duplicateNodes(node.getCoor(), prev_coor)) {
                     outer_nodes.add(node);
                     prev_coor = node.getCoor();
                 }
@@ -422,7 +421,7 @@ public class RuianModule implements TracerModule {
             // Close & create outer way
             outer_nodes.add(outer_nodes.get(0));
             EdWay outer_way = editor.newWay(outer_nodes);
-            outer_way.reuseExistingNodes(reuse_filter);
+            outer_way.reuseExistingNodes(gconn, reuse_filter);
 
 // #### Multipolygons are not supported yet.
             // Simple way?
@@ -493,16 +492,16 @@ public class RuianModule implements TracerModule {
             return new Pair<>(null, false);
         }
 
-        private void connectExistingTouchingNodes(EdObject obj) {
+        private void connectExistingTouchingNodes(GeomConnector gconn, EdObject obj) {
             // Setup filters - include building nodes only, exclude all nodes of the object itself
             IEdNodePredicate area_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingBuildingNodeMatch);
             IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(obj);
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, area_filter);
 
             if (obj instanceof EdWay)
-                ((EdWay)obj).connectExistingTouchingNodes(filter);
+                ((EdWay)obj).connectExistingTouchingNodes(gconn, filter);
             else if (obj instanceof EdMultipolygon)
-                ((EdMultipolygon)obj).connectExistingTouchingNodes(filter);
+                ((EdMultipolygon)obj).connectExistingTouchingNodes(gconn, filter);
             else
                 throw new AssertionError("Unsupported EdObject instance");
         }
