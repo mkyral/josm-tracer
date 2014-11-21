@@ -21,6 +21,7 @@ package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import java.util.List;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
 import org.openstreetmap.josm.data.osm.Way;
@@ -28,45 +29,73 @@ import org.openstreetmap.josm.data.osm.Way;
 public class AreaPredicate implements IEdAreaPredicate {
 
     private final Match m_filter;
-    private final MultipolygonBoundaryWayPredicate m_filterMultipolygon;
 
     public AreaPredicate (Match filter) {
         m_filter = filter;
-        m_filterMultipolygon = new MultipolygonBoundaryWayPredicate(filter);
     }
 
     @Override
     public boolean evaluate(EdWay way) {
+
+        // closed matching way
         if (way.isClosed() && way.matches(m_filter))
             return true;
-        if (m_filterMultipolygon.evaluate(way))
-            return true;
+
+        // boundary way of a matching edited multipolygon
+        List<EdMultipolygon> mps = way.getEditorReferrers(EdMultipolygon.class);
+        for (EdMultipolygon mp: mps) {
+            if (this.evaluate(mp))
+                return true;
+        }
+
+        // boundary way of a matching external multipolygon
+        List<Relation> relations = way.getExternalReferrers(Relation.class);
+        for (Relation rel: relations) {
+            if (this.evaluate(rel))
+                return true;
+        }
+
         return false;
     }
 
     @Override
     public boolean evaluate(Way way) {
+
+        // closed matching way
         if (way.isClosed() && m_filter.match(way))
             return true;
-        if (m_filterMultipolygon.evaluate(way))
-            return true;
+
+        // boundary way of a matching multipolygon relation
+        List<Relation> relations = OsmPrimitive.getFilteredList(way.getReferrers(), Relation.class);
+        for (Relation rel: relations) {
+            if (this.evaluate(rel))
+                return true;
+        }
+
         return false;
     }
 
     @Override
     public boolean evaluate(EdMultipolygon mp) {
-        // new-style multipolygon
+
+        // new-style multipolygon, ignore way tags
         if (mp.matches(m_filter))
             return true;
 
-        // old-style multipolygon, we detect only outer way tags
+        // old-style multipolygon, considered as matching if:
+        // (1) there's at least one matching outer way
+        // (2) all non-matching outer ways are untagged
+        int matching_ways = 0;
         List<EdWay> ways = mp.outerWays();
         for (EdWay way: ways) {
-            if (way.matches(m_filter))
-                return true;
+            if (way.matches(m_filter)) {
+                ++matching_ways;
+                continue;
+            }
+            if (way.isTagged())
+                return false;
         }
-
-        return false;
+        return matching_ways > 0;
     }
 
     @Override
@@ -75,19 +104,25 @@ public class AreaPredicate implements IEdAreaPredicate {
         if (!MultipolygonMatch.match(mp))
             return false;
 
-        // new-style multipolygon
+        // new-style multipolygon, ignore way tags
         if (m_filter.match(mp))
             return true;
 
-        // old-style multipolygon, we detect only outer way tags
+        // old-style multipolygon, considered as matching if:
+        // (1) there's at least one matching outer way
+        // (2) all non-matching outer ways are untagged
+        int matching_ways = 0;
         for (RelationMember member: mp.getMembers()) {
             if (!member.hasRole() || !member.getRole().equals("outer") || !member.isWay())
                 continue;
-            if (m_filter.match(member.getWay()))
-                return true;
+            Way way = member.getWay();
+            if (m_filter.match(way)) {
+                ++matching_ways;
+                continue;
+            }
+            if (way.isTagged())
+                return false;
         }
-
-        return false;
+        return matching_ways > 0;
     }
-
 }
