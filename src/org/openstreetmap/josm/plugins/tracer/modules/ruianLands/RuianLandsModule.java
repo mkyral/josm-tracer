@@ -63,7 +63,7 @@ public class RuianLandsModule implements TracerModule {
     private static final String RuianLandsUrl = "http://josm.poloha.net";
 
     private static final String reuseExistingLanduseNodePattern =
-        "((landuse=* -landuse=no) | natural=scrub | natural=wood | natural=grassland | leisure=garden)";
+        "((landuse=* -landuse=no -landuse=military) | natural=scrub | natural=wood | natural=grassland | leisure=garden)";
 
     private static final String retraceLandsAreaPattern =
         "(landuse=farmland | landuse=meadow | landuse=orchard | landuse=vineyard | landuse=plant_nursery | (landuse=forest source=\"cuzk:ruian\") | (landuse=forest source=\"cuzk:km\") | natural=scrub | natural=wood | natural=grassland | leisure=garden)";
