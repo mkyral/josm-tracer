@@ -84,12 +84,12 @@ public class GeomConnector {
         return pointOnLine(p.currentNodeUnsafe(), x.currentNodeUnsafe(), y.currentNodeUnsafe());
     }
 
-    public double distanceToSegmentMeters(EdNode p, EdNode x, EdNode y) {
+    public static double distanceToSegmentMeters(EdNode p, EdNode x, EdNode y) {
         return distanceToSegmentMeters(p.currentNodeUnsafe(), x.currentNodeUnsafe(), y.currentNodeUnsafe());
     }
 
 
-    public double distanceToSegmentMeters(Node p, Node x, Node y) {
+    public static double distanceToSegmentMeters(Node p, Node x, Node y) {
         EastNorth ep = p.getEastNorth();
         EastNorth ex = x.getEastNorth();
         EastNorth ey = y.getEastNorth();
@@ -114,7 +114,11 @@ public class GeomConnector {
         return (a1 < limit && a2 < limit);
     }
 
-    private double unorientedAngleBetween(Node p0, Node p1, Node p2) {
+    public static double unorientedAngleBetween (EdNode p0, EdNode p1, EdNode p2) {
+        return unorientedAngleBetween(p0.currentNodeUnsafe(), p1.currentNodeUnsafe(), p2.currentNodeUnsafe());
+    }
+
+    public static double unorientedAngleBetween(Node p0, Node p1, Node p2) {
         double a1 = p1.getCoor().heading(p0.getCoor());
         double a2 = p1.getCoor().heading(p2.getCoor());
         double angle = Math.abs(a2 - a1) % (2 * Math.PI);

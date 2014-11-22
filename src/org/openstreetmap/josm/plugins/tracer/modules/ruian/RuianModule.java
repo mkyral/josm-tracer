@@ -297,6 +297,16 @@ public class RuianModule implements TracerModule {
             EdWay outer_way = trobj.a;
             EdMultipolygon multipolygon = trobj.b;
 
+            // Connect to near building polygons
+            // (must be done before retrace updates, we want to use as much old nodes as possible)
+            if (!m_performNearBuildingsEdit) {
+                reuseExistingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
+            }
+            else {
+                reuseNearNodes(gconn, multipolygon == null ? outer_way : multipolygon);
+                connectExistingTouchingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
+            }
+
             // Retrace simple ways - just use the old way
             if (retrace_object != null) {
                 if ((multipolygon != null) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
@@ -311,21 +321,17 @@ public class RuianModule implements TracerModule {
             // Tag object
             tagTracedObject(multipolygon == null ? outer_way : multipolygon);
 
-            // Connect to near building polygons
-            if (!m_performNearBuildingsEdit) {
-                reuseExistingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
-            }
-            else {
-                reuseNearNodes(gconn, multipolygon == null ? outer_way : multipolygon);
-                connectExistingTouchingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
-            }
-
             // Clip other areas
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipBuildingWayMatch);
                 ClipAreas clip = new ClipAreas(editor, gconn, m_postTraceNotifications);
                 clip.clipAreas(outer_way, filter);
+
+                // Remove needless nodes
+                AreaPredicate remove_filter = new AreaPredicate (m_clipBuildingWayMatch);
+                RemoveNeedlessNodes remover = new RemoveNeedlessNodes(remove_filter, 0.07, (Math.PI*2)/3);
+                remover.removeNeedlessNodes(editor.getModifiedWays());
             }
 
             // Merge duplicate ways
