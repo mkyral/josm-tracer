@@ -564,12 +564,7 @@ public class RuianLandsModule implements TracerModule {
             IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(obj);
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, area_filter);
 
-            if (obj instanceof EdWay)
-                ((EdWay)obj).connectExistingTouchingNodes(gconn, filter);
-            else if (obj instanceof EdMultipolygon)
-                ((EdMultipolygon)obj).connectExistingTouchingNodes(gconn, filter);
-            else
-                throw new AssertionError("Unsupported EdObject instance");
+            obj.connectExistingTouchingNodes(gconn, filter);
         }
     }
 }

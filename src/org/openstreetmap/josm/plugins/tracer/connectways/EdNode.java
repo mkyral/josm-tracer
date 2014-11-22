@@ -65,8 +65,36 @@ public class EdNode extends EdObject {
         return m_node;
     }
 
+    /**
+     * Returns a final Node that can be referenced in other EdObject's finalization.
+     * The main difference from finalNode() is that for a modified node, it doesn't
+     * return new final Node but -surprisingly- the original Node. Indeed, because
+     * JOSM's ChangeCommand does not replace the original object wit the new one but
+     * just copies it's contents, EdObjects must be finalized with references to
+     * the original Node. Command ordering in WayEditor.finalizeEdit() guarantees that
+     * the original Node is changed prior the referencing EdObject uses it.
+     * @return final Way
+     */
+    Node finalReferenceableNode() {
+        checkNotDeleted();
+        Node fin = finalNode();
+        if (hasOriginal() && isModified())
+            return originalNode();
+        else
+            return fin;
+    }
+
+
     public LatLon getCoor() {
         return m_node.getCoor();
+    }
+
+    public void setCoor(LatLon ll) {
+        checkEditable();
+        if (ll.equals(m_node.getCoor()))
+                return;
+        m_node.setCoor(ll);
+        setModified();
     }
 
     @Override
@@ -123,6 +151,21 @@ public class EdNode extends EdObject {
         }
 
         return result;
+    }
+
+    @Override
+    public boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate filter, boolean move_near_nodes) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+        throw new UnsupportedOperationException("This operation is not supported for nodes.");
     }
 }
 

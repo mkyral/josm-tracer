@@ -19,22 +19,22 @@
 
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
-import static org.openstreetmap.josm.tools.I18n.tr;
-
-import org.openstreetmap.josm.data.osm.Node;
-import org.openstreetmap.josm.data.osm.Way;
-import org.openstreetmap.josm.data.osm.Relation;
-import java.util.List;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Map;
 import java.util.Collections;
 import java.util.Comparator;
-import org.openstreetmap.josm.tools.Pair;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Set;
 import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.data.osm.Node;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.Relation;
+import org.openstreetmap.josm.data.osm.Way;
+import static org.openstreetmap.josm.tools.I18n.tr;
+import org.openstreetmap.josm.tools.Pair;
 
 
 public class EdWay extends EdObject {
@@ -121,12 +121,29 @@ public class EdWay extends EdObject {
         if (!this.getEditor().ownedByEditor (ednode))
             throw new IllegalArgumentException(tr("EdNode(s) from a different WayEditor"));
 
-        m_nodes.add(offs, ednode); // throws exception if offs is out or range
+        m_nodes.add(offs, ednode); // throws exception if offs is out of range
 
         setModified();
         ednode.addRef(this);
     }
 
+    public void setNode(int offs, EdNode ednode) {
+        checkEditable();
+        if (!this.getEditor().ownedByEditor (ednode))
+            throw new IllegalArgumentException(tr("EdNode(s) from a different WayEditor"));
+
+        EdNode old = m_nodes.get(offs);
+        if (old == ednode)
+            return;
+
+        m_nodes.set(offs, ednode); // throws exception if offs is out of range
+
+        setModified();
+
+        old.removeRef(this);
+        ednode.addRef(this);
+    }
+    
     public int getNodesCount() {
         return m_nodes.size();
     }
@@ -165,7 +182,7 @@ public class EdWay extends EdObject {
             Way fin = new Way(m_way);
             ArrayList<Node> nodes = new ArrayList<>(m_nodes.size());
             for (EdNode en: m_nodes)
-                nodes.add(en.finalNode());
+                nodes.add(en.finalReferenceableNode());
             fin.setNodes(nodes);
             m_way = fin;
         }
@@ -223,7 +240,8 @@ public class EdWay extends EdObject {
         return bbox;
     }
 
-    public void reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+    @Override
+    public boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
         checkEditable ();
         if (filter == null)
             throw new IllegalArgumentException(tr("No filter specified"));
@@ -246,6 +264,82 @@ public class EdWay extends EdObject {
                 throw new AssertionError(tr("EdWay.reuseExistingNodes on a closed way created a non-closed way!"));
             setNodes (new_nodes);
         }
+
+        return modified;
+    }
+
+
+    class NearNodesPair implements Comparable<NearNodesPair> {
+        public final int src_index;
+        public final EdNode dst;
+        public final double distance;
+
+        public NearNodesPair(int si, EdNode d, double dist) {
+            src_index = si;
+            dst = d;
+            distance = dist;
+        }
+
+        @Override
+        public int compareTo(NearNodesPair t) {
+            return Double.compare(this.distance, t.distance);
+        }
+    }
+
+    @Override
+    public boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate filter, boolean move_near_nodes) {
+        checkEditable();
+        if (filter == null)
+            throw new IllegalArgumentException(tr("No filter specified"));
+
+        int mynodes = m_nodes.size();
+        boolean closed = this.isClosed();
+        if (closed)
+            --mynodes;
+
+        // get and sort candidate pairs according to their relative distances
+        PriorityQueue<NearNodesPair> queue = new PriorityQueue<>();
+        for (int i = 0; i < mynodes; i++) {
+            final EdNode x = m_nodes.get(i);
+            BBox box = x.getBBox(gconn.nearNodeToleranceDegrees() * 1.2);
+            Set<EdNode> tn = getEditor().findExistingNodesInBBox(box, filter);
+            for(EdNode node: tn) {
+                if (x == node)
+                    continue;
+                double dist = gconn.distanceOfNodesMeters(x, node);
+                if (dist > gconn.nearNodeToleranceMeters())
+                    continue;
+                queue.add(new NearNodesPair(i, node, dist));
+            }
+        }
+
+        if (queue.size() <= 0)
+            return false;
+
+        Set<Integer> used_src = new HashSet<>();
+        Set<EdNode> used_dst = new HashSet<>();
+        NearNodesPair nnp;
+        while ((nnp = queue.poll()) != null) {
+            if (used_src.contains(nnp.src_index) || used_dst.contains(nnp.dst))
+                continue;
+
+            // move dst node to src position?
+            if (move_near_nodes)
+                nnp.dst.setCoor(m_nodes.get(nnp.src_index).getCoor());
+
+            // reuse dst node
+            this.setNode(nnp.src_index, nnp.dst);
+
+            used_src.add(nnp.src_index);
+            used_dst.add(nnp.dst);
+        }        
+
+        // fix closing node, if necessary
+        if (closed && m_nodes.get(0) != m_nodes.get(m_nodes.size() - 1)) {
+            this.setNode(m_nodes.size() - 1, m_nodes.get(0));
+        }
+
+        return true;
     }
 
     /**
@@ -257,6 +351,7 @@ public class EdWay extends EdObject {
      * except those provided by "filter" predicate.
      *
      */
+    @Override
     public boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter) {
         checkEditable();
         if (filter == null)

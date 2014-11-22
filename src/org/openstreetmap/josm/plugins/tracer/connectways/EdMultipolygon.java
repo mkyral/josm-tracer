@@ -307,6 +307,41 @@ public class EdMultipolygon extends EdObject {
         return box;
     }
 
+    @Override
+    public boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+        checkEditable();
+        boolean r = false;
+
+        for (EdWay way: m_outerWays)
+            if (way.connectExistingTouchingNodes(gconn, filter))
+                r = true;
+        for (EdWay way: m_innerWays)
+            if (way.connectExistingTouchingNodes(gconn, filter))
+                r = true;
+
+        return r;
+    }
+
+    @Override
+    public boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate nodes_filter, boolean move_near_nodes) {
+        checkEditable();
+        boolean r = false;
+
+        // never try to reuse near nodes across multipolygon ways
+        IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(this);
+        IEdNodePredicate filter = new EdNodeLogicalAndPredicate(exclude_my_nodes, nodes_filter);
+
+        for (EdWay way: m_outerWays)
+            if (way.reuseNearNodes(gconn, filter, move_near_nodes))
+                r = true;
+        for (EdWay way: m_innerWays)
+            if (way.reuseNearNodes(gconn, filter, move_near_nodes))
+                r = true;
+
+        return r;
+    }
+
+
     /**
      * Add all existing nodes that touch this multipolygon (i.e. are very close to
      * any of its ways' segments) and satisfy given predicate.

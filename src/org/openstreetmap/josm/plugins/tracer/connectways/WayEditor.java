@@ -227,6 +227,33 @@ public class WayEditor {
         return result;
     }
 
+    Set<EdNode> findExistingNodesInBBox(BBox bbox, IEdNodePredicate filter) {
+
+        Set<EdNode> result = new HashSet<>();
+
+        // (1) original nodes that are not tracked yet
+        for (Node nd : getDataSet().searchNodes(bbox)) {
+            if (!nd.isUsable() || nd.isOutsideDownloadArea())
+                continue;
+            if (isEdited(nd))
+                continue;
+            if (!filter.evaluate(nd))
+                continue;
+            result.add(useNode(nd));
+        }
+
+        // (2) edited nodes
+        for (EdNode ednd: searchEdNodes(bbox)) {
+            if (ednd.isDeleted())
+                continue;
+            if (!filter.evaluate(ednd))
+                continue;
+            result.add(ednd);
+        }
+
+        return result;
+    }
+
     EdNode findExistingNodeForDuplicateMerge(GeomConnector gconn, EdNode src, IEdNodePredicate filter) {
         if (src == null || src.isDeleted())
             throw new IllegalArgumentException();

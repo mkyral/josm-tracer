@@ -290,6 +290,10 @@ public abstract class EdObject {
         checkNotDeleted();
         return currentPrimitive().getUniqueId();
     }
+
+    public abstract boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter);
+    public abstract boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate filter, boolean move_near_nodes);
+    public abstract boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter);
 }
 
 
