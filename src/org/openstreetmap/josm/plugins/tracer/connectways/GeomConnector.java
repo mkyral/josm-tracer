@@ -33,20 +33,38 @@ public class GeomConnector {
     private final double m_duplicateNodesPrecision;
 
     private final double m_metersPerDegree = 111120.00071117;
+
     private final double m_pointOnLineToleranceMeters;        // 0.2 for LPIS
     private final double m_pointOnLineMaxLateralAngle;        // Math.PI / 3 for LPIS, must be < Pi/2
-
     private final double m_pointOnLineToleranceDegrees;
+
+    private final double m_nearNodeToleranceMeters;
+    private final double m_nearNodeToleranceDegrees;
 
     public GeomConnector (double point_on_line_tolerance_meters, double point_on_line_max_lateral_angle) {
         m_duplicateNodesPrecision = Main.pref.getDouble("validator.duplicatenodes.precision", 0.0);
         m_pointOnLineToleranceMeters = point_on_line_tolerance_meters;
         m_pointOnLineMaxLateralAngle = point_on_line_max_lateral_angle;
         m_pointOnLineToleranceDegrees = m_pointOnLineToleranceMeters/m_metersPerDegree;
+
+        m_nearNodeToleranceMeters = m_pointOnLineToleranceMeters;
+        m_nearNodeToleranceDegrees = m_nearNodeToleranceMeters/m_metersPerDegree;
     }
 
     public double pointOnLineToleranceDegrees() {
         return m_pointOnLineToleranceDegrees;
+    }
+
+    public double nearNodeToleranceDegrees() {
+        return m_nearNodeToleranceDegrees;
+    }
+
+    public double nearNodeToleranceMeters() {
+        return m_nearNodeToleranceMeters;
+    }
+
+    public double distanceOfNodesMeters(EdNode x, EdNode y) {
+        return x.getCoor().greatCircleDistance(y.getCoor());
     }
 
     public boolean duplicateNodes(LatLon l1, LatLon l2) {
