@@ -307,15 +307,22 @@ public class EdMultipolygon extends EdObject {
         return box;
     }
 
-    public void reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+    @Override
+    public boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
         checkEditable();
+        boolean r = false;
 
         for (EdWay way: m_outerWays)
-            way.connectExistingTouchingNodes(gconn, filter);
+            if (way.connectExistingTouchingNodes(gconn, filter))
+                r = true;
         for (EdWay way: m_innerWays)
-            way.connectExistingTouchingNodes(gconn, filter);
+            if (way.connectExistingTouchingNodes(gconn, filter))
+                r = true;
+
+        return r;
     }
 
+    @Override
     public boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate nodes_filter, boolean move_near_nodes) {
         checkEditable();
         boolean r = false;

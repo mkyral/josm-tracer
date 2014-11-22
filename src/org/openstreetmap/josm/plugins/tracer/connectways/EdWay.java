@@ -240,7 +240,8 @@ public class EdWay extends EdObject {
         return bbox;
     }
 
-    public void reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+    @Override
+    public boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
         checkEditable ();
         if (filter == null)
             throw new IllegalArgumentException(tr("No filter specified"));
@@ -263,7 +264,10 @@ public class EdWay extends EdObject {
                 throw new AssertionError(tr("EdWay.reuseExistingNodes on a closed way created a non-closed way!"));
             setNodes (new_nodes);
         }
+
+        return modified;
     }
+
 
     class NearNodesPair implements Comparable<NearNodesPair> {
         public final int src_index;
@@ -282,6 +286,7 @@ public class EdWay extends EdObject {
         }
     }
 
+    @Override
     public boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate filter, boolean move_near_nodes) {
         checkEditable();
         if (filter == null)
@@ -346,6 +351,7 @@ public class EdWay extends EdObject {
      * except those provided by "filter" predicate.
      *
      */
+    @Override
     public boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter) {
         checkEditable();
         if (filter == null)

@@ -497,39 +497,16 @@ public class RuianModule implements TracerModule {
         }
 
         private void connectExistingTouchingNodes(GeomConnector gconn, EdObject obj) {
-
             IEdNodePredicate filter = reuseExistingNodesFilter(obj);
-
-            if (obj instanceof EdWay)
-                ((EdWay)obj).connectExistingTouchingNodes(gconn, filter);
-            else if (obj instanceof EdMultipolygon)
-                ((EdMultipolygon)obj).connectExistingTouchingNodes(gconn, filter);
-            else
-                throw new AssertionError("Unsupported EdObject instance");
+            obj.connectExistingTouchingNodes(gconn, filter);
         }
 
         private void reuseExistingNodes(GeomConnector gconn, EdObject obj) {
-
-            IEdNodePredicate filter = reuseExistingNodesFilter(obj);
-
-            if (obj instanceof EdWay)
-                ((EdWay)obj).reuseExistingNodes(gconn, filter);
-            else if (obj instanceof EdMultipolygon)
-                ((EdMultipolygon)obj).reuseExistingNodes(gconn, filter);
-            else
-                throw new AssertionError("Unsupported EdObject instance");
+            obj.reuseExistingNodes (gconn, reuseExistingNodesFilter(obj));
         }
 
         private void reuseNearNodes(GeomConnector gconn, EdObject obj) {
-
-            IEdNodePredicate filter = reuseExistingNodesFilter(obj);
-
-            if (obj instanceof EdWay)
-                ((EdWay)obj).reuseNearNodes(gconn, filter, true);
-            else if (obj instanceof EdMultipolygon)
-                ((EdMultipolygon)obj).reuseNearNodes(gconn, filter, true);
-            else
-                throw new AssertionError("Unsupported EdObject instance");
+            obj.reuseNearNodes (gconn, reuseExistingNodesFilter(obj), true);
         }
 
         private IEdNodePredicate reuseExistingNodesFilter(EdObject obj) {

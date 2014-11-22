@@ -152,6 +152,21 @@ public class EdNode extends EdObject {
 
         return result;
     }
+
+    @Override
+    public boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate filter, boolean move_near_nodes) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+        throw new UnsupportedOperationException("This operation is not supported for nodes.");
+    }
 }
 
 
