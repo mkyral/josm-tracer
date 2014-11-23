@@ -193,6 +193,11 @@ public abstract class EdObject {
         return new HashMap<> (currentPrimitive().getKeys());
     }
 
+    public final Map<String, String> getInterestingKeys() {
+        checkNotDeleted();
+        return new HashMap<> (currentPrimitive().getInterestingTags());
+    }
+
     protected boolean hasIdenticalKeys(OsmPrimitive other) {
         checkEditable();
         OsmPrimitive cur = currentPrimitive();

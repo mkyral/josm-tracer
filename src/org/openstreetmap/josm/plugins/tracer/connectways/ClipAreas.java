@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
-import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.plugins.tracer.PostTraceNotifications;
 import static org.openstreetmap.josm.tools.I18n.tr;
 import org.openstreetmap.josm.tools.Pair;
@@ -38,15 +37,17 @@ public class ClipAreas {
     private final GeomConnector m_gconn;
     private final PostTraceNotifications m_postTraceNotifications;
     private final double m_DiscardCutoffsPercent;
+    private final IDiscardableCutoffPredicate m_discardablePredicate;
 
     public ClipAreas (WayEditor editor, GeomConnector gconn, PostTraceNotifications notifications) {
-        this (editor, gconn, 0.0, notifications);
+        this (editor, gconn, 0.0, null, notifications);
     }
 
-    public ClipAreas (WayEditor editor, GeomConnector gconn, double discard_cutoffs_percent, PostTraceNotifications notifications) {
+    public ClipAreas (WayEditor editor, GeomConnector gconn, double discard_cutoffs_percent, IDiscardableCutoffPredicate dispred, PostTraceNotifications notifications) {
         m_editor = editor;
         m_gconn = gconn;
         m_DiscardCutoffsPercent = discard_cutoffs_percent;
+        m_discardablePredicate = dispred;
         m_postTraceNotifications = notifications;
     }
 
@@ -73,6 +74,14 @@ public class ClipAreas {
         }
     }
 
+    private boolean canSilentlyDiscard(EdWay way, double cutoffs_percent) {
+        if (m_discardablePredicate == null)
+            return false;
+        if (way.hasReferrers())
+            return false;        
+        return m_discardablePredicate.canSilentlyDiscard(way, cutoffs_percent);
+    }
+
     private void clipSimpleSimple(EdWay clip_way, EdWay subject_way) {
         // First, connect touching nodes of subject_way to clip_way. This is necessary because
         // LPIS polygons series contain very small gaps that need to be elliminated before
@@ -90,7 +99,7 @@ public class ClipAreas {
         System.out.println("- result: outers=" + Long.toString(outers.size()) + ", inners=" + Long.toString(inners.size()));
 
         if (outers.isEmpty() && inners.isEmpty()) {
-            if (m_DiscardCutoffsPercent > 0.0 && clipper.discardedPercent() > 0.0 && !subject_way.hasReferrers()) {
+            if (canSilentlyDiscard(subject_way, clipper.discardedPercent())) {
                 // #### fix EdObjects deletion support, instead of this hack
                 subject_way.setKeys(new HashMap<String, String>());
                 subject_way.setNodes(new ArrayList<EdNode>());

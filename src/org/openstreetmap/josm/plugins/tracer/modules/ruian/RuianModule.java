@@ -19,11 +19,9 @@
 package org.openstreetmap.josm.plugins.tracer.modules.ruian;
 
 import java.awt.Cursor;
-import java.awt.Point;
 import java.util.*;
 
 import javax.swing.JOptionPane;
-
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
@@ -39,16 +37,14 @@ import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 import org.openstreetmap.josm.plugins.tracer.PostTraceNotifications;
-import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
+import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
 
 import static org.openstreetmap.josm.tools.I18n.*;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Pair;
-
-
 import org.xml.sax.SAXException;
 
 public class RuianModule implements TracerModule {
@@ -61,7 +57,6 @@ public class RuianModule implements TracerModule {
 
     private final String source = "cuzk:ruian"; // obsolete
     private final String ruianUrl = "http://josm.poloha.net";
-
 
     private static final String reuseExistingBuildingNodePattern =
         "(building=* -building=no -building=entrance)";
@@ -117,6 +112,27 @@ public class RuianModule implements TracerModule {
     @Override
     public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
         return new RuianTracerTask (pos, ctrl, alt, shift);
+    }
+
+    class DiscardableBuildingCutoff implements IDiscardableCutoffPredicate {
+
+        @Override
+        public boolean canSilentlyDiscard(EdWay way, double cutoffs_percent) {
+
+            if (cutoffs_percent > 30.0)
+                return false;
+
+            // can silently discard given building as a result of clipping/cutoff removal?
+            Map<String, String> keys = way.getInterestingKeys();
+            for (Map.Entry<String, String> entry: keys.entrySet()) {
+                String k = entry.getKey();
+                String v = entry.getValue();
+                if (k != null && v != null && !(k.equals("building") && v.equals("yes")))
+                    return false;
+            }
+            return true;
+        }
+
     }
 
     class RuianTracerTask extends PleaseWaitRunnable {
@@ -325,7 +341,7 @@ public class RuianModule implements TracerModule {
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipBuildingWayMatch);
-                ClipAreas clip = new ClipAreas(editor, gconn, 15.0, m_postTraceNotifications);
+                ClipAreas clip = new ClipAreas(editor, gconn, 15.0, new DiscardableBuildingCutoff(), m_postTraceNotifications);
                 clip.clipAreas(outer_way, filter);
 
                 // Remove needless nodes
