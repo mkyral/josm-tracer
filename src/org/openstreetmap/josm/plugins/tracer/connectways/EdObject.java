@@ -68,9 +68,13 @@ public abstract class EdObject {
         return m_finalized;
     }
 
+    /* #### EdObject deletion support is broken now! TODO:
+       - EdObject must remove all it's references to other EdObjects
+       - EdObject cannot be removed if it has referrers
+       - All enumerations in WayEditor must take care not to return deleted objects
     protected void setDeleted() {
         m_deleted = true;
-    }
+    }*/
 
     public boolean isDeleted() {
         return m_deleted;
