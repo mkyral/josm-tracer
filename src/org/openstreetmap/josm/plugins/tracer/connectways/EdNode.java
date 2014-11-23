@@ -167,6 +167,11 @@ public class EdNode extends EdObject {
     public boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter) {
         throw new UnsupportedOperationException("This operation is not supported for nodes.");
     }
+
+    @Override
+    public double getEastNorthArea() {
+        return 0.0;
+    }
 }
 
 

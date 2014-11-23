@@ -268,6 +268,12 @@ public class EdWay extends EdObject {
         return modified;
     }
 
+    @Override
+    public double getEastNorthArea() {
+        checkEditable();
+        return GeomConnector.getEastNorthArea(m_nodes);
+    }
+
 
     class NearNodesPair implements Comparable<NearNodesPair> {
         public final int src_index;

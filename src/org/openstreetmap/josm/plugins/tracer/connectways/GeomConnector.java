@@ -20,6 +20,7 @@
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
 
+import java.util.List;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.coor.EastNorth;
@@ -129,6 +130,28 @@ public class GeomConnector {
         return angle;
     }
 
+    public static double getEastNorthArea(List<EdNode> nodes) {
+
+        int count = nodes.size();
+
+        // for closed ways, ignore last node (
+        if (count > 1 && nodes.get(0).equals(nodes.get(count - 1))) {
+            --count;
+        }
+
+        if (count <= 2) {
+            return 0;
+        }
+
+        double area = 0;
+        EastNorth ej = nodes.get(count - 1).getEastNorth();
+        for (int i = 0; i < count; ++i) {
+            EastNorth ei = nodes.get(i).getEastNorth();
+            area += (ej.getX() + ei.getX()) * (ej.getY() - ei.getY());
+            ej = ei;
+        }
+        return Math.abs(area / 2);
+    }
 }
 
 

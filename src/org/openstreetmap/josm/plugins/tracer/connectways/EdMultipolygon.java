@@ -366,4 +366,21 @@ public class EdMultipolygon extends EdObject {
 
         return r;
     }
+
+    @Override
+    public double getEastNorthArea() {
+        checkEditable();
+
+        double area = 0.0;
+
+        for (EdWay way: m_outerWays) {
+            area += way.getEastNorthArea();
+        }
+
+        for (EdWay way: m_innerWays) {
+            area -= way.getEastNorthArea();
+        }
+
+        return area;
+    }
 }
