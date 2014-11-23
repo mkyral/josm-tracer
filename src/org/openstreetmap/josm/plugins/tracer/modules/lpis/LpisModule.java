@@ -58,7 +58,7 @@ public class LpisModule implements TracerModule  {
     private static final String source = "lpis";
     private static final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
     private static final String reuseExistingLanduseNodePattern =
-        "((landuse=* -landuse=no) | natural=scrub | natural=wood | natural=grassland | natural=wood | leisure=garden)";
+        "((landuse=* -landuse=no -landuse=military) | natural=scrub | natural=wood | natural=grassland | natural=wood | leisure=garden)";
     private static final String retraceAreaPattern =
         "(landuse=farmland | landuse=meadow | landuse=orchard | landuse=vineyard | landuse=plant_nursery | (landuse=forest source=lpis))";
 
