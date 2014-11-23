@@ -325,7 +325,7 @@ public class RuianModule implements TracerModule {
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipBuildingWayMatch);
-                ClipAreas clip = new ClipAreas(editor, gconn, m_postTraceNotifications);
+                ClipAreas clip = new ClipAreas(editor, gconn, 15.0, m_postTraceNotifications);
                 clip.clipAreas(outer_way, filter);
 
                 // Remove needless nodes

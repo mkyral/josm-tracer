@@ -37,10 +37,16 @@ public class ClipAreas {
     private final WayEditor m_editor;
     private final GeomConnector m_gconn;
     private final PostTraceNotifications m_postTraceNotifications;
+    private final double m_DiscardCutoffsPercent;
 
     public ClipAreas (WayEditor editor, GeomConnector gconn, PostTraceNotifications notifications) {
+        this (editor, gconn, 0.0, notifications);
+    }
+
+    public ClipAreas (WayEditor editor, GeomConnector gconn, double discard_cutoffs_percent, PostTraceNotifications notifications) {
         m_editor = editor;
         m_gconn = gconn;
+        m_DiscardCutoffsPercent = discard_cutoffs_percent;
         m_postTraceNotifications = notifications;
     }
 
@@ -76,7 +82,7 @@ public class ClipAreas {
 
         System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_way=" + Long.toString(subject_way.getUniqueId()));
 
-        AngPolygonClipper clipper = new AngPolygonClipper(m_editor, m_gconn);
+        AngPolygonClipper clipper = new AngPolygonClipper(m_editor, m_gconn, m_DiscardCutoffsPercent);
         clipper.polygonDifference(clip_way, subject_way);
         List<List<EdNode>> outers = clipper.outerPolygons();
         List<List<EdNode>> inners = clipper.innerPolygons();
@@ -84,7 +90,14 @@ public class ClipAreas {
         System.out.println("- result: outers=" + Long.toString(outers.size()) + ", inners=" + Long.toString(inners.size()));
 
         if (outers.isEmpty() && inners.isEmpty()) {
-            addPostTraceNotification(tr("Simple way {0} would be completely removed, ignoring, please check.", subject_way.getUniqueId()));
+            if (m_DiscardCutoffsPercent > 0.0 && clipper.discardedPercent() > 0.0 && !subject_way.hasReferrers()) {
+                // #### fix EdObjects deletion support, instead of this hack
+                subject_way.setKeys(new HashMap<String, String>());
+                subject_way.setNodes(new ArrayList<EdNode>());
+            }
+            else {
+                addPostTraceNotification(tr("Simple way {0} would be completely removed, ignoring, please check.", subject_way.getUniqueId()));
+            }
         } else if (outers.size() == 1 && inners.isEmpty()) {
             handleSimpleSimpleSimple(clip_way, subject_way, outers.get(0));
         } else if ((outers.size() + inners.size()) > 1) {
@@ -114,7 +127,7 @@ public class ClipAreas {
 
         System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_relation=" + Long.toString(subject_mp.getUniqueId()));
 
-        AngPolygonClipper clipper = new AngPolygonClipper(m_editor, m_gconn);
+        AngPolygonClipper clipper = new AngPolygonClipper(m_editor, m_gconn, m_DiscardCutoffsPercent);
         clipper.polygonDifference(clip_way, subject_mp);
         List<List<EdNode>> unmapped_new_outers = new ArrayList<>(clipper.outerPolygons());
         List<List<EdNode>> unmapped_new_inners = new ArrayList<>(clipper.innerPolygons());
@@ -123,6 +136,7 @@ public class ClipAreas {
 
         // Whole multipolygon disappeared
         if (unmapped_new_outers.isEmpty() && unmapped_new_inners.isEmpty()) {
+            // #### add handling of discarded cutoffs, but be careful
             addPostTraceNotification(tr("Multipolygon {0} would be completely removed, ignoring, please check.", subject_mp.getUniqueId()));
             return;
         }
@@ -346,7 +360,7 @@ public class ClipAreas {
         List<EdNode> maxnodes = null;
         double maxarea = Double.NEGATIVE_INFINITY;
         for (List<EdNode> nodes: outers) {
-            double area = getWayArea(nodes);
+            double area = GeomConnector.getEastNorthArea(nodes);
             if (area < maxarea)
                 continue;
             maxnodes = nodes;
@@ -443,29 +457,6 @@ public class ClipAreas {
                 System.out.println("Removing inner way " + Long.toString(old_way.getUniqueId()));
             }
         }
-    }
-
-    private static double getWayArea(List<EdNode> nodes) {
-
-        int count = nodes.size();
-
-        // for closed ways, ignore last node (
-        if (count > 1 && nodes.get(0).equals(nodes.get(count - 1))) {
-            --count;
-        }
-
-        if (count <= 2) {
-            return 0;
-        }
-
-        double area = 0;
-        EastNorth ej = nodes.get(count - 1).getEastNorth();
-        for (int i = 0; i < count; ++i) {
-            EastNorth ei = nodes.get(i).getEastNorth();
-            area += (ej.getX() + ei.getX()) * (ej.getY() - ei.getY());
-            ej = ei;
-        }
-        return Math.abs(area / 2);
     }
 
     private void addPostTraceNotification(String msg) {

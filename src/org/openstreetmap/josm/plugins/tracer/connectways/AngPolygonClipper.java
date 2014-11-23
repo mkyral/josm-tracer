@@ -41,15 +41,21 @@ public class AngPolygonClipper {
     private final WayEditor m_editor;
     private final GeomConnector m_gconn;
 
+    private final double m_DiscardCutoffsPercent;
+    private double m_DiscardedPercent;
+
     private List<List<EdNode>> m_outers;
     private List<List<EdNode>> m_inners;
 
     private Map<LatLon, EdNode> m_nodesMap;
 
-    public AngPolygonClipper (WayEditor editor, GeomConnector gconn) {
+    public AngPolygonClipper (WayEditor editor, GeomConnector gconn, double discard_cutoffs_percent) {
 
         m_editor = editor;
         m_gconn = gconn;
+
+        m_DiscardCutoffsPercent = discard_cutoffs_percent;
+        m_DiscardedPercent = 0.0;
 
         m_outers = null;
         m_inners = null;
@@ -68,6 +74,10 @@ public class AngPolygonClipper {
         return m_inners;
     }
 
+    public double discardedPercent() {
+        return m_DiscardedPercent;
+    }
+
     @SuppressWarnings("CallToPrintStackTrace")
     public void polygonDifference (EdWay clip_way, EdObject subj) {
 
@@ -75,6 +85,12 @@ public class AngPolygonClipper {
         m_outers = new ArrayList<>();
         m_inners = new ArrayList<>();
         m_nodesMap = new HashMap<>();
+
+        m_DiscardedPercent = 0.0;
+
+        double subj_area = Double.NaN;
+        if (m_DiscardCutoffsPercent > 0.0)
+            subj_area = subj.getEastNorthArea();
 
         try {
             // Note: always preserve collinear nodes! Otherwise, clipper disconnects
@@ -89,7 +105,7 @@ public class AngPolygonClipper {
 
             List<PolyNode> pnodes = ptree.getChilds();
             for (PolyNode pn: pnodes) {
-                processPolyNode(pn);
+                processPolyNode(pn, m_outers, m_inners, subj_area);
             }
         }
         catch (ClipperException e) {
@@ -105,23 +121,65 @@ public class AngPolygonClipper {
         m_inners = Collections.unmodifiableList(m_inners);
     }
 
-    private void processPolyNode(PolyNode pn) {
+    private void processPolyNode(PolyNode pn, List<List<EdNode>> aouters, List<List<EdNode>> ainners, double subj_area) {
+
+        List<List<EdNode>> outers = aouters;
+        List<List<EdNode>> inners = ainners;
+
         Path path = pn.getContour();
         boolean hole = pn.isHole();
+        boolean discard_cutoffs = !hole && m_DiscardCutoffsPercent > 0.0 && subj_area > 0.0;
+
+        if (discard_cutoffs) {
+            inners = new ArrayList<>();
+            outers = new ArrayList<>();
+        }
+
         List<EdNode> nodes = pathToEdNodes(path);
         if (nodes.size() > 3) {
             if (hole)
-                m_inners.add(Collections.unmodifiableList(nodes));
+                inners.add(Collections.unmodifiableList(nodes));
             else
-                m_outers.add(Collections.unmodifiableList(nodes));
+                outers.add(Collections.unmodifiableList(nodes));
         }
 
         if (pn.getChildCount() > 0) {
             List<PolyNode> children = pn.getChilds();
             for (PolyNode child: children) {
-                processPolyNode(child);
+                processPolyNode(child, outers, inners, subj_area);
             }
         }
+
+        if (!discard_cutoffs)
+            return;
+
+        double area = getEastNorthArea(outers, inners);
+        double percent = (area/subj_area) * 100.0;
+        if (percent >= 0.0 && percent < m_DiscardCutoffsPercent) {
+            System.out.println("Discarding cutoff area, percent=" + Double.toString(percent));
+            m_DiscardedPercent += percent;
+            return;
+        }
+        else {
+            System.out.println("Cutoff out of limit, percent=" + Double.toString(percent));
+        }
+
+        aouters.addAll(outers);
+        ainners.addAll(inners);
+    }
+
+    private double getEastNorthArea(List<List<EdNode>> outers, List<List<EdNode>> inners) {
+        double area = 0.0;
+
+        for (List<EdNode> outer: outers) {
+            area += GeomConnector.getEastNorthArea(outer);
+        }
+
+        for (List<EdNode> inner: inners) {
+            area -= GeomConnector.getEastNorthArea(inner);
+        }
+
+        return area;
     }
 
     private List<EdNode> pathToEdNodes (Path p)
