@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2014-11-18 22:34+0100\n"
+"POT-Creation-Date: 2014-11-24 16:42+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:78
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:85
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:80
 #: ../src/org/openstreetmap/josm/plugins/tracer/connectways/MultipolygonMatch.java:37
 msgid "Unable to compile pattern"
 msgstr ""
@@ -31,7 +31,7 @@ msgstr ""
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:131
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:175
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:101
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:138
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:155
 msgid "Tracing"
 msgstr ""
 
@@ -45,7 +45,7 @@ msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:170
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:221
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:185
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:202
 msgid "Data not available."
 msgstr ""
 
@@ -56,21 +56,21 @@ msgstr ""
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:223
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:274
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:157
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:238
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:255
 msgid "Way is outside downloaded area"
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:224
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:275
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:158
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:239
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:256
 msgid "Ok"
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:227
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:278
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:161
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:242
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:259
 msgid ""
 "Sorry.\n"
 "The traced way (or part of the way) is outside of the downloaded area.\n"
@@ -83,26 +83,26 @@ msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:288
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:357
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:302
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:329
 msgid "Multipolygon retrace is not supported yet."
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:325
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:394
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:339
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:368
 #: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ConnectWays.java:346
 msgid "Trace object"
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:340
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:409
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:354
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:383
 msgid "Nothing changed."
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:388
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:485
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:420
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:484
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:446
 msgid "Outer way consists of less than 3 nodes"
 msgstr ""
 
@@ -139,17 +139,17 @@ msgid "Downloading RUIAN data..."
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:212
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:176
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:193
 msgid "RUIAN download failed."
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:232
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:196
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:213
 msgid "Creating RUIAN polygon..."
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:342
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:287
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:304
 msgid ""
 "Multiple existing Ruian building polygons found, retrace is not possible."
 msgstr ""
@@ -172,11 +172,11 @@ msgid_plural "Tracer: modify way to {0} points"
 msgstr[0] ""
 msgstr[1] ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:104
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:99
 msgid "RUIAN"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:169
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:186
 msgid "Downloading RUIAN building data..."
 msgstr ""
 
@@ -268,98 +268,98 @@ msgstr ""
 msgid "Multipolygon must have type=multipolygon"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:85
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:108
 #, java-format
 msgid "Simple way {0} would be completely removed, ignoring, please check."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:91
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:115
 msgid "PolygonClipper.polygonDifference returned nonsense!"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:101
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:125
 #, java-format
 msgid "Ignoring multipolygon {0}, it contains non-closed ways."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:124
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:149
 #, java-format
 msgid "Multipolygon {0} would be completely removed, ignoring, please check."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:166
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:191
 #, java-format
 msgid "Multipolygon clipping result of {0} is too complex."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:324
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:349
 #, java-format
 msgid "Clipping changes simple way {0} to multipolygon, not supported yet."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:334
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:359
 #, java-format
 msgid ""
 "Clipped way {0} is a member of non-multipolygon relation, not supported yet."
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdObject.java:159
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdObject.java:163
 msgid "EdObject is finalized"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdObject.java:164
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdObject.java:168
 msgid "EdObject is deleted"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:101
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:95
 msgid "Non-original Node created outside WayEditor scope"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:103
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:97
 msgid "Cannot use Node from with a different/null DataSet"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:105
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:99
 msgid "Cannot edit unusable Node"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:110
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:104
 msgid "Original Node ID mapped to a different Node object"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:124
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:118
 msgid "Non-original Way created outside WayEditor scope"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:126
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:120
 msgid "Cannot use Way from with a different/null DataSet"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:128
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:122
 msgid "Cannot edit unusable Way"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:133
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:127
 msgid "Original Way ID mapped to a different Way object"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:147
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:141
 msgid "Non-original Relation created outside WayEditor scope"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:149
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:143
 msgid "Cannot use Relation from with a different/null DataSet"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:151
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:145
 msgid "Cannot edit unusable/incomplete Relation"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:153
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:147
 msgid "Relation is not a multipolygon"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:158
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/WayEditor.java:152
 msgid "Original Relation ID mapped to a different Relation object"
 msgstr ""
 
@@ -370,19 +370,21 @@ msgstr ""
 #: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:57
 #: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:96
 #: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:122
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:133
 msgid "EdNode(s) from a different WayEditor"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:151
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:168
 msgid "EdWay has no original Way"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:229
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:263
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:247
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:299
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:364
 msgid "No filter specified"
 msgstr ""
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:246
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java:264
 msgid "EdWay.reuseExistingNodes on a closed way created a non-closed way!"
 msgstr ""
 
