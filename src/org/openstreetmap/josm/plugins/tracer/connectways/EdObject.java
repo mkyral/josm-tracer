@@ -34,7 +34,7 @@ import org.openstreetmap.josm.data.osm.BBox;
 public abstract class EdObject {
     private Object m_refs;
     private final WayEditor m_editor;
-    private final OsmPrimitive m_original;
+    private OsmPrimitive m_original;
     private boolean m_modified;
     private boolean m_deleted;
     private boolean m_finalized;
@@ -66,6 +66,12 @@ public abstract class EdObject {
 
     public boolean isFinalized() {
         return m_finalized;
+    }
+
+    protected final void forgeOriginalDangerous(OsmPrimitive orig) {
+        if (m_original != null)
+            throw new IllegalStateException("Cannot forge OsmPrimitive, EdObject already has original primitive");
+        m_original = orig;
     }
 
     /* #### EdObject deletion support is broken now! TODO:

@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
 import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.ChangeCommand;
@@ -56,6 +57,11 @@ public class WayEditor {
     private final HashMap<Long, EdMultipolygon> m_originalMultipolygons;
 
     public WayEditor(DataSet dataset) {
+        this (dataset, 0.0);
+    }
+
+
+    public WayEditor(DataSet dataset, double resurrect_dist) {
         m_dataSet = dataset;
         m_idGuard = (new Node()).getUniqueId();
         m_nodes = new HashSet<> ();
@@ -337,6 +343,11 @@ public class WayEditor {
     }
 
     public List<Command> finalizeEdit () {
+        return finalizeEdit(0.0);
+    }
+
+
+    public List<Command> finalizeEdit (double resurrect_dist) {
 
         System.out.println("WayEditor.finalizeEdit(): ");
 
@@ -383,6 +394,10 @@ public class WayEditor {
                 continue;
             delete_nodes.add(n);
         }
+
+        // resurrect anonymous deleted nodes
+        if (resurrect_dist > 0)
+            resurrectNodes(add_nodes, change_nodes, delete_nodes, resurrect_dist);
 
         // ways to be added/changed
         Set<EdWay> add_ways = new HashSet<>();
@@ -596,6 +611,58 @@ public class WayEditor {
             areas.add(useWay(w));
         }
         return areas;
+    }
+
+    class ResurrectableNodesPair implements Comparable<ResurrectableNodesPair> {
+        public final EdNode delete_node;
+        public final EdNode add_node;
+        public final double distance;
+
+        public ResurrectableNodesPair(EdNode an, EdNode dn, double dist) {
+            delete_node = dn;
+            add_node = an;
+            distance = dist;
+        }
+
+        @Override
+        public int compareTo(ResurrectableNodesPair t) {
+            return Double.compare(this.distance, t.distance);
+        }
+    }
+
+
+    private void resurrectNodes(Set<EdNode> add_nodes, Set<EdNode> change_nodes, Set<EdNode> delete_nodes, double resurrect_dist) {
+        if (add_nodes.isEmpty() || delete_nodes.isEmpty())
+            return;
+
+        PriorityQueue<ResurrectableNodesPair> queue = new PriorityQueue<>();
+
+        for (EdNode dn: delete_nodes) {
+
+            Node dnorig = dn.originalNode();
+
+            // don't resurrect explicitly deleted nodes and nodes that were originally tagged
+            if (dn.isDeleted() || dnorig.isTagged())
+                continue;
+            
+            for (EdNode an: add_nodes) {
+                double dist = dnorig.getCoor().greatCircleDistance(an.getCoor());
+                if (dist > resurrect_dist)
+                    continue;
+                queue.add(new ResurrectableNodesPair (an, dn, dist));
+            }
+        }
+
+        ResurrectableNodesPair rnp;
+        while ((rnp = queue.poll()) != null) {
+            if (!delete_nodes.contains(rnp.delete_node) || !add_nodes.contains(rnp.add_node))
+                continue;
+            System.out.println("Resurrecting node " + Long.toString(rnp.delete_node.getUniqueId()) + " <- " + Long.toString(rnp.add_node.getUniqueId()) + ", dist: " + Double.toString(rnp.distance));
+            add_nodes.remove(rnp.add_node);
+            delete_nodes.remove(rnp.delete_node);
+            change_nodes.add(rnp.add_node);
+            rnp.add_node.forgeOriginalNodeDangerous(rnp.delete_node.originalNode());
+        }
     }
 }
 

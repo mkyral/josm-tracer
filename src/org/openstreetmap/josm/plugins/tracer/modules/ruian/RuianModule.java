@@ -58,6 +58,8 @@ public class RuianModule implements TracerModule {
     private final String source = "cuzk:ruian"; // obsolete
     private final String ruianUrl = "http://josm.poloha.net";
 
+    private static final double resurrectNodesDistanceMeters = 10.0;
+
     private static final String reuseExistingBuildingNodePattern =
         "(building=* -building=no -building=entrance)";
 
@@ -359,7 +361,7 @@ public class RuianModule implements TracerModule {
                 outer_way = merger.mergeWays(editor.getModifiedWays(), true, outer_way);
             }
 
-            List<Command> commands = editor.finalizeEdit();
+            List<Command> commands = editor.finalizeEdit(resurrectNodesDistanceMeters);
 
             if (!commands.isEmpty()) {
 
