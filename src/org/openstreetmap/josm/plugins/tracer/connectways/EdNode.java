@@ -49,6 +49,16 @@ public class EdNode extends EdObject {
         return m_node;
     }
 
+    void forgeOriginalNodeDangerous (Node original_node) {
+        checkEditable();
+        super.forgeOriginalDangerous(original_node);
+        Node n = new Node(original_node);
+        n.setKeys(m_node.getKeys());
+        n.setCoor(m_node.getCoor());
+        m_node = n;
+        setModified();
+    }
+
     public Node originalNode() {
         if (!hasOriginal())
             throw new IllegalStateException(tr("EdNode has no original Node"));
