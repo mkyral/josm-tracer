@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Tracer-testing" default="dist" basedir=".">
     <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Added RUIAN support. Added ability to modify existing way from Tracer2 plugin"/>
+    <property name="commit.message" value="Big refactoring of the code."/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
     <property name="plugin.main.version" value="7001"/>
 
-    <property name="plugin.author" value="Jan Bilak, Petr Dlouhý, Marián Kyral"/>
+    <property name="plugin.author" value="Jan Bilak, Petr Dlouhý, Marián Kyral, Martin Švec"/>
     <property name="plugin.class" value="org.openstreetmap.josm.plugins.tracer.TracerPlugin"/>
     <property name="plugin.description" value="This is an testing version of the improved original Tracer plugin developed at https://github.com/mkyral/josm-tracer"/>
     <property name="plugin.icon" value="images/mapmode/tracer-sml.png"/>
