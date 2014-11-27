@@ -464,7 +464,7 @@ public class LpisModule implements TracerModule  {
             IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
             IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(obj);
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
-            
+
             obj.connectExistingTouchingNodes(gconn, filter);
         }
     }

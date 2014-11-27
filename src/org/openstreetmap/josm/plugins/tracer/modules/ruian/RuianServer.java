@@ -65,8 +65,9 @@ public class RuianServer {
      */
     public RuianRecord trace(LatLon pos, String url) {
         try {
-            System.out.println("Request: "+ url + "/ruian-buildings/?lat=" + pos.lat() + "&lon=" + pos.lon());
-            String content = callServer(url + "/ruian-buildings/?lat=" + pos.lat() + "&lon=" + pos.lon());
+            String call_url = url + "/ruian-buildings/?req=full&lat=" + pos.lat() + "&lon=" + pos.lon();
+            System.out.println("Request: " + call_url);
+            String content = callServer(call_url);
             System.out.println("Reply: " + content);
             RuianRecord ruian = new RuianRecord();
             ruian.parseJSON(content);

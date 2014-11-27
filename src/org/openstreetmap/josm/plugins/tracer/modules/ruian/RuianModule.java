@@ -200,7 +200,7 @@ public class RuianModule implements TracerModule {
                 return;
 
             // No data available?
-            if (m_record.getCoorCount() == 0) {
+            if (m_record.getBuildingID() == -1) {
                 TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
                 return;
             }
@@ -419,19 +419,22 @@ public class RuianModule implements TracerModule {
               dAdjY = pref.getRuianAdjustPositionLon();
             }
 
+            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingBuildingNodeMatch);
+
             // Prepare outer way nodes
-            List<EdNode> outer_nodes = new ArrayList<> ();
             LatLon prev_coor = null;
+            List<LatLon> outer_rls = m_record.getOuter();
+            List<EdNode> outer_nodes = new ArrayList<> (outer_rls.size());
             // m_record.getCoorCount() - 1 - omit last node
-            for (int i = 0; i < m_record.getCoorCount() - 1; i++) {
+            for (int i = 0; i < outer_rls.size() - 1; i++) {
                 EdNode node;
 
                 // Apply corrections to node coordinates
                 if (!pref.isRuianAdjustPositionEnabled()) {
-                  node = editor.newNode(m_record.getCoor(i));
+                  node = editor.newNode(outer_rls.get(i));
                 } else {
-                  node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(m_record.getCoor(i).lat()+dAdjX),
-                                                   LatLon.roundToOsmPrecision(m_record.getCoor(i).lon()+dAdjY)));
+                  node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(outer_rls.get(i).lat()+dAdjX),
+                                                   LatLon.roundToOsmPrecision(outer_rls.get(i).lon()+dAdjY)));
                 }
 
                 if (!editor.insideDataSourceBounds(node)) {
@@ -450,33 +453,46 @@ public class RuianModule implements TracerModule {
             // Close & create outer way
             outer_nodes.add(outer_nodes.get(0));
             EdWay outer_way = editor.newWay(outer_nodes);
+            outer_way.reuseExistingNodes(gconn, reuse_filter);
 
-// #### Multipolygons are not supported yet.
             // Simple way?
-//             if (!m_record.hasInners())
+            if (!m_record.hasInners())
                 return new Pair<>(outer_way, null);
 
-//             // Create multipolygon
-//             EdMultipolygon multipolygon = editor.newMultipolygon();
-//             multipolygon.addOuterWay(outer_way);
-//
-//             for (List<LatLon> inner_lls: m_record.getInners()) {
-//                 List<EdNode> inner_nodes = new ArrayList<>(inner_lls.size());
-//                 for (int i = 0; i < inner_lls.size() - 1; i++) {
-//                     inner_nodes.add(editor.newNode(inner_lls.get(i)));
-//                 }
-//
-//                 // Close & create inner way
-//                 if (inner_nodes.size() < 3)
-//                     throw new AssertionError(tr("Inner way consists of less than 3 nodes"));
-//                 inner_nodes.add(inner_nodes.get(0));
-//                 EdWay way = editor.newWay(inner_nodes);
-//                 way.reuseNearNodes(gconn, reuse_filter, true);
-//
-//                 multipolygon.addInnerWay(way);
-//             }
-//
-//             return new Pair<>(outer_way, multipolygon);
+            // Create multipolygon
+            prev_coor = null;
+            EdMultipolygon multipolygon = editor.newMultipolygon();
+            multipolygon.addOuterWay(outer_way);
+
+            for (List<LatLon> inner_rls: m_record.getInners()) {
+                List<EdNode> inner_nodes = new ArrayList<>(inner_rls.size());
+                for (int i = 0; i < inner_rls.size() - 1; i++) {
+                    EdNode node;
+                    // Apply corrections to node coordinates
+                    if (!pref.isRuianAdjustPositionEnabled()) {
+                      node = editor.newNode(inner_rls.get(i));
+                    } else {
+                      node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(inner_rls.get(i).lat()+dAdjX),
+                                                      LatLon.roundToOsmPrecision(inner_rls.get(i).lon()+dAdjY)));
+                    }
+
+                    if (!gconn.duplicateNodes(node.getCoor(), prev_coor)) {
+                        inner_nodes.add(node);
+                        prev_coor = node.getCoor();
+                    }
+                }
+
+                // Close & create inner way
+                if (inner_nodes.size() < 3)
+                    throw new AssertionError(tr("Inner way consists of less than 3 nodes"));
+                inner_nodes.add(inner_nodes.get(0));
+                EdWay way = editor.newWay(inner_nodes);
+                way.reuseExistingNodes(gconn, reuse_filter);
+
+                multipolygon.addInnerWay(way);
+            }
+
+            return new Pair<>(outer_way, multipolygon);
         }
 
         private Pair<EdObject, Boolean> getObjectToRetrace(WayEditor editor, LatLon pos, Match retraceAreaMatch) {

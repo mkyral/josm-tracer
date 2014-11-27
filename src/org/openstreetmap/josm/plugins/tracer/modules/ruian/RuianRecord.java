@@ -57,7 +57,8 @@ public class RuianRecord {
     private String   m_finished;
     private String   m_valid_from;
 
-    private ArrayList <LatLon> m_geometry;
+    private List<LatLon> m_outer;
+    private List<List<LatLon>> m_inners;
     private ArrayList <Address> m_address_places;
 
     /**
@@ -77,7 +78,7 @@ public class RuianRecord {
       m_coor_lat = 0;
       m_coor_lon = 0;
       m_source = "";
-      m_ruian_id = 0;
+      m_ruian_id = -1;
       m_levels = 0;
       m_flats = 0;
       m_usage_code = "";
@@ -85,7 +86,8 @@ public class RuianRecord {
       m_usage_val = "";
       m_finished = "";
       m_valid_from = "";
-      m_geometry = new ArrayList<LatLon> ();
+      m_outer = new ArrayList<>();
+      m_inners = new ArrayList<>();
       m_address_places = new ArrayList<Address> ();
 
     }
@@ -265,28 +267,56 @@ public class RuianRecord {
 
 // =========================================================================
       try {
-        JsonArray arr = obj.getJsonArray("geometry");
+        JsonObject geomObj = obj.getJsonObject("geometry");
 
-        for(int i = 0; i < arr.size(); i++)
+        // Outer
+        JsonArray outerArr = geomObj.getJsonArray("outer");
+        for(int i = 0; i < outerArr.size(); i++)
         {
-          System.out.println("i="+i);
-          JsonArray node = arr.getJsonArray(i);
+          JsonArray node = outerArr.getJsonArray(i);
 
           try {
             LatLon coor = new LatLon(
               LatLon.roundToOsmPrecision(node.getJsonNumber(1).doubleValue()),
               LatLon.roundToOsmPrecision(node.getJsonNumber(0).doubleValue())
             );
-            System.out.println("coor: " + coor.toString());
-            m_geometry.add(coor);
+            System.out.println("outer["+i+"]:coor: " + coor.toString());
+            m_outer.add(coor);
           } catch (Exception e) {
           }
+        }
 
+        try {
+          // Inners
+          JsonArray innersArr = geomObj.getJsonArray("inners");
+          for(int i = 0; i < innersArr.size(); i++)
+          {
+            JsonArray innerArr = innersArr.getJsonArray(i);
+            ArrayList<LatLon> inner = new ArrayList<>();
+
+            System.out.println("");
+            for(int j = 0; j < innerArr.size(); j++)
+            {
+              JsonArray node = innerArr.getJsonArray(j);
+
+              try {
+                LatLon coor = new LatLon(
+                  LatLon.roundToOsmPrecision(node.getJsonNumber(1).doubleValue()),
+                  LatLon.roundToOsmPrecision(node.getJsonNumber(0).doubleValue())
+                );
+                System.out.println("inner["+i+"]["+j+"]:coor: " + coor.toString());
+                inner.add(coor);
+              } catch (Exception e) {
+              }
+            }
+            m_inners.add(inner);
+          }
+        } catch (Exception e) {
         }
       } catch (Exception e) {
       }
 
-// =========================================================================
+      // =========================================================================
       try {
         JsonArray arr = obj.getJsonArray("adresni_mista");
 
@@ -366,35 +396,42 @@ public class RuianRecord {
       }
     }
 
-  /**
-   *  Return number of nodes in the building
-   *  @return Count of nodes in building
-   */
-  public int getCoorCount() {
-    if (m_geometry == null)
-      return 0;
-    else
-      return m_geometry.size();
-  }
+    /**
+     *  Return outer polygon
+     *  @return Outer polygon nodes
+     */
+    public List <LatLon> getOuter() {
+        if (m_outer == null)
+            throw new IllegalStateException("No outer geometry available");
+        return Collections.unmodifiableList(m_outer);
+    }
 
-  /**
-   *  Return coordinates of node
-   *  @return geometry node coordinates
-   */
-  public LatLon getCoor(int i) {
-    return m_geometry.get(i);
-  }
+    /**
+     *  Return whether there are inners
+     *  @return True/False
+     */
+    public boolean hasInners() {
+        return m_inners.size() > 0;
+    }
+
+    /**
+     *  Return number of inners
+     *  @return List of inners
+     */
+    public List<List<LatLon>> getInners() {
+        return Collections.unmodifiableList(m_inners);
+    }
 
   /**
    * Returns BBox of RUIAN (multi)polygon
    * @return BBox of RUIAN (multi)polygon
    */
   public BBox getBBox() {
-      LatLon p0 = m_geometry.get(0);
+      LatLon p0 = m_outer.get(0);
 
       BBox bbox = new BBox(p0.lon(), p0.lat());
-      for (int i = 1; i < m_geometry.size(); i++) {
-          LatLon p = m_geometry.get(i);
+      for (int i = 1; i < m_outer.size(); i++) {
+          LatLon p = m_outer.get(i);
           bbox.add(p.lon(), p.lat());
       }
 

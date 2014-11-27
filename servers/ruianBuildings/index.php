@@ -2,6 +2,8 @@
 require("config.php");
 $lat=$_REQUEST['lat'];
 $lon=$_REQUEST['lon'];
+$req=$_REQUEST['req'];
+
 if ( !is_numeric($lat) or !is_numeric($lon) ) die;
 header('Content-Type: application/json');
 
@@ -9,6 +11,7 @@ $data = array();
 
 $data["coordinates"] = array( "lat" => "$lat", "lon" => "$lon");
 $data["source"] = "cuzk:ruian";
+
 
 // building
 $query="
@@ -71,29 +74,65 @@ if (pg_num_rows($result) > 0)
 
   // -----------------
   // Building geometry
-  $query="
-    select st_asgeojson(st_transform(local_simplify_polygon(xhranice),4326)) as geom
-    from
-      (select kod,(st_dump(hranice)).geom as xhranice
-      from rn_stavebni_objekt
-      where st_contains(hranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
-        and not deleted) as foo
-    where st_contains(xhranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
-    limit 1
-  ";
+  if ( "$req" == "full" )
+  { // export complete building including inners
+    $query="
+      select st_asgeojson(st_transform(local_less_simplify_polygon((st_dumprings(xhranice)).geom),4326)) as geom
+      from
+        (select kod,(st_dump(hranice)).geom as xhranice
+        from rn_stavebni_objekt
+        where st_contains(hranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
+          and not deleted) as foo
+      where st_contains(xhranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
+    ";
+  } else
+  { // Export only outer way
+    $query="
+      select st_asgeojson(st_transform(local_simplify_polygon(xhranice),4326)) as geom
+      from
+        (select kod,(st_dump(hranice)).geom as xhranice
+        from rn_stavebni_objekt
+        where st_contains(hranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
+          and not deleted) as foo
+      where st_contains(xhranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
+      limit 1
+    ";
+  }
   $result = pg_query($CONNECT,$query);
 
-  if (pg_num_rows($result) > 0)
+  if (pg_num_rows($result) == 1 && !"$req" == "full")
   {
+
     $geom = pg_result($result,0,"geom");
     $geometry=json_decode($geom,true);
     $data["geometry"] = $geometry['coordinates'][0];
   }
-  else
+  else if (pg_num_rows($result) > 1 || "$req" == "full")
+  {
+    $geom = array();
+    $inners = array();
+    for ($i = 0; $i < pg_num_rows($result); $i++)
+    {
+      $row = pg_result($result,$i,"geom");
+      $geometry=json_decode($row,true);
+      if ($i == 0)
+      {
+        $geom['outer'] =$geometry['coordinates'][0];
+      } else if ($geometry['coordinates'][0][0] == $geom['outer'][0])
+      {
+        // Ignore dulicated outer ways on the same position
+        break;
+      } else
+      {
+        array_push($inners, $geometry['coordinates'][0]);
+      }
+    }
+      $geom['inners'] = $inners;
+      $data["geometry"] = $geom;
+  } else
   {
     $data["geometry"] = array();
   }
-
   // -----------------
   // Addresses
   $query="
