@@ -20,8 +20,12 @@
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.actions.CreateMultipolygonAction;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
@@ -407,5 +411,72 @@ public class EdMultipolygon extends EdObject {
         }
 
         return area;
+    }
+
+    public void removeTagsFromWaysIfNeeded() {
+        checkEditable();
+        Map<String, String> values = this.getKeys();
+
+        Set<String> conflicting_keys = new HashSet<>();
+
+        for (EdWay way: outerWays()) {
+            for (String key : way.keySet()) {
+                if (!values.containsKey(key)) { //relation values take precedence
+                    values.put(key, way.get(key));
+                } else if (!this.hasKey(key) && !values.get(key).equals(way.get(key))) {
+                    conflicting_keys.add(key);
+                }
+            }
+        }
+
+        // filter out empty key conflicts - we need second iteration
+        if (!Main.pref.getBoolean("multipoly.alltags", false))
+            for (EdWay way: outerWays())
+                for (String key : values.keySet())
+                    if (!way.hasKey(key) && !this.hasKey(key))
+                        conflicting_keys.add(key);
+
+        for (String key : conflicting_keys)
+            values.remove(key);
+
+        for (String linear_tag : Main.pref.getCollection("multipoly.lineartagstokeep", CreateMultipolygonAction.DEFAULT_LINEAR_TAGS))
+            values.remove(linear_tag);
+
+        if ("coastline".equals(values.get("natural")))
+            values.remove("natural");
+
+        values.put("area", "yes");
+
+        boolean move_tags = Main.pref.getBoolean("multipoly.movetags", true);
+
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+
+            for (EdWay way : innerWays()) {
+                if (value.equals(way.get(key))) {
+                    way.remove(key);
+                }
+            }
+
+            if (move_tags) {
+                // remove duplicated tags from outer ways
+                for (EdWay way : outerWays()) {
+                    if(way.hasKey(key)) {
+                        way.remove(key);
+                    }
+                }
+            }
+        }
+
+        if (move_tags) {
+            // add those tag values to the relation
+            for (Map.Entry<String, String> entry : values.entrySet()) {
+                String key = entry.getKey();
+                if (!this.hasKey(key) && !"area".equals(key)) {
+                    this.put(key, entry.getValue());
+                }
+            }
+        }
     }
 }

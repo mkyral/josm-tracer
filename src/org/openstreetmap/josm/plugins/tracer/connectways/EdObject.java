@@ -192,6 +192,18 @@ public abstract class EdObject {
         return currentPrimitive().get(key);
     }
 
+    public final void put(String key, String value) {
+        checkEditable();
+        currentPrimitive().put(key, value);
+        setModified();
+    }
+
+    public final void remove(String key) {
+        checkEditable();
+        currentPrimitive().remove(key);
+        setModified();
+    }
+
     public void setKeys(Map<String,String> keys) {
         checkEditable();
         currentPrimitive().setKeys(keys);
@@ -207,6 +219,17 @@ public abstract class EdObject {
         checkNotDeleted();
         return new HashMap<> (currentPrimitive().getInterestingTags());
     }
+
+    public final Collection<String> keySet() {
+        checkNotDeleted();
+        return currentPrimitive().keySet();
+    }
+
+    public final boolean hasKey(String key) {
+        checkNotDeleted();
+        return currentPrimitive().hasKey(key);
+    }
+
 
     protected boolean hasIdenticalKeys(OsmPrimitive other) {
         checkEditable();
@@ -310,6 +333,23 @@ public abstract class EdObject {
         return currentPrimitive().getUniqueId();
     }
 
+    public void moveAllNonLinearTagsFrom(EdObject src) {
+        checkNotDeleted();
+
+        Map<String, String> values = src.getKeys();
+
+        for (String linear_tag: Main.pref.getCollection("multipoly.lineartagstokeep", CreateMultipolygonAction.DEFAULT_LINEAR_TAGS))
+            values.remove(linear_tag);
+
+        if ("coastline".equals(values.get("natural")))
+            values.remove("natural");
+
+        for (Map.Entry<String, String> entry : values.entrySet()) {
+            this.put (entry.getKey(), entry.getValue());
+            src.remove (entry.getKey());
+        }
+    }
+    
     public abstract boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter);
     public abstract boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate filter, boolean move_near_nodes);
     public abstract boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter);
