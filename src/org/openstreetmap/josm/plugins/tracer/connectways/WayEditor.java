@@ -399,8 +399,13 @@ public class WayEditor {
         }
 
         // resurrect anonymous deleted nodes
-        if (resurrect_dist > 0)
-            resurrectNodes(add_nodes, change_nodes, delete_nodes, resurrect_dist);
+        if (resurrect_dist > 0) {
+            Set<EdWay> affected_ways = resurrectNodes(add_nodes, change_nodes, delete_nodes, resurrect_dist);
+            if (affected_ways != null) {
+                for (EdWay way: affected_ways)
+                    way.updateModifiedFlag();
+            }
+        }
 
         // ways to be added/changed
         Set<EdWay> add_ways = new HashSet<>();
@@ -634,9 +639,9 @@ public class WayEditor {
     }
 
 
-    private void resurrectNodes(Set<EdNode> add_nodes, Set<EdNode> change_nodes, Set<EdNode> delete_nodes, double resurrect_dist) {
+    private Set<EdWay> resurrectNodes(Set<EdNode> add_nodes, Set<EdNode> change_nodes, Set<EdNode> delete_nodes, double resurrect_dist) {
         if (add_nodes.isEmpty() || delete_nodes.isEmpty())
-            return;
+            return null;
 
         PriorityQueue<ResurrectableNodesPair> queue = new PriorityQueue<>();
 
@@ -656,6 +661,8 @@ public class WayEditor {
             }
         }
 
+        Set<EdWay> affected_ways = new HashSet<>();
+
         ResurrectableNodesPair rnp;
         while ((rnp = queue.poll()) != null) {
             if (!delete_nodes.contains(rnp.delete_node) || !add_nodes.contains(rnp.add_node))
@@ -665,7 +672,10 @@ public class WayEditor {
             delete_nodes.remove(rnp.delete_node);
             change_nodes.add(rnp.add_node);
             rnp.add_node.forgeOriginalNodeDangerous(rnp.delete_node.originalNode());
+            affected_ways.addAll(rnp.add_node.getEditorReferrers(EdWay.class));
         }
+
+        return affected_ways;
     }
 }
 
