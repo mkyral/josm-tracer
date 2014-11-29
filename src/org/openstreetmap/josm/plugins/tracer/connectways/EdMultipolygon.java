@@ -305,6 +305,28 @@ public class EdMultipolygon extends EdObject {
         return false;
     }
 
+    public boolean containsTaggedWays() {
+        checkEditable();
+        for (EdWay w: m_outerWays)
+            if (w.isTagged())
+                return true;
+        for (EdWay w: m_innerWays)
+            if (w.isTagged())
+                return true;
+        return false;
+    }
+
+    public boolean allWaysHaveSingleReferrer() {
+        checkEditable();
+        for (EdWay w: m_outerWays)
+            if (!w.hasSingleReferrer(this))
+                return false;
+        for (EdWay w: m_innerWays)
+            if (!w.hasSingleReferrer(this))
+                return false;
+        return true;
+    }
+
     @Override
     protected OsmPrimitive currentPrimitive() {
         return m_relation;
