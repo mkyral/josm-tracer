@@ -19,16 +19,18 @@
 
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
-import static org.openstreetmap.josm.tools.I18n.tr;
-
-import java.util.List;
 import java.util.ArrayList;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.actions.CreateMultipolygonAction;
+import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import static org.openstreetmap.josm.tools.I18n.tr;
 
 
 public abstract class EdObject {
@@ -74,13 +76,15 @@ public abstract class EdObject {
         m_original = orig;
     }
 
-    /* #### EdObject deletion support is broken now! TODO:
-       - EdObject must remove all it's references to other EdObjects
-       - EdObject cannot be removed if it has referrers
-       - All enumerations in WayEditor must take care not to return deleted objects
-    protected void setDeleted() {
+    public void deleteShallow() {
+        checkEditable();
+        if (this.hasReferrers())
+            throw new IllegalStateException("Cannot delete referenced EdObject");
+        this.deleteContentsShallow();
         m_deleted = true;
-    }*/
+    }
+
+    protected abstract void deleteContentsShallow();
 
     public boolean isDeleted() {
         return m_deleted;

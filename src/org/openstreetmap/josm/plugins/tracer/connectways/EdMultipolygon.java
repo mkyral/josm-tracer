@@ -129,6 +129,25 @@ public class EdMultipolygon extends EdObject {
         return true;
     }
 
+    public void removeAllWays() {
+        checkEditable();
+
+        if (m_outerWays.isEmpty() && m_innerWays.isEmpty())
+            return;
+
+        for (EdWay way: m_outerWays)
+            way.removeRef(this);
+        m_outerWays.clear();
+
+        for (EdWay way: m_innerWays)
+            way.removeRef(this);
+        m_innerWays.clear();
+
+        setModified();
+    }
+
+
+
     public Relation originalMultipolygon() {
         if (!hasOriginal())
             throw new IllegalStateException(tr("EdMultipolygon has no original Relation"));
@@ -187,6 +206,12 @@ public class EdMultipolygon extends EdObject {
         }
 
         resetModified();
+    }
+
+    @Override
+    protected void deleteContentsShallow() {
+        this.removeAllWays();
+        this.m_relation.removeAll();
     }
 
     private boolean containsWayWithUniqueId(List<EdWay> ways, long id) {

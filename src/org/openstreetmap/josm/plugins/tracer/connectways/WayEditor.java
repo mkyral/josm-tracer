@@ -335,11 +335,14 @@ public class WayEditor {
 
     public void updateModifiedFlags() {
         for (EdNode n: m_nodes)
-            n.updateModifiedFlag();
+            if (!n.isDeleted())
+                n.updateModifiedFlag();
         for (EdWay w: m_ways)
-            w.updateModifiedFlag();
+            if (!w.isDeleted())
+                w.updateModifiedFlag();
         for (EdMultipolygon mp: m_multipolygons)
-            mp.updateModifiedFlag();
+            if (!mp.isDeleted())
+                mp.updateModifiedFlag();
     }
 
     public List<Command> finalizeEdit () {

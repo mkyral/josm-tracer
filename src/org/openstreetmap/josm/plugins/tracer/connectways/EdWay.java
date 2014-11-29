@@ -210,6 +210,12 @@ public class EdWay extends EdObject {
         resetModified();
     }
 
+    @Override
+    protected void deleteContentsShallow() {
+        this.removeAllNodes();
+        this.m_way.removeAll();
+    }
+
     /**
      * Returns a final way that can be referenced in EdMultipolygon finalization.
      * The main difference from finalWay() is that for a modified way, it doesn't

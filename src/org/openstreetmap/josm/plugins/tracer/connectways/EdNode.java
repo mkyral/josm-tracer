@@ -182,6 +182,11 @@ public class EdNode extends EdObject {
     public double getEastNorthArea() {
         return 0.0;
     }
+
+    @Override
+    protected void deleteContentsShallow() {
+        this.m_node.removeAll();
+    }
 }
 
 
