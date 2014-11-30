@@ -20,7 +20,9 @@
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import java.util.List;
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.projection.Projections;
 import org.openstreetmap.josm.tools.Geometry;
@@ -159,9 +161,25 @@ public abstract class GeomUtils {
 
         return new GeomDeviation (dev_distance_meters, dev_angle);
     }
-    
+
     public static double distanceOfNodesMeters(EdNode x, EdNode y) {
         return x.getCoor().greatCircleDistance(y.getCoor());
     }
 
+    private static LatLon roundCoor(LatLon coor, double precision) {
+        if (precision <= 0)
+            return coor.getRoundedToOsmPrecision();
+        return new LatLon(
+            Math.round(coor.lat() / precision) * precision,
+            Math.round(coor.lon() / precision) * precision);
+    }
+
+    public static boolean duplicateNodes(LatLon l1, LatLon l2, double precision) {
+        return (l1 == l2) ||
+            (l1 != null && l2 != null && roundCoor(l1, precision).equals(roundCoor(l2, precision)));
+    }
+
+    public static double duplicateNodesPrecision() {
+        return Main.pref.getDouble("validator.duplicatenodes.precision", 0.0);
+    }
 }

@@ -154,6 +154,10 @@ public class RuianModule implements TracerModule {
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
         private final GeomDeviation m_reuseNearNodesTolerance = new GeomDeviation (0.10, 0.0);
+        private final GeomDeviation m_connectTolerance = new GeomDeviation (0.15, Math.PI / 50);
+        private final double m_discardCutoffsPercent = 15.0;
+        private final ClipAreasSettings m_clipSettings =
+            new ClipAreasSettings (m_connectTolerance, m_discardCutoffsPercent, new DiscardableBuildingCutoff());
 
         RuianTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (tr("Tracing"));
@@ -343,7 +347,7 @@ public class RuianModule implements TracerModule {
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipBuildingWayMatch);
-                ClipAreas clip = new ClipAreas(editor, gconn, 15.0, new DiscardableBuildingCutoff(), m_postTraceNotifications);
+                ClipAreas clip = new ClipAreas(editor, m_clipSettings, m_postTraceNotifications);
                 clip.clipAreas(outer_way, filter);
 
                 // Remove needless nodes

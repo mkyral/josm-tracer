@@ -127,6 +127,9 @@ public class LpisModule implements TracerModule  {
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
+        private final GeomDeviation m_connectTolerance = new GeomDeviation(0.2, Math.PI / 3);
+        private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_connectTolerance);
+
         LpisTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (tr("Tracing"));
             this.m_pos = pos;
@@ -303,7 +306,7 @@ public class LpisModule implements TracerModule  {
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipLanduseWayMatch);
-                ClipAreas clip = new ClipAreas(editor, gconn, m_postTraceNotifications);
+                ClipAreas clip = new ClipAreas(editor, m_clipSettings, m_postTraceNotifications);
                 clip.clipAreas(outer_way, filter);
             }
 

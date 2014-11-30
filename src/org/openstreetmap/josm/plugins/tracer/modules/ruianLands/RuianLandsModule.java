@@ -19,7 +19,6 @@
 package org.openstreetmap.josm.plugins.tracer.modules.ruianLands;
 
 import java.awt.Cursor;
-import java.awt.Point;
 import java.util.*;
 
 import javax.swing.JOptionPane;
@@ -170,6 +169,9 @@ public class RuianLandsModule implements TracerModule {
         private boolean m_cancelled;
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
+
+        private final GeomDeviation m_tolerance = new GeomDeviation (0.2, Math.PI / 3);
+        private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_tolerance);
 
         RuianLandsTracerTask  (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (tr("Tracing"));
@@ -372,7 +374,7 @@ public class RuianLandsModule implements TracerModule {
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (clipWayMatch);
-                ClipAreas clip = new ClipAreas(editor, gconn, m_postTraceNotifications);
+                ClipAreas clip = new ClipAreas(editor, m_clipSettings, m_postTraceNotifications);
                 clip.clipAreas(outer_way, filter);
             }
 

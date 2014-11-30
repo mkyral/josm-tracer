@@ -400,20 +400,20 @@ public class EdWay extends EdObject {
      * This function doesn't impose any additional restrictions to matching nodes,
      * except those provided by "filter" predicate.
      *
+     * @param tolerance maximal deviation tolerances of touching nodes
      * @param other EdWay whose nodes will be tested and added
      * @param filter predicate to rule out unwanted nodes
      * @return true if any touching nodes were added; false if no nodes
      * were added.
      */
-    public boolean connectTouchingNodes(GeomConnector gconn, EdWay other, IEdNodePredicate filter) {
+    public boolean connectTouchingNodes(GeomDeviation tolerance, EdWay other, IEdNodePredicate filter) {
         checkEditable();
         other.checkEditable();
 
         if (this == other)
             return false;
 
-        final double tolerance_degs = gconn.pointOnLineToleranceLatLon();
-        final BBox way_bbox = this.getBBox(tolerance_degs);
+        final BBox way_bbox = this.getBBox(tolerance.distanceLatLon());
 
         // filter nodes
         Set<EdNode> other_nodes = new HashSet<>();
@@ -436,15 +436,16 @@ public class EdWay extends EdObject {
 
             BBox seg_bbox = new BBox(x.currentNodeUnsafe());
             seg_bbox.add(y.getCoor());
-            BBoxUtils.extendBBox(seg_bbox, tolerance_degs);
+            BBoxUtils.extendBBox(seg_bbox, tolerance.distanceLatLon());
 
             for (EdNode node: other_nodes) {
                 if (!seg_bbox.bounds(node.getCoor()))
                     continue;
-                if (!gconn.pointOnLine(node, x, y))
+                GeomDeviation deviation = GeomUtils.pointDeviationFromSegment(node, x, y);
+                if (!deviation.inTolerance(tolerance))
                     continue;
                 Pair<Double, Integer> best_segment = nodes_map.get(node);
-                double dist = GeomUtils.distanceToSegmentMeters(node, x, y);
+                double dist = deviation.distanceMeters();
                 if (best_segment == null || best_segment.a > dist) {
                     nodes_map.put(node, new Pair<> (dist, i));
                 }
@@ -501,9 +502,9 @@ public class EdWay extends EdObject {
      * Nodes are added to the right positions into way segments.
      *
      */
-    public boolean connectNonIncludedTouchingNodes(GeomConnector gconn, EdWay other) {
+    public boolean connectNonIncludedTouchingNodes(GeomDeviation tolerance, EdWay other) {
         IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(this);
-        return connectTouchingNodes(gconn, other, exclude_my_nodes);
+        return connectTouchingNodes(tolerance, other, exclude_my_nodes);
     }
 
     public boolean isMemberOfAnyMultipolygon() {

@@ -39,7 +39,8 @@ import org.openstreetmap.josm.plugins.tracer.clipper.PolyType;
 
 public class AngPolygonClipper {
     private final WayEditor m_editor;
-    private final GeomConnector m_gconn;
+    private final GeomDeviation m_tolerance;
+    private final double m_duplicateNodesPrecision;
 
     private final double m_DiscardCutoffsPercent;
     private double m_DiscardedPercent;
@@ -49,10 +50,11 @@ public class AngPolygonClipper {
 
     private Map<LatLon, EdNode> m_nodesMap;
 
-    public AngPolygonClipper (WayEditor editor, GeomConnector gconn, double discard_cutoffs_percent) {
+    public AngPolygonClipper (WayEditor editor, GeomDeviation tolerance, double discard_cutoffs_percent) {
 
         m_editor = editor;
-        m_gconn = gconn;
+        m_tolerance = tolerance;
+        m_duplicateNodesPrecision = GeomUtils.duplicateNodesPrecision();
 
         m_DiscardCutoffsPercent = discard_cutoffs_percent;
         m_DiscardedPercent = 0.0;
@@ -191,7 +193,7 @@ public class AngPolygonClipper {
         for (Point2d point : p) {
             EdNode node = point2dToNode(point);
             // avoid two consecutive duplicate nodes ..x,x..
-            if (!m_gconn.duplicateNodes(node.getCoor(), prev_coor)) {
+            if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, m_duplicateNodesPrecision)) {
                 list.add(node);
                 prev_coor = node.getCoor();
                 //System.out.println(" - d: node " + Long.toString(node.getUniqueId()));
@@ -200,7 +202,7 @@ public class AngPolygonClipper {
 
         // Avoid consecutive duplicate nodes around the end of polygon
         while ((list.size() >= 2) &&
-               (m_gconn.duplicateNodes(list.get(0).getCoor(), list.get(list.size() - 1).getCoor())))
+               (GeomUtils.duplicateNodes(list.get(0).getCoor(), list.get(list.size() - 1).getCoor(), m_duplicateNodesPrecision)))
             list.remove(list.size() - 1);
 
         boolean changed;
@@ -216,8 +218,8 @@ public class AngPolygonClipper {
                 EdNode p0 = list.get(i);
                 EdNode p1 = list.get(i1);
                 EdNode p2 = list.get(i2);
-                if (m_gconn.pointOnLine(p2, p0, p1) ||
-                    m_gconn.pointOnLine(p0, p1, p2)) {
+                if (GeomUtils.pointDeviationFromSegment(p2, p0, p1).inTolerance(m_tolerance) ||
+                    GeomUtils.pointDeviationFromSegment(p0, p1, p2).inTolerance(m_tolerance)) {
                     list.remove(i1);
                     i = i >= 1 ? i - 1 : 0;
                     changed = true;
@@ -232,7 +234,7 @@ public class AngPolygonClipper {
             while ((list.size() >= 3) && i < list.size ()) {
                 int i1 = (i + 1) % list.size();
                 int i2 = (i + 2) % list.size();
-                if (m_gconn.duplicateNodes(list.get(i).getCoor(), list.get(i2).getCoor())) {
+                if (GeomUtils.duplicateNodes(list.get(i).getCoor(), list.get(i2).getCoor(), m_duplicateNodesPrecision)) {
                     System.out.println(" x d: tail " + Long.toString(list.get(i).getUniqueId()));
                     list.remove(i1);
                     list.remove(i2 > i1 ? i1 : 0);
