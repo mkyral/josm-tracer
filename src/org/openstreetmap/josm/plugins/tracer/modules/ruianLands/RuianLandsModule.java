@@ -309,7 +309,7 @@ public class RuianLandsModule implements TracerModule {
 
             System.out.println("  RUIAN keys: " + m_record.getKeys());
 
-            GeomConnector gconn = new GeomConnector(0.2, Math.PI / 3);
+            GeomConnector gconn = new GeomConnector(new GeomDeviation (0.2, Math.PI / 3));
             WayEditor editor = new WayEditor (data_set);
 
             Match clipWayMatch;

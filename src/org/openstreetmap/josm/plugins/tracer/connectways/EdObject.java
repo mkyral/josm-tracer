@@ -351,7 +351,7 @@ public abstract class EdObject {
     }
     
     public abstract boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter);
-    public abstract boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate filter, boolean move_near_nodes);
+    public abstract boolean reuseNearNodes(GeomDeviation tolerance, IEdNodePredicate filter, boolean move_near_nodes);
     public abstract boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter);
     public abstract double getEastNorthArea();
 }

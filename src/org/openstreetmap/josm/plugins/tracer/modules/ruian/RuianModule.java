@@ -153,6 +153,8 @@ public class RuianModule implements TracerModule {
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
+        private final GeomDeviation m_reuseNearNodesTolerance = new GeomDeviation (0.10, 0.0);
+
         RuianTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (tr("Tracing"));
             this.m_pos = pos;
@@ -292,7 +294,7 @@ public class RuianModule implements TracerModule {
 
             System.out.println("  RUIAN keys: " + m_record.getKeys(m_alt));
 
-            GeomConnector gconn = new GeomConnector(0.10, Math.PI / 25);
+            GeomConnector gconn = new GeomConnector(new GeomDeviation (0.10, Math.PI / 25));
             WayEditor editor = new WayEditor (data_set);
 
             // Look for object to retrace
@@ -321,7 +323,7 @@ public class RuianModule implements TracerModule {
                 reuseExistingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
             }
             else {
-                reuseNearNodes(gconn, multipolygon == null ? outer_way : multipolygon);
+                reuseNearNodes(multipolygon == null ? outer_way : multipolygon);
                 connectExistingTouchingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
             }
 
@@ -543,8 +545,8 @@ public class RuianModule implements TracerModule {
             obj.reuseExistingNodes (gconn, reuseExistingNodesFilter(obj));
         }
 
-        private void reuseNearNodes(GeomConnector gconn, EdObject obj) {
-            obj.reuseNearNodes (gconn, reuseExistingNodesFilter(obj), true);
+        private void reuseNearNodes(EdObject obj) {
+            obj.reuseNearNodes (m_reuseNearNodesTolerance, reuseExistingNodesFilter(obj), true);
         }
 
         private IEdNodePredicate reuseExistingNodesFilter(EdObject obj) {

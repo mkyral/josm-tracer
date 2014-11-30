@@ -22,49 +22,22 @@ package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.osm.Node;
-import org.openstreetmap.josm.data.projection.Projections;
-import org.openstreetmap.josm.tools.Geometry;
 
 
 public class GeomConnector {
 
     private final double m_duplicateNodesPrecision;
 
-    private final double m_metersPerDegree = 111120.00071117;
+    private final GeomDeviation m_tolerance;
 
-    private final double m_pointOnLineToleranceMeters;        // 0.2 for LPIS
-    private final double m_pointOnLineMaxLateralAngle;        // Math.PI / 3 for LPIS, must be < Pi/2
-    private final double m_pointOnLineToleranceDegrees;
-
-    private final double m_nearNodeToleranceMeters;
-    private final double m_nearNodeToleranceDegrees;
-
-    public GeomConnector (double point_on_line_tolerance_meters, double point_on_line_max_lateral_angle) {
+    public GeomConnector (GeomDeviation poldev) {
         m_duplicateNodesPrecision = Main.pref.getDouble("validator.duplicatenodes.precision", 0.0);
-        m_pointOnLineToleranceMeters = point_on_line_tolerance_meters;
-        m_pointOnLineMaxLateralAngle = point_on_line_max_lateral_angle;
-        m_pointOnLineToleranceDegrees = m_pointOnLineToleranceMeters/m_metersPerDegree;
-
-        m_nearNodeToleranceMeters = m_pointOnLineToleranceMeters;
-        m_nearNodeToleranceDegrees = m_nearNodeToleranceMeters/m_metersPerDegree;
+        m_tolerance = poldev;
     }
 
-    public double pointOnLineToleranceDegrees() {
-        return m_pointOnLineToleranceDegrees;
-    }
-
-    public double nearNodeToleranceDegrees() {
-        return m_nearNodeToleranceDegrees;
-    }
-
-    public double nearNodeToleranceMeters() {
-        return m_nearNodeToleranceMeters;
-    }
-
-    public double distanceOfNodesMeters(EdNode x, EdNode y) {
-        return x.getCoor().greatCircleDistance(y.getCoor());
+    public double pointOnLineToleranceLatLon() {
+        return m_tolerance.distanceLatLon();
     }
 
     public boolean duplicateNodes(LatLon l1, LatLon l2) {
@@ -81,23 +54,11 @@ public class GeomConnector {
     }
 
     public boolean pointOnLine(EdNode p, EdNode x, EdNode y) {
-        return pointOnLine(p.currentNodeUnsafe(), x.currentNodeUnsafe(), y.currentNodeUnsafe());
+        return GeomUtils.pointDeviationFromSegment(p, x, y).inTolerance(m_tolerance);
     }
 
     public boolean pointOnLine(Node p, Node x, Node y) {
-
-        EastNorth ep = p.getEastNorth();
-        EastNorth ex = x.getEastNorth();
-        EastNorth ey = y.getEastNorth();
-
-        EastNorth cp = Geometry.closestPointToSegment(ex, ey, ep);
-        if (p.getCoor().greatCircleDistance(Projections.inverseProject(cp)) > m_pointOnLineToleranceMeters)
-            return false;
-
-        double a1 = GeomUtils.unorientedAngleBetween(x, y, p);
-        double a2 = GeomUtils.unorientedAngleBetween(y, x, p);
-        double limit = m_pointOnLineMaxLateralAngle;
-        return (a1 < limit && a2 < limit);
+        return GeomUtils.pointDeviationFromSegment(p, x, y).inTolerance(m_tolerance);
     }
 }
 

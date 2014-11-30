@@ -374,7 +374,7 @@ public class EdMultipolygon extends EdObject {
     }
 
     @Override
-    public boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate nodes_filter, boolean move_near_nodes) {
+    public boolean reuseNearNodes(GeomDeviation tolerance, IEdNodePredicate nodes_filter, boolean move_near_nodes) {
         checkEditable();
         boolean r = false;
 
@@ -383,10 +383,10 @@ public class EdMultipolygon extends EdObject {
         IEdNodePredicate filter = new EdNodeLogicalAndPredicate(exclude_my_nodes, nodes_filter);
 
         for (EdWay way: m_outerWays)
-            if (way.reuseNearNodes(gconn, filter, move_near_nodes))
+            if (way.reuseNearNodes(tolerance, filter, move_near_nodes))
                 r = true;
         for (EdWay way: m_innerWays)
-            if (way.reuseNearNodes(gconn, filter, move_near_nodes))
+            if (way.reuseNearNodes(tolerance, filter, move_near_nodes))
                 r = true;
 
         return r;

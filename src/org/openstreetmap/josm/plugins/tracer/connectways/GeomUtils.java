@@ -120,4 +120,48 @@ public abstract class GeomUtils {
                 segp1.getEastNorth(), segp2.getEastNorth(), point.getEastNorth());
         return point.getCoor().greatCircleDistance(Projections.inverseProject(cp));
     }
+
+    /**
+     * Returns distance and angle deviations of a point from a line segment.
+     * Distance deviation is the minimal distance of the point to the line. Angle
+     * deviation is the greater of unoriented vertex angles (point, segp1, segp2) and
+     * (point, segp2, segp1).
+     * @param point Point for which the deviation is calculated
+     * @param segp1 First point determining the line segment
+     * @param segp2 Second point determining the line segment
+     * @return Calculated GeomDeviation
+     */
+    public static GeomDeviation pointDeviationFromSegment(EdNode point, EdNode segp1, EdNode segp2) {
+        return pointDeviationFromSegment(point.currentNodeUnsafe(), segp1.currentNodeUnsafe(), segp2.currentNodeUnsafe());
+    }
+
+    /**
+     * Returns distance and angle deviations of a point from a line segment.
+     * Distance deviation is the minimal distance of the point to the line. Angle
+     * deviation is the greater of unoriented vertex angles (point, segp1, segp2) and
+     * (point, segp2, segp1).
+     * @param point Point for which the deviation is calculated
+     * @param segp1 First point determining the line segment
+     * @param segp2 Second point determining the line segment
+     * @return Calculated GeomDeviation
+     */
+    public static GeomDeviation pointDeviationFromSegment(Node point, Node segp1, Node segp2) {
+        EastNorth ep = point.getEastNorth();
+        EastNorth ex = segp1.getEastNorth();
+        EastNorth ey = segp2.getEastNorth();
+
+        EastNorth cp = Geometry.closestPointToSegment(ex, ey, ep);
+        double dev_distance_meters = point.getCoor().greatCircleDistance(Projections.inverseProject(cp));
+
+        double a1 = GeomUtils.unorientedAngleBetween(segp1, segp2, point);
+        double a2 = GeomUtils.unorientedAngleBetween(segp2, segp1, point);
+        double dev_angle = Math.max(a1, a2);
+
+        return new GeomDeviation (dev_distance_meters, dev_angle);
+    }
+    
+    public static double distanceOfNodesMeters(EdNode x, EdNode y) {
+        return x.getCoor().greatCircleDistance(y.getCoor());
+    }
+
 }

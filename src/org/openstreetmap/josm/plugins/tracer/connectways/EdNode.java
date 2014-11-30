@@ -169,7 +169,7 @@ public class EdNode extends EdObject {
     }
 
     @Override
-    public boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate filter, boolean move_near_nodes) {
+    public boolean reuseNearNodes(GeomDeviation tolerance, IEdNodePredicate filter, boolean move_near_nodes) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

@@ -48,4 +48,14 @@ public class GeomDeviation {
     public double angleRad() {
         return m_angleRad;
     }
+
+    public boolean inTolerance(GeomDeviation tolerance) {
+        return
+            m_distanceMeters <= tolerance.m_distanceMeters &&
+            m_angleRad <= tolerance.m_angleRad;
+    }
+
+    public boolean distanceIsWithin(double distance) {
+        return distance <= m_distanceMeters;
+    }
 }

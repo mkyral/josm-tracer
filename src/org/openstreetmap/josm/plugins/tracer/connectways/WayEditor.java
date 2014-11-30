@@ -197,7 +197,7 @@ public class WayEditor {
     }
 
     Set<EdNode> findExistingNodesTouchingWaySegment(GeomConnector gconn, EdNode x, EdNode y, IEdNodePredicate filter) {
-        double oversize = gconn.pointOnLineToleranceDegrees() * 10;
+        double oversize = gconn.pointOnLineToleranceLatLon() * 10;
         Node nx = new Node(x.currentNodeUnsafe());
         Node ny = new Node(y.currentNodeUnsafe());
         BBox bbox = new BBox (nx);

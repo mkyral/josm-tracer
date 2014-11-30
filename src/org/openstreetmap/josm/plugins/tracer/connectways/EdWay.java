@@ -299,7 +299,7 @@ public class EdWay extends EdObject {
     }
 
     @Override
-    public boolean reuseNearNodes(GeomConnector gconn, IEdNodePredicate filter, boolean move_near_nodes) {
+    public boolean reuseNearNodes(GeomDeviation tolerance, IEdNodePredicate filter, boolean move_near_nodes) {
         checkEditable();
         if (filter == null)
             throw new IllegalArgumentException(tr("No filter specified"));
@@ -313,15 +313,15 @@ public class EdWay extends EdObject {
         PriorityQueue<NearNodesPair> queue = new PriorityQueue<>();
         for (int i = 0; i < mynodes; i++) {
             final EdNode x = m_nodes.get(i);
-            BBox box = x.getBBox(gconn.nearNodeToleranceDegrees() * 1.2);
+            BBox box = x.getBBox(tolerance.distanceLatLon() * 1.2);
             Set<EdNode> tn = getEditor().findExistingNodesInBBox(box, filter);
             for(EdNode node: tn) {
                 if (x == node)
                     continue;
-                double dist = gconn.distanceOfNodesMeters(x, node);
-                if (dist > gconn.nearNodeToleranceMeters())
+                double distance = GeomUtils.distanceOfNodesMeters(x, node);
+                if (!tolerance.distanceIsWithin(distance))
                     continue;
-                queue.add(new NearNodesPair(i, node, dist));
+                queue.add(new NearNodesPair(i, node, distance));
             }
         }
 
@@ -412,7 +412,7 @@ public class EdWay extends EdObject {
         if (this == other)
             return false;
 
-        final double tolerance_degs = gconn.pointOnLineToleranceDegrees();
+        final double tolerance_degs = gconn.pointOnLineToleranceLatLon();
         final BBox way_bbox = this.getBBox(tolerance_degs);
 
         // filter nodes

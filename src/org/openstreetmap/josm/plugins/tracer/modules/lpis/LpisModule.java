@@ -259,7 +259,7 @@ public class LpisModule implements TracerModule  {
             System.out.println("  LPIS ID: " + m_record.getLpisID());
             System.out.println("  LPIS usage: " + m_record.getUsage());
 
-            GeomConnector gconn = new GeomConnector(0.2, Math.PI / 3);
+            GeomConnector gconn = new GeomConnector(new GeomDeviation(0.2, Math.PI / 3));
             WayEditor editor = new WayEditor (data_set);
 
             // Look for object to retrace
