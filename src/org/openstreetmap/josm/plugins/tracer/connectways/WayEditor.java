@@ -199,8 +199,8 @@ public class WayEditor {
         return obj.getEditor() == this;
     }
 
-    Set<EdNode> findExistingNodesTouchingWaySegment(GeomConnector gconn, EdNode x, EdNode y, IEdNodePredicate filter) {
-        double oversize = gconn.pointOnLineToleranceLatLon() * 10;
+    Set<EdNode> findExistingNodesTouchingWaySegment(GeomDeviation tolerance, EdNode x, EdNode y, IEdNodePredicate filter) {
+        double oversize = tolerance.distanceLatLon() * 10;
         Node nx = new Node(x.currentNodeUnsafe());
         Node ny = new Node(y.currentNodeUnsafe());
         BBox bbox = new BBox (nx);
@@ -209,7 +209,18 @@ public class WayEditor {
 
         Set<EdNode> result = new HashSet<>();
 
-        // (1) original nodes that are not tracked yet
+        // (1) edited nodes
+        for (EdNode ednd: searchEdNodes(bbox)) {
+            if (ednd.isDeleted())
+                continue;
+            if (!filter.evaluate(ednd))
+                continue;
+            if (!GeomUtils.pointDeviationFromSegment(ednd.currentNodeUnsafe(), nx, ny).inTolerance(tolerance))
+                continue;
+            result.add(ednd);
+        }
+
+        // (2) original nodes that are not tracked yet
         for (Node nd : getDataSet().searchNodes(bbox)) {
             if (!nd.isUsable() || nd.isOutsideDownloadArea())
                 continue;
@@ -217,20 +228,9 @@ public class WayEditor {
                 continue;
             if (!filter.evaluate(nd))
                 continue;
-            if (!gconn.pointOnLine(nd, nx, ny))
+            if (!GeomUtils.pointDeviationFromSegment(nd, nx, ny).inTolerance(tolerance))
                 continue;
             result.add(useNode(nd));
-        }
-
-        // (2) edited nodes
-        for (EdNode ednd: searchEdNodes(bbox)) {
-            if (ednd.isDeleted())
-                continue;
-            if (!filter.evaluate(ednd))
-                continue;
-            if (!gconn.pointOnLine(ednd.currentNodeUnsafe(), nx, ny))
-                continue;
-            result.add(ednd);
         }
 
         return result;

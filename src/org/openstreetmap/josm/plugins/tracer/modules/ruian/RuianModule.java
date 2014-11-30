@@ -542,7 +542,7 @@ public class RuianModule implements TracerModule {
 
         private void connectExistingTouchingNodes(GeomConnector gconn, EdObject obj) {
             IEdNodePredicate filter = reuseExistingNodesFilter(obj);
-            obj.connectExistingTouchingNodes(gconn, filter);
+            obj.connectExistingTouchingNodes(m_connectTolerance, filter);
         }
 
         private void reuseExistingNodes(GeomConnector gconn, EdObject obj) {

@@ -174,7 +174,7 @@ public class EdNode extends EdObject {
     }
 
     @Override
-    public boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+    public boolean connectExistingTouchingNodes(GeomDeviation tolerance, IEdNodePredicate filter) {
         throw new UnsupportedOperationException("This operation is not supported for nodes.");
     }
 

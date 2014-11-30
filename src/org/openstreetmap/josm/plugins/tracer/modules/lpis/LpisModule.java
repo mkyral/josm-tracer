@@ -468,7 +468,7 @@ public class LpisModule implements TracerModule  {
             IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(obj);
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
 
-            obj.connectExistingTouchingNodes(gconn, filter);
+            obj.connectExistingTouchingNodes(m_connectTolerance, filter);
         }
     }
 }

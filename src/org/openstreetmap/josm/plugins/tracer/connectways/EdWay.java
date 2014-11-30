@@ -364,7 +364,7 @@ public class EdWay extends EdObject {
      *
      */
     @Override
-    public boolean connectExistingTouchingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+    public boolean connectExistingTouchingNodes(GeomDeviation tolerance, IEdNodePredicate filter) {
         checkEditable();
         if (filter == null)
             throw new IllegalArgumentException(tr("No filter specified"));
@@ -375,7 +375,7 @@ public class EdWay extends EdObject {
         for (int i = 0; i < m_nodes.size() - 1; i++) {
             final EdNode x = m_nodes.get(i);
             final EdNode y = m_nodes.get(i+1);
-            Set<EdNode> tn = getEditor().findExistingNodesTouchingWaySegment(gconn, x, y, filter);
+            Set<EdNode> tn = getEditor().findExistingNodesTouchingWaySegment(tolerance, x, y, filter);
             for (EdNode node: tn) {
                 Pair<Double, Integer> best_segment = nodes_map.get(node);
                 double dist = GeomUtils.distanceToSegmentMeters(node, x, y);
