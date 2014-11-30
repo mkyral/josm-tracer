@@ -262,7 +262,6 @@ public class LpisModule implements TracerModule  {
             System.out.println("  LPIS ID: " + m_record.getLpisID());
             System.out.println("  LPIS usage: " + m_record.getUsage());
 
-            GeomConnector gconn = new GeomConnector(new GeomDeviation(0.2, Math.PI / 3));
             WayEditor editor = new WayEditor (data_set);
 
             // Look for object to retrace
@@ -279,7 +278,7 @@ public class LpisModule implements TracerModule  {
             }
 
             // Create traced object
-            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor, gconn);
+            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
             if (trobj == null)
                 return;
             EdWay outer_way = trobj.a;
@@ -300,7 +299,7 @@ public class LpisModule implements TracerModule  {
             tagTracedObject(multipolygon == null ? outer_way : multipolygon);
 
             // Connect to touching nodes of near landuse polygons
-            connectExistingTouchingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
+            connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
 
             // Clip other areas
             if (m_performClipping) {
@@ -370,7 +369,7 @@ public class LpisModule implements TracerModule  {
             obj.setKeys(map);
         }
 
-        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor, GeomConnector gconn) {
+        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
 
             IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
 
@@ -462,7 +461,7 @@ public class LpisModule implements TracerModule  {
             return new Pair<>(null, false);
         }
 
-        private void connectExistingTouchingNodes(GeomConnector gconn, EdObject obj) {
+        private void connectExistingTouchingNodes(EdObject obj) {
             // Setup filters - include landuse nodes only, exclude all nodes of the object itself
             IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
             IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(obj);

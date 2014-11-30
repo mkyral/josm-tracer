@@ -298,7 +298,6 @@ public class RuianModule implements TracerModule {
 
             System.out.println("  RUIAN keys: " + m_record.getKeys(m_alt));
 
-            GeomConnector gconn = new GeomConnector(new GeomDeviation (0.10, Math.PI / 25));
             WayEditor editor = new WayEditor (data_set);
 
             // Look for object to retrace
@@ -315,7 +314,7 @@ public class RuianModule implements TracerModule {
             }
 
             // Create traced object
-            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor, gconn);
+            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
             if (trobj == null)
                 return;
             EdWay outer_way = trobj.a;
@@ -324,11 +323,11 @@ public class RuianModule implements TracerModule {
             // Connect to near building polygons
             // (must be done before retrace updates, we want to use as much old nodes as possible)
             if (!m_performNearBuildingsEdit) {
-                reuseExistingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
+                reuseExistingNodes(multipolygon == null ? outer_way : multipolygon);
             }
             else {
                 reuseNearNodes(multipolygon == null ? outer_way : multipolygon);
-                connectExistingTouchingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
+                connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
             }
 
             // Retrace simple ways - just use the old way
@@ -412,7 +411,7 @@ public class RuianModule implements TracerModule {
             obj.setKeys(map);
         }
 
-        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor, GeomConnector gconn) {
+        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
 
             TracerPreferences pref = TracerPreferences.getInstance();
 
@@ -424,6 +423,7 @@ public class RuianModule implements TracerModule {
             }
 
             IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingBuildingNodeMatch);
+            final double precision = GeomUtils.duplicateNodesPrecision();
 
             // Prepare outer way nodes
             LatLon prev_coor = null;
@@ -446,7 +446,7 @@ public class RuianModule implements TracerModule {
                     return null;
                 }
 
-                if (!gconn.duplicateNodes(node.getCoor(), prev_coor)) {
+                if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, precision)) {
                     outer_nodes.add(node);
                     prev_coor = node.getCoor();
                 }
@@ -480,7 +480,7 @@ public class RuianModule implements TracerModule {
                                                       LatLon.roundToOsmPrecision(inner_rls.get(i).lon()+dAdjY)));
                     }
 
-                    if (!gconn.duplicateNodes(node.getCoor(), prev_coor)) {
+                    if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, precision)) {
                         inner_nodes.add(node);
                         prev_coor = node.getCoor();
                     }
@@ -540,12 +540,12 @@ public class RuianModule implements TracerModule {
             return new Pair<>(null, false);
         }
 
-        private void connectExistingTouchingNodes(GeomConnector gconn, EdObject obj) {
+        private void connectExistingTouchingNodes(EdObject obj) {
             IEdNodePredicate filter = reuseExistingNodesFilter(obj);
             obj.connectExistingTouchingNodes(m_connectTolerance, filter);
         }
 
-        private void reuseExistingNodes(GeomConnector gconn, EdObject obj) {
+        private void reuseExistingNodes(EdObject obj) {
             obj.reuseExistingNodes (reuseExistingNodesFilter(obj));
         }
 

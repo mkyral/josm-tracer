@@ -311,7 +311,6 @@ public class RuianLandsModule implements TracerModule {
 
             System.out.println("  RUIAN keys: " + m_record.getKeys());
 
-            GeomConnector gconn = new GeomConnector(new GeomDeviation (0.2, Math.PI / 3));
             WayEditor editor = new WayEditor (data_set);
 
             Match clipWayMatch;
@@ -347,7 +346,7 @@ public class RuianLandsModule implements TracerModule {
             }
 
             // Create traced object
-            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor, gconn);
+            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
             if (trobj == null)
                 return;
             EdWay outer_way = trobj.a;
@@ -368,7 +367,7 @@ public class RuianLandsModule implements TracerModule {
             tagTracedObject(multipolygon == null ? outer_way : multipolygon);
 
             // Connect to touching nodes of near building polygons
-            connectExistingTouchingNodes(gconn, multipolygon == null ? outer_way : multipolygon);
+            connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
 
             // Clip other areas
             if (m_performClipping) {
@@ -434,7 +433,7 @@ public class RuianLandsModule implements TracerModule {
             obj.setKeys(map);
         }
 
-        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor, GeomConnector gconn) {
+        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
 
             IEdNodePredicate reuse_filter;
 
@@ -456,6 +455,7 @@ public class RuianLandsModule implements TracerModule {
               reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
             }
 
+            final double precision = GeomUtils.duplicateNodesPrecision();
 
             // Prepare outer way nodes
             List<EdNode> outer_nodes = new ArrayList<> ();
@@ -477,7 +477,7 @@ public class RuianLandsModule implements TracerModule {
                     return null;
                 }
 
-                if (!gconn.duplicateNodes(node.getCoor(), prev_coor)) {
+                if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, precision)) {
                     outer_nodes.add(node);
                     prev_coor = node.getCoor();
                 }
@@ -560,7 +560,7 @@ public class RuianLandsModule implements TracerModule {
             return new Pair<>(null, false);
         }
 
-        private void connectExistingTouchingNodes(GeomConnector gconn, EdObject obj) {
+        private void connectExistingTouchingNodes(EdObject obj) {
             // Setup filters - include building nodes only, exclude all nodes of the object itself
             IEdNodePredicate area_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingBuildingNodeMatch);
             IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(obj);
