@@ -20,7 +20,9 @@
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
@@ -169,11 +171,6 @@ public class EdNode extends EdObject {
     }
 
     @Override
-    public boolean reuseNearNodes(GeomDeviation tolerance, IEdNodePredicate filter, boolean move_near_nodes) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public boolean connectExistingTouchingNodes(GeomDeviation tolerance, IEdNodePredicate filter) {
         throw new UnsupportedOperationException("This operation is not supported for nodes.");
     }
@@ -186,6 +183,18 @@ public class EdNode extends EdObject {
     @Override
     protected void deleteContentsShallow() {
         this.m_node.removeAll();
+    }
+
+    @Override
+    public boolean reuseNearNodes(IReuseNearNodePredicate reuse, IEdNodePredicate filter) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Set<EdNode> getAllNodes() {
+        Set<EdNode> s = new HashSet<>();
+        s.add(this);
+        return s;
     }
 }
 

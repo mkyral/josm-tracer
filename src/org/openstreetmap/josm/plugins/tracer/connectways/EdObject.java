@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.CreateMultipolygonAction;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
@@ -349,11 +350,11 @@ public abstract class EdObject {
             src.remove (entry.getKey());
         }
     }
-    
+
+    public abstract Set<EdNode> getAllNodes();
     public abstract boolean reuseExistingNodes(IEdNodePredicate filter);
-    public abstract boolean reuseNearNodes(GeomDeviation tolerance, IEdNodePredicate filter, boolean move_near_nodes);
+    public abstract boolean reuseNearNodes(IReuseNearNodePredicate reuse, IEdNodePredicate filter);
     public abstract boolean connectExistingTouchingNodes(GeomDeviation tolerance, IEdNodePredicate filter);
     public abstract double getEastNorthArea();
 }
-
 

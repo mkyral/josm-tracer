@@ -374,7 +374,7 @@ public class EdMultipolygon extends EdObject {
     }
 
     @Override
-    public boolean reuseNearNodes(GeomDeviation tolerance, IEdNodePredicate nodes_filter, boolean move_near_nodes) {
+    public boolean reuseNearNodes(IReuseNearNodePredicate reuse, IEdNodePredicate nodes_filter) {
         checkEditable();
         boolean r = false;
 
@@ -383,15 +383,14 @@ public class EdMultipolygon extends EdObject {
         IEdNodePredicate filter = new EdNodeLogicalAndPredicate(exclude_my_nodes, nodes_filter);
 
         for (EdWay way: m_outerWays)
-            if (way.reuseNearNodes(tolerance, filter, move_near_nodes))
+            if (way.reuseNearNodes(reuse, filter))
                 r = true;
         for (EdWay way: m_innerWays)
-            if (way.reuseNearNodes(tolerance, filter, move_near_nodes))
+            if (way.reuseNearNodes(reuse, filter))
                 r = true;
 
         return r;
     }
-
 
     /**
      * Add all existing nodes that touch this multipolygon (i.e. are very close to
@@ -500,5 +499,18 @@ public class EdMultipolygon extends EdObject {
                 }
             }
         }
+    }
+
+    @Override
+    public Set<EdNode> getAllNodes() {
+        checkEditable();
+        Set<EdNode> s = new HashSet<>();
+
+        for (EdWay way: m_outerWays)
+            s.addAll(way.getAllNodes());
+        for (EdWay way: m_innerWays)
+            s.addAll(way.getAllNodes());
+
+        return s;
     }
 }

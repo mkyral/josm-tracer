@@ -280,15 +280,22 @@ public class EdWay extends EdObject {
         return GeomUtils.getEastNorthArea(m_nodes);
     }
 
+    @Override
+    public Set<EdNode> getAllNodes() {
+        checkEditable();
+        return new HashSet<>(m_nodes);
+    }
 
     class NearNodesPair implements Comparable<NearNodesPair> {
         public final int src_index;
         public final EdNode dst;
         public final double distance;
+        public final ReuseNearNodeMethod method;
 
-        public NearNodesPair(int si, EdNode d, double dist) {
+        public NearNodesPair(int si, EdNode d, ReuseNearNodeMethod m, double dist) {
             src_index = si;
             dst = d;
+            method = m;
             distance = dist;
         }
 
@@ -299,7 +306,7 @@ public class EdWay extends EdObject {
     }
 
     @Override
-    public boolean reuseNearNodes(GeomDeviation tolerance, IEdNodePredicate filter, boolean move_near_nodes) {
+    public boolean reuseNearNodes(IReuseNearNodePredicate reuse, IEdNodePredicate filter) {
         checkEditable();
         if (filter == null)
             throw new IllegalArgumentException(tr("No filter specified"));
@@ -313,15 +320,16 @@ public class EdWay extends EdObject {
         PriorityQueue<NearNodesPair> queue = new PriorityQueue<>();
         for (int i = 0; i < mynodes; i++) {
             final EdNode x = m_nodes.get(i);
-            BBox box = x.getBBox(tolerance.distanceLatLon() * 1.2);
+            BBox box = x.getBBox(reuse.lookupDistanceLatLon());
             Set<EdNode> tn = getEditor().findExistingNodesInBBox(box, filter);
             for(EdNode node: tn) {
                 if (x == node)
                     continue;
                 double distance = GeomUtils.distanceOfNodesMeters(x, node);
-                if (!tolerance.distanceIsWithin(distance))
+                ReuseNearNodeMethod method = reuse.reuseNearNode(x, node, distance);
+                if (method == ReuseNearNodeMethod.dontReuseNode)
                     continue;
-                queue.add(new NearNodesPair(i, node, distance));
+                queue.add(new NearNodesPair(i, node, method, distance));
             }
         }
 
@@ -336,7 +344,7 @@ public class EdWay extends EdObject {
                 continue;
 
             // move dst node to src position?
-            if (move_near_nodes)
+            if (nnp.method == ReuseNearNodeMethod.moveAndReuseNode)
                 nnp.dst.setCoor(m_nodes.get(nnp.src_index).getCoor());
 
             // reuse dst node
@@ -344,7 +352,7 @@ public class EdWay extends EdObject {
 
             used_src.add(nnp.src_index);
             used_dst.add(nnp.dst);
-        }        
+        }
 
         // fix closing node, if necessary
         if (closed && m_nodes.get(0) != m_nodes.get(m_nodes.size() - 1)) {
@@ -353,6 +361,7 @@ public class EdWay extends EdObject {
 
         return true;
     }
+
 
     /**
      * Add all existing nodes that touch this way (i.e. are very close to

@@ -24,8 +24,6 @@ public class GeomDeviation {
     private final double m_distanceLatLon;
     private final double m_angleRad;
 
-    private final double m_metersPerDegree = 111120.00071117;
-
     public GeomDeviation (double distance_meters, double angle_rad) {
         if (distance_meters < 0.0)
             throw new IllegalArgumentException("Negative deviation distance");
@@ -34,7 +32,7 @@ public class GeomDeviation {
 
         m_distanceMeters = distance_meters;
         m_angleRad = angle_rad;
-        m_distanceLatLon = m_distanceMeters/m_metersPerDegree;
+        m_distanceLatLon = m_distanceMeters/GeomUtils.metersPerDegree;
     }
 
     public double distanceMeters() {

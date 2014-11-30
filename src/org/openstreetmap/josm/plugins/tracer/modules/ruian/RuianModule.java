@@ -60,16 +60,25 @@ public class RuianModule implements TracerModule {
 
     private static final double resurrectNodesDistanceMeters = 10.0;
 
+    private static final GeomDeviation m_connectTolerance = new GeomDeviation (0.15, Math.PI / 50);
+    private static final double m_discardCutoffsPercent = 15.0;
+    private final ClipAreasSettings m_clipSettings =
+        new ClipAreasSettings (m_connectTolerance, m_discardCutoffsPercent, new DiscardableBuildingCutoff());
+
     private static final String reuseExistingBuildingNodePattern =
         "(building=* -building=no -building=entrance)";
 
     private static final String retraceAreaPattern =
         "(building=* -building=no -building=entrance)";
 
+    private static final String ruianSourcePattern =
+        "(source=\"cuzk:ruian\")";
+
     private static final Match m_reuseExistingBuildingNodeMatch;
     private static final Match m_clipBuildingWayMatch;
     private static final Match m_mergeBuildingWayMatch;
     private static final Match m_retraceAreaMatch;
+    private static final Match m_ruianSourceMatch;
 
     static {
         try {
@@ -77,6 +86,7 @@ public class RuianModule implements TracerModule {
             m_clipBuildingWayMatch = m_reuseExistingBuildingNodeMatch; // use the same
             m_mergeBuildingWayMatch = m_clipBuildingWayMatch; // use the same
             m_retraceAreaMatch = SearchCompiler.compile(retraceAreaPattern, false, false);
+            m_ruianSourceMatch = SearchCompiler.compile(ruianSourcePattern, false, false);
         }
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile pattern"));
@@ -134,8 +144,61 @@ public class RuianModule implements TracerModule {
             }
             return true;
         }
-
     }
+
+    class ReuseBuildingNearNodes implements IReuseNearNodePredicate {
+
+        // distance tolerancies are in meters
+        private final double m_reuseNearNodesToleranceDefault = m_connectTolerance.distanceMeters();
+        private final double m_reuseNearNodesToleranceNonRuian = 0.30;
+        private final double m_reuseNearNodesToleranceRetracedNodes = 0.40;
+
+        private final double m_lookupDistanceLatLon;
+        private final ReuseNearNodeMethod m_reuseMethod = ReuseNearNodeMethod.moveAndReuseNode;
+        private final AreaBoundaryWayNodePredicate m_ruianArea = new AreaBoundaryWayNodePredicate(m_ruianSourceMatch);
+
+        private final Set<EdNode> m_retracedNodes;
+
+        ReuseBuildingNearNodes (Set<EdNode> retraced_nodes) {
+            m_retracedNodes = retraced_nodes;
+            double max = Math.max (Math.max(m_reuseNearNodesToleranceDefault, m_reuseNearNodesToleranceRetracedNodes), m_reuseNearNodesToleranceNonRuian);
+            m_lookupDistanceLatLon = 1.2 * (max/GeomUtils.metersPerDegree);
+        }
+
+        @Override
+        public ReuseNearNodeMethod reuseNearNode(EdNode node, EdNode near_node, double distance_meters) {
+
+            boolean retraced = m_retracedNodes != null && m_retracedNodes.contains(near_node);
+            boolean ruian = m_ruianArea.evaluate(near_node);
+
+            // be more tolerant for nodes occurring in retraced building
+            if (retraced && !ruian) {
+                System.out.println("RNN: retraced, dist=" + Double.toString(distance_meters));
+                if (distance_meters <= m_reuseNearNodesToleranceRetracedNodes)
+                    return m_reuseMethod;
+            }
+
+            // be more tolerant for non-ruian buildings
+            if (!ruian) {
+                System.out.println("RNN: non-ruian, dist=" + Double.toString(distance_meters));
+                if (distance_meters <= m_reuseNearNodesToleranceNonRuian)
+                    return m_reuseMethod;
+            }
+
+            // use default tolerance for others
+                System.out.println("RNN: default, dist=" + Double.toString(distance_meters));
+            if (distance_meters <= m_reuseNearNodesToleranceDefault)
+                return m_reuseMethod;
+
+            return ReuseNearNodeMethod.dontReuseNode;
+        }
+
+        @Override
+        public double lookupDistanceLatLon() {
+            return m_lookupDistanceLatLon;
+        }
+    }
+
 
     class RuianTracerTask extends PleaseWaitRunnable {
 
@@ -152,12 +215,6 @@ public class RuianModule implements TracerModule {
         private boolean m_cancelled;
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
-
-        private final GeomDeviation m_reuseNearNodesTolerance = new GeomDeviation (0.10, 0.0);
-        private final GeomDeviation m_connectTolerance = new GeomDeviation (0.15, Math.PI / 50);
-        private final double m_discardCutoffsPercent = 15.0;
-        private final ClipAreasSettings m_clipSettings =
-            new ClipAreasSettings (m_connectTolerance, m_discardCutoffsPercent, new DiscardableBuildingCutoff());
 
         RuianTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (tr("Tracing"));
@@ -313,6 +370,10 @@ public class RuianModule implements TracerModule {
                 }
             }
 
+            Set<EdNode> retrace_nodes = null;
+            if (retrace_object != null)
+                retrace_nodes = retrace_object.getAllNodes();
+
             // Create traced object
             Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
             if (trobj == null)
@@ -326,7 +387,7 @@ public class RuianModule implements TracerModule {
                 reuseExistingNodes(multipolygon == null ? outer_way : multipolygon);
             }
             else {
-                reuseNearNodes(multipolygon == null ? outer_way : multipolygon);
+                reuseNearNodes(multipolygon == null ? outer_way : multipolygon, retrace_nodes);
                 connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
             }
 
@@ -549,8 +610,8 @@ public class RuianModule implements TracerModule {
             obj.reuseExistingNodes (reuseExistingNodesFilter(obj));
         }
 
-        private void reuseNearNodes(EdObject obj) {
-            obj.reuseNearNodes (m_reuseNearNodesTolerance, reuseExistingNodesFilter(obj), true);
+        private void reuseNearNodes(EdObject obj, Set<EdNode> retraced_nodes) {
+            obj.reuseNearNodes (new ReuseBuildingNearNodes(retraced_nodes), reuseExistingNodesFilter(obj));
         }
 
         private IEdNodePredicate reuseExistingNodesFilter(EdObject obj) {

@@ -29,6 +29,8 @@ import org.openstreetmap.josm.tools.Geometry;
 
 public abstract class GeomUtils {
 
+    public static final double metersPerDegree = 111120.00071117;
+
     /**
      * Calculates approximate planar area determined by the given polygon,
      * in east/north coordinates. Relies on current projection and works
