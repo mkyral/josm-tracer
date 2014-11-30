@@ -164,7 +164,7 @@ public class EdNode extends EdObject {
     }
 
     @Override
-    public boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+    public boolean reuseExistingNodes(IEdNodePredicate filter) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

@@ -359,15 +359,15 @@ public class EdMultipolygon extends EdObject {
     }
 
     @Override
-    public boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+    public boolean reuseExistingNodes(IEdNodePredicate filter) {
         checkEditable();
         boolean r = false;
 
         for (EdWay way: m_outerWays)
-            if (way.reuseExistingNodes(gconn, filter))
+            if (way.reuseExistingNodes(filter))
                 r = true;
         for (EdWay way: m_innerWays)
-            if (way.reuseExistingNodes(gconn, filter))
+            if (way.reuseExistingNodes(filter))
                 r = true;
 
         return r;

@@ -247,7 +247,7 @@ public class EdWay extends EdObject {
     }
 
     @Override
-    public boolean reuseExistingNodes(GeomConnector gconn, IEdNodePredicate filter) {
+    public boolean reuseExistingNodes(IEdNodePredicate filter) {
         checkEditable ();
         if (filter == null)
             throw new IllegalArgumentException(tr("No filter specified"));
@@ -255,7 +255,7 @@ public class EdWay extends EdObject {
         boolean modified = false;
         List<EdNode> new_nodes = new ArrayList<> (m_nodes.size());
         for (EdNode en: m_nodes) {
-            EdNode nn = getEditor().findExistingNodeForDuplicateMerge(gconn, en, filter);
+            EdNode nn = getEditor().findExistingNodeForDuplicateMerge(en, filter);
             if (nn != null) {
                 new_nodes.add (nn);
                 modified = true;

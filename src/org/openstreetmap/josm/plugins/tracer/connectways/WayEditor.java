@@ -46,6 +46,8 @@ public class WayEditor {
 
     private final double s_dMinDistance      = 0.0000005; // Minimal distance, for objects
 
+    private final double m_duplicateNodesPrecision;
+
     private final long m_idGuard;
     private final DataSet m_dataSet;
 
@@ -70,6 +72,7 @@ public class WayEditor {
         m_originalNodes = new HashMap<> ();
         m_originalWays = new HashMap<> ();
         m_originalMultipolygons = new HashMap<> ();
+        m_duplicateNodesPrecision = GeomUtils.duplicateNodesPrecision();
     }
 
     public DataSet getDataSet() {
@@ -260,7 +263,7 @@ public class WayEditor {
         return result;
     }
 
-    EdNode findExistingNodeForDuplicateMerge(GeomConnector gconn, EdNode src, IEdNodePredicate filter) {
+    EdNode findExistingNodeForDuplicateMerge(EdNode src, IEdNodePredicate filter) {
         if (src == null || src.isDeleted())
             throw new IllegalArgumentException();
 
@@ -277,7 +280,7 @@ public class WayEditor {
             if (ednd != null) {
                 if (ednd.isDeleted())
                     continue;
-                if (src == ednd || ((gconn.duplicateNodes(ednd.getCoor(), src.getCoor()) && filter.evaluate(ednd)))) {
+                if (src == ednd || ((GeomUtils.duplicateNodes(ednd.getCoor(), src.getCoor(), m_duplicateNodesPrecision) && filter.evaluate(ednd)))) {
                     if (ednode1 == null)
                         ednode1 = ednd;
                     else if (ednd.originalNode().getUniqueId() > ednode1.originalNode().getUniqueId())
@@ -285,7 +288,7 @@ public class WayEditor {
                 }
             }
             else {
-                if ((gconn.duplicateNodes(nd.getCoor(), src.getCoor()) && filter.evaluate(nd))) {
+                if ((GeomUtils.duplicateNodes(nd.getCoor(), src.getCoor(), m_duplicateNodesPrecision) && filter.evaluate(nd))) {
                     if (node1 == null)
                         node1 = nd;
                     else if (nd.getUniqueId() > node1.getUniqueId())
@@ -311,7 +314,7 @@ public class WayEditor {
                 continue;
             if (!ednd.hasEditorReferrers())
                 continue;
-            if (src == ednd || ((gconn.duplicateNodes(ednd.getCoor(), src.getCoor()) && filter.evaluate(ednd)))) {
+            if (src == ednd || ((GeomUtils.duplicateNodes(ednd.getCoor(), src.getCoor(), m_duplicateNodesPrecision) && filter.evaluate(ednd)))) {
                 if (ednd.hasOriginal()) {
                     if (ornode2 == null)
                         ornode2 = ednd;

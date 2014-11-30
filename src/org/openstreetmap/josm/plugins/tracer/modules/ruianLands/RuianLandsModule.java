@@ -489,7 +489,7 @@ public class RuianLandsModule implements TracerModule {
             outer_nodes.add(outer_nodes.get(0));
             EdWay outer_way = editor.newWay(outer_nodes);
 
-            outer_way.reuseExistingNodes(gconn, reuse_filter);
+            outer_way.reuseExistingNodes(reuse_filter);
 
 // #### Multipolygons are not supported yet.
             // Simple way?
