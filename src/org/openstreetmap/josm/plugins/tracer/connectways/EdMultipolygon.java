@@ -364,10 +364,10 @@ public class EdMultipolygon extends EdObject {
         boolean r = false;
 
         for (EdWay way: m_outerWays)
-            if (way.connectExistingTouchingNodes(gconn, filter))
+            if (way.reuseExistingNodes(gconn, filter))
                 r = true;
         for (EdWay way: m_innerWays)
-            if (way.connectExistingTouchingNodes(gconn, filter))
+            if (way.reuseExistingNodes(gconn, filter))
                 r = true;
 
         return r;
