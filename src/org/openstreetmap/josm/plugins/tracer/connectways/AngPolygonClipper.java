@@ -172,11 +172,11 @@ public class AngPolygonClipper {
         double area = 0.0;
 
         for (List<EdNode> outer: outers) {
-            area += GeomConnector.getEastNorthArea(outer);
+            area += GeomUtils.getEastNorthArea(outer);
         }
 
         for (List<EdNode> inner: inners) {
-            area -= GeomConnector.getEastNorthArea(inner);
+            area -= GeomUtils.getEastNorthArea(inner);
         }
 
         return area;

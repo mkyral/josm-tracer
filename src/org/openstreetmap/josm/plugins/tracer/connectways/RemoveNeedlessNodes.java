@@ -157,7 +157,7 @@ public class RemoveNeedlessNodes {
 
         for (; i != last; i = (i + 1) % ncount) {
             EdNode p = nodes.get(i);
-            double xte = GeomConnector.distanceToSegmentMeters(p, n1, n2);
+            double xte = GeomUtils.distanceToSegmentMeters(p, n1, n2);
             System.out.println(" - Xte distance: " + Double.toString(xte) + ", p: " + Long.toString(p.getUniqueId()) + ", n1: " + Long.toString(n1.getUniqueId()) + ", n2: " + Long.toString(n2.getUniqueId()));
             if (imax < 0 || xte > xtemax) {
                 imax = i;
@@ -240,7 +240,7 @@ public class RemoveNeedlessNodes {
 
                 // check minimal vertex angle
                 if (m_MinimalVertexAngle > 0) {
-                    double angle = GeomConnector.unorientedAngleBetween(prev_node, cur_node, next_node);
+                    double angle = GeomUtils.unorientedAngleBetween(prev_node, cur_node, next_node);
                     if (angle < m_MinimalVertexAngle) {
                         m_requiredNodes.add(cur_node);
                         System.out.println(" - Angle node " + Long.toString(cur_node.getUniqueId()));

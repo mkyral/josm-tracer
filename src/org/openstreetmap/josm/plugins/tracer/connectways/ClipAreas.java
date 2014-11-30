@@ -369,7 +369,7 @@ public class ClipAreas {
         List<EdNode> maxnodes = null;
         double maxarea = Double.NEGATIVE_INFINITY;
         for (List<EdNode> nodes: outers) {
-            double area = GeomConnector.getEastNorthArea(nodes);
+            double area = GeomUtils.getEastNorthArea(nodes);
             if (area < maxarea)
                 continue;
             maxnodes = nodes;

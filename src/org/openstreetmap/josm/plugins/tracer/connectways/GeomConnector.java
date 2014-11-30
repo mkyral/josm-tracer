@@ -20,7 +20,6 @@
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
 
-import java.util.List;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.coor.EastNorth;
@@ -85,20 +84,6 @@ public class GeomConnector {
         return pointOnLine(p.currentNodeUnsafe(), x.currentNodeUnsafe(), y.currentNodeUnsafe());
     }
 
-    public static double distanceToSegmentMeters(EdNode p, EdNode x, EdNode y) {
-        return distanceToSegmentMeters(p.currentNodeUnsafe(), x.currentNodeUnsafe(), y.currentNodeUnsafe());
-    }
-
-
-    public static double distanceToSegmentMeters(Node p, Node x, Node y) {
-        EastNorth ep = p.getEastNorth();
-        EastNorth ex = x.getEastNorth();
-        EastNorth ey = y.getEastNorth();
-
-        EastNorth cp = Geometry.closestPointToSegment(ex, ey, ep);
-        return p.getCoor().greatCircleDistance(Projections.inverseProject(cp));
-    }
-
     public boolean pointOnLine(Node p, Node x, Node y) {
 
         EastNorth ep = p.getEastNorth();
@@ -109,48 +94,10 @@ public class GeomConnector {
         if (p.getCoor().greatCircleDistance(Projections.inverseProject(cp)) > m_pointOnLineToleranceMeters)
             return false;
 
-        double a1 = unorientedAngleBetween(x, y, p);
-        double a2 = unorientedAngleBetween(y, x, p);
+        double a1 = GeomUtils.unorientedAngleBetween(x, y, p);
+        double a2 = GeomUtils.unorientedAngleBetween(y, x, p);
         double limit = m_pointOnLineMaxLateralAngle;
         return (a1 < limit && a2 < limit);
-    }
-
-    public static double unorientedAngleBetween (EdNode p0, EdNode p1, EdNode p2) {
-        return unorientedAngleBetween(p0.currentNodeUnsafe(), p1.currentNodeUnsafe(), p2.currentNodeUnsafe());
-    }
-
-    public static double unorientedAngleBetween(Node p0, Node p1, Node p2) {
-        double a1 = p1.getCoor().heading(p0.getCoor());
-        double a2 = p1.getCoor().heading(p2.getCoor());
-        double angle = Math.abs(a2 - a1) % (2 * Math.PI);
-        if (angle < 0)
-            angle += 2 * Math.PI;
-        if (angle > Math.PI)
-            angle = (2 * Math.PI) - angle;
-        return angle;
-    }
-
-    public static double getEastNorthArea(List<EdNode> nodes) {
-
-        int count = nodes.size();
-
-        // for closed ways, ignore last node (
-        if (count > 1 && nodes.get(0).equals(nodes.get(count - 1))) {
-            --count;
-        }
-
-        if (count <= 2) {
-            return 0;
-        }
-
-        double area = 0;
-        EastNorth ej = nodes.get(count - 1).getEastNorth();
-        for (int i = 0; i < count; ++i) {
-            EastNorth ei = nodes.get(i).getEastNorth();
-            area += (ej.getX() + ei.getX()) * (ej.getY() - ei.getY());
-            ej = ei;
-        }
-        return Math.abs(area / 2);
     }
 }
 

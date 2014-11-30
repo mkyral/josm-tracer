@@ -277,7 +277,7 @@ public class EdWay extends EdObject {
     @Override
     public double getEastNorthArea() {
         checkEditable();
-        return GeomConnector.getEastNorthArea(m_nodes);
+        return GeomUtils.getEastNorthArea(m_nodes);
     }
 
 
@@ -378,7 +378,7 @@ public class EdWay extends EdObject {
             Set<EdNode> tn = getEditor().findExistingNodesTouchingWaySegment(gconn, x, y, filter);
             for (EdNode node: tn) {
                 Pair<Double, Integer> best_segment = nodes_map.get(node);
-                double dist = gconn.distanceToSegmentMeters(node, x, y);
+                double dist = GeomUtils.distanceToSegmentMeters(node, x, y);
                 if (best_segment == null || best_segment.a > dist) {
                     nodes_map.put(node, new Pair<> (dist, i));
                 }
@@ -444,7 +444,7 @@ public class EdWay extends EdObject {
                 if (!gconn.pointOnLine(node, x, y))
                     continue;
                 Pair<Double, Integer> best_segment = nodes_map.get(node);
-                double dist = gconn.distanceToSegmentMeters(node, x, y);
+                double dist = GeomUtils.distanceToSegmentMeters(node, x, y);
                 if (best_segment == null || best_segment.a > dist) {
                     nodes_map.put(node, new Pair<> (dist, i));
                 }
