@@ -483,7 +483,6 @@ public class RuianModule implements TracerModule {
               dAdjY = pref.getRuianAdjustPositionLon();
             }
 
-            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingBuildingNodeMatch);
             final double precision = GeomUtils.duplicateNodesPrecision();
 
             // Prepare outer way nodes
