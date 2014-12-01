@@ -518,7 +518,6 @@ public class RuianModule implements TracerModule {
             // Close & create outer way
             outer_nodes.add(outer_nodes.get(0));
             EdWay outer_way = editor.newWay(outer_nodes);
-            outer_way.reuseExistingNodes(reuse_filter);
 
             // Simple way?
             if (!m_record.hasInners())
@@ -552,7 +551,6 @@ public class RuianModule implements TracerModule {
                     throw new AssertionError(tr("Inner way consists of less than 3 nodes"));
                 inner_nodes.add(inner_nodes.get(0));
                 EdWay way = editor.newWay(inner_nodes);
-                way.reuseExistingNodes(reuse_filter);
 
                 multipolygon.addInnerWay(way);
             }
