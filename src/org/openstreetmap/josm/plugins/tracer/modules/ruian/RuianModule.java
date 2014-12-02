@@ -368,10 +368,6 @@ public class RuianModule implements TracerModule {
                 }
             }
 
-            Set<EdNode> retrace_nodes = null;
-            if (retrace_object != null)
-                retrace_nodes = retrace_object.getAllNodes();
-
             // Create traced object
             Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
             EdWay outer_way = trobj.a;
@@ -389,7 +385,7 @@ public class RuianModule implements TracerModule {
                 reuseExistingNodes(multipolygon == null ? outer_way : multipolygon);
             }
             else {
-                reuseNearNodes(multipolygon == null ? outer_way : multipolygon, retrace_nodes);
+                reuseNearNodes(multipolygon == null ? outer_way : multipolygon, retrace_object);
                 connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
             }
 
@@ -598,8 +594,11 @@ public class RuianModule implements TracerModule {
             obj.reuseExistingNodes (reuseExistingNodesFilter(obj));
         }
 
-        private void reuseNearNodes(EdObject obj, Set<EdNode> retraced_nodes) {
-            obj.reuseNearNodes (new ReuseBuildingNearNodes(retraced_nodes), reuseExistingNodesFilter(obj));
+        private void reuseNearNodes(EdObject obj, EdObject retrace_object) {
+            Set<EdNode> retrace_nodes = null;
+            if (retrace_object != null)
+                retrace_nodes = retrace_object.getAllNodes();
+            obj.reuseNearNodes (new ReuseBuildingNearNodes(retrace_nodes), reuseExistingNodesFilter(obj));
         }
 
         private IEdNodePredicate reuseExistingNodesFilter(EdObject obj) {
