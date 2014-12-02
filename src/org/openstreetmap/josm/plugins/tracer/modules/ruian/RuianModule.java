@@ -60,6 +60,7 @@ public class RuianModule implements TracerModule {
 
 
     private static final GeomDeviation m_connectTolerance = new GeomDeviation (0.15, Math.PI / 50);
+    private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.10, Math.PI / 50);
     private static final double m_discardCutoffsPercent = 15.0;
     private final ClipAreasSettings m_clipSettings =
         new ClipAreasSettings (m_connectTolerance, m_discardCutoffsPercent, new DiscardableBuildingCutoff());
@@ -410,7 +411,7 @@ public class RuianModule implements TracerModule {
 
                 // Remove needless nodes
                 AreaPredicate remove_filter = new AreaPredicate (m_clipBuildingWayMatch);
-                RemoveNeedlessNodes remover = new RemoveNeedlessNodes(remove_filter, 0.07, (Math.PI*2)/3);
+                RemoveNeedlessNodes remover = new RemoveNeedlessNodes(remove_filter, m_removeNeedlesNodesTolerance, (Math.PI*2)/3);
                 remover.removeNeedlessNodes(editor.getModifiedWays());
             }
 

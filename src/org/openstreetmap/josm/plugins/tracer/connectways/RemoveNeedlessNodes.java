@@ -33,13 +33,13 @@ public class RemoveNeedlessNodes {
     private Set<EdNode> m_nodesToRemove = null;
     private Set<EdWay> m_removeInWays = null;
 
-    private final double m_XteThresholdMeters;
+    private final GeomDeviation m_XteDeviation;
     private final double m_MinimalVertexAngle;
 
-    public RemoveNeedlessNodes (IEdAreaPredicate filter, double xte_threshold_meters, double minimal_vertex_angle) {
+    public RemoveNeedlessNodes (IEdAreaPredicate filter, GeomDeviation xte_deviation, double minimal_vertex_angle) {
         m_filter = filter;
         m_negatedFilter = new NegatedAreaPredicate(filter);
-        m_XteThresholdMeters = xte_threshold_meters;
+        m_XteDeviation = xte_deviation;
         m_MinimalVertexAngle = minimal_vertex_angle;
     }
 
@@ -152,20 +152,29 @@ public class RemoveNeedlessNodes {
         EdNode n1 = nodes.get(first);
         EdNode n2 = nodes.get(last);
 
-        int imax = -1;
-        double xtemax = -1;
+        int imaxd = -1;
+        double maxd = -1;
+        int imaxa = -1;
+        double maxa = -1;
 
         for (; i != last; i = (i + 1) % ncount) {
             EdNode p = nodes.get(i);
-            double xte = GeomUtils.distanceToSegmentMeters(p, n1, n2);
-            System.out.println(" - Xte distance: " + Double.toString(xte) + ", p: " + Long.toString(p.getUniqueId()) + ", n1: " + Long.toString(n1.getUniqueId()) + ", n2: " + Long.toString(n2.getUniqueId()));
-            if (imax < 0 || xte > xtemax) {
-                imax = i;
-                xtemax = xte;
+            GeomDeviation dev = GeomUtils.pointDeviationFromSegment(p, n1, n2);
+            System.out.println(" - Xte distance: " + Double.toString(dev.distanceMeters()) + ", angle: " + Double.toString(Math.toDegrees(dev.angleRad())) + ", p: " + Long.toString(p.getUniqueId()) + ", n1: " + Long.toString(n1.getUniqueId()) + ", n2: " + Long.toString(n2.getUniqueId()));
+            if (!dev.inTolerance(m_XteDeviation)) {
+                if (imaxd < 0 || dev.distanceMeters() > maxd) {
+                    imaxd = i;
+                    maxd = dev.distanceMeters();
+                }
+                if (imaxa < 0 || dev.angleRad() > maxa) {
+                    imaxa = i;
+                    maxa = dev.angleRad();
+                }
             }
         }
 
-        if (xtemax > m_XteThresholdMeters) {
+        if (imaxd >= 0 || imaxa >= 0) {
+            int imax = (imaxd >= 0) ? imaxd : imaxa;
             m_requiredNodes.add(nodes.get(imax));
             selectNeedlessNodesInSegment(nodes, first, imax, ncount);
             selectNeedlessNodesInSegment(nodes, imax, last, ncount);
