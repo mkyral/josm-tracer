@@ -184,4 +184,19 @@ public abstract class GeomUtils {
     public static double duplicateNodesPrecision() {
         return Main.pref.getDouble("validator.duplicatenodes.precision", 0.0);
     }
+
+    public static double getMetersPerDegreeOfLatitude (LatLon ll) {
+        double phi = Math.toRadians(ll.lat());
+        return 111132.954 - 559.822 * Math.cos(2 * phi) + 1.175 * Math.cos(4 * phi);
+    }
+
+    public static double getMetersPerDegreeOfLongitude(LatLon ll) {
+        double phi = Math.toRadians(ll.lat());
+        double a = Ellipsoid.WGS84.a;
+        double e2 = Ellipsoid.WGS84.e2;
+        double v1 = Math.PI * a * Math.cos(phi);
+        double sinphi = Math.sin(phi);
+        double v2 = 180.0 * Math.sqrt(1 - e2 * sinphi * sinphi);
+        return v1/v2;
+    }
 }
