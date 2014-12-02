@@ -153,7 +153,7 @@ public class RuianModule implements TracerModule {
         private final double m_reuseNearNodesToleranceNonRuian = 0.30;
         private final double m_reuseNearNodesToleranceRetracedNodes = 0.40;
 
-        private final double m_lookupDistanceLatLon;
+        private final double m_lookupDistanceMeters;
         private final ReuseNearNodeMethod m_reuseMethod = ReuseNearNodeMethod.moveAndReuseNode;
         private final AreaBoundaryWayNodePredicate m_ruianArea = new AreaBoundaryWayNodePredicate(m_ruianSourceMatch);
 
@@ -161,8 +161,7 @@ public class RuianModule implements TracerModule {
 
         ReuseBuildingNearNodes (Set<EdNode> retraced_nodes) {
             m_retracedNodes = retraced_nodes;
-            double max = Math.max (Math.max(m_reuseNearNodesToleranceDefault, m_reuseNearNodesToleranceRetracedNodes), m_reuseNearNodesToleranceNonRuian);
-            m_lookupDistanceLatLon = 1.2 * (max/GeomUtils.metersPerDegree);
+            m_lookupDistanceMeters = Math.max (Math.max(m_reuseNearNodesToleranceDefault, m_reuseNearNodesToleranceRetracedNodes), m_reuseNearNodesToleranceNonRuian);
         }
 
         @Override
@@ -194,8 +193,8 @@ public class RuianModule implements TracerModule {
         }
 
         @Override
-        public double lookupDistanceLatLon() {
-            return m_lookupDistanceLatLon;
+        public double lookupDistanceMeters() {
+            return m_lookupDistanceMeters;
         }
     }
 

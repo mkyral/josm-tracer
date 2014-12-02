@@ -44,7 +44,7 @@ import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class WayEditor {
 
-    private final double s_dMinDistance      = 0.0000005; // Minimal distance, for objects
+    private final LatLonSize minimalOversize = new LatLonSize(0.0000005, 0.0000005);
 
     private final double m_duplicateNodesPrecision;
 
@@ -199,13 +199,12 @@ public class WayEditor {
         return obj.getEditor() == this;
     }
 
-    Set<EdNode> findExistingNodesTouchingWaySegment(GeomDeviation tolerance, EdNode x, EdNode y, IEdNodePredicate filter) {
-        double oversize = tolerance.distanceLatLon() * 10;
+    Set<EdNode> findExistingNodesTouchingWaySegment(GeomDeviation tolerance, LatLonSize oversize, EdNode x, EdNode y, IEdNodePredicate filter) {
         Node nx = new Node(x.currentNodeUnsafe());
         Node ny = new Node(y.currentNodeUnsafe());
         BBox bbox = new BBox (nx);
-        bbox.addPrimitive (ny, oversize);
-        bbox.addPrimitive (nx, oversize);
+        bbox.addPrimitive (ny, 0);
+        BBoxUtils.extendBBox(bbox, oversize);
 
         Set<EdNode> result = new HashSet<>();
 
@@ -267,7 +266,7 @@ public class WayEditor {
         if (src == null || src.isDeleted())
             throw new IllegalArgumentException();
 
-        BBox bbox = src.getBBox(s_dMinDistance);
+        BBox bbox = src.getBBox(minimalOversize);
 
         // (1) original nodes that are either not tracked or didn't move from original position;
         //     prefer edited EdNodes, use a matching one with the highest ID

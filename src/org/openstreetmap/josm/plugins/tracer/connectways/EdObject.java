@@ -323,7 +323,7 @@ public abstract class EdObject {
 
     public abstract BBox getBBox();
 
-    public BBox getBBox(double oversize) {
+    public BBox getBBox(LatLonSize oversize) {
         BBox box = this.getBBox();
         BBoxUtils.extendBBox(box, oversize);
         return box;

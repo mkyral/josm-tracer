@@ -24,12 +24,11 @@ import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
+import org.openstreetmap.josm.data.projection.Ellipsoid;
 import org.openstreetmap.josm.data.projection.Projections;
 import org.openstreetmap.josm.tools.Geometry;
 
 public abstract class GeomUtils {
-
-    public static final double metersPerDegree = 111120.00071117;
 
     /**
      * Calculates approximate planar area determined by the given polygon,

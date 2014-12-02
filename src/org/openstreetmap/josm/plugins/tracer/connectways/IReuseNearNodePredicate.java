@@ -21,5 +21,5 @@ package org.openstreetmap.josm.plugins.tracer.connectways;
 
 public interface IReuseNearNodePredicate {
     public ReuseNearNodeMethod reuseNearNode (EdNode node, EdNode near_node, double distance_meters);
-    public double lookupDistanceLatLon ();
+    public double lookupDistanceMeters ();
 }
