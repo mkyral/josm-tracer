@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.CreateMultipolygonAction;
+import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
@@ -403,6 +404,7 @@ public class EdMultipolygon extends EdObject {
      * @param filter EdNode predicate to filter existing nodes
      * @return true if any existing nodes were connected, false otherwise
      */
+    @Override
     public boolean connectExistingTouchingNodes(GeomDeviation tolerance, IEdNodePredicate filter) {
         checkEditable();
         boolean r = false;
@@ -512,5 +514,19 @@ public class EdMultipolygon extends EdObject {
             s.addAll(way.getAllNodes());
 
         return s;
+    }
+
+    @Override
+    public boolean isInsideBounds(List<Bounds> bounds, LatLonSize oversize) {
+        checkEditable();
+
+        for (EdWay way: m_outerWays)
+            if (!way.isInsideBounds(bounds, oversize))
+                return false;
+        for (EdWay way: m_innerWays)
+            if (!way.isInsideBounds(bounds, oversize))
+                return false;
+
+        return true;
     }
 }

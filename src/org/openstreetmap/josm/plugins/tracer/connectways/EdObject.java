@@ -29,6 +29,7 @@ import java.util.Set;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.CreateMultipolygonAction;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
+import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -351,10 +352,16 @@ public abstract class EdObject {
         }
     }
 
+    public final boolean isInsideDataSourceBounds(LatLonSize oversize) {
+        return isInsideBounds(m_editor.getDataSet().getDataSourceBounds(), oversize);
+    }
+
     public abstract Set<EdNode> getAllNodes();
     public abstract boolean reuseExistingNodes(IEdNodePredicate filter);
     public abstract boolean reuseNearNodes(IReuseNearNodePredicate reuse, IEdNodePredicate filter);
     public abstract boolean connectExistingTouchingNodes(GeomDeviation tolerance, IEdNodePredicate filter);
     public abstract double getEastNorthArea();
+    public abstract boolean isInsideBounds(List<Bounds> bounds, LatLonSize oversize);
+
 }
 

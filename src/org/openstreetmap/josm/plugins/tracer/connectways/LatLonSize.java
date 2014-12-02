@@ -39,6 +39,10 @@ public class LatLonSize {
         return m_lon;
     }
 
+    public boolean isZero() {
+        return m_lat == 0 && m_lon == 0;
+    }
+
     public static LatLonSize get(LatLon ll, double radius_in_meters) {
         double meters_per_degree_lat = GeomUtils.getMetersPerDegreeOfLatitude(ll);
         double meters_per_degree_lon = GeomUtils.getMetersPerDegreeOfLongitude(ll);

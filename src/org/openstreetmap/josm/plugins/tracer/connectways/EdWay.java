@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
@@ -284,6 +285,16 @@ public class EdWay extends EdObject {
     public Set<EdNode> getAllNodes() {
         checkEditable();
         return new HashSet<>(m_nodes);
+    }
+
+    @Override
+    public boolean isInsideBounds(List<Bounds> bounds, LatLonSize oversize) {
+        checkEditable();
+        for (EdNode n: m_nodes) {
+            if (!n.isInsideBounds(bounds, oversize))
+                return false;
+        }
+        return true;
     }
 
     class NearNodesPair implements Comparable<NearNodesPair> {
