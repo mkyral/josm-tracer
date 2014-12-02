@@ -50,12 +50,8 @@ import org.xml.sax.SAXException;
 public class RuianModule implements TracerModule {
 
     protected boolean cancel;
-    private boolean ctrl;
-    private boolean alt;
-    private boolean shift;
     private boolean moduleEnabled;
 
-    private final String source = "cuzk:ruian"; // obsolete
     private final String ruianUrl = "http://josm.poloha.net";
 
     private static final double resurrectNodesDistanceMeters = 10.0;
@@ -562,15 +558,9 @@ public class RuianModule implements TracerModule {
 
             String ruianref = Long.toString(m_record.getBuildingID());
 
-            // restrict to RUIAN areas only, yet ... #### improve in the future
             boolean multiple_areas = false;
             EdObject building_area = null;
             for (EdObject area: areas) {
-                  // Retrace all building if possible
-//                 String source = area.get("source");
-//                 if (source == null || !source.equals("cuzk:ruian"))
-//                     continue;
-
                 if (area instanceof EdWay)
                     System.out.println("Retrace candidate EdWay: " + Long.toString(area.getUniqueId()));
                 else if (area instanceof EdMultipolygon)
