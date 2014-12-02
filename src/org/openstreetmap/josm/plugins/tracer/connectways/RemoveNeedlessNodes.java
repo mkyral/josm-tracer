@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.openstreetmap.josm.data.Bounds;
 
 public class RemoveNeedlessNodes {
     private final IEdAreaPredicate m_filter;
@@ -200,6 +201,7 @@ public class RemoveNeedlessNodes {
             return;
         }
 
+        List<Bounds> bounds = way.getEditor().getDataSet().getDataSourceBounds();
         Set<EdNode> seen_nodes = new HashSet<>();
 
         for (int i = 0; i < ncount; i++) {
@@ -222,6 +224,13 @@ public class RemoveNeedlessNodes {
 
             // global node tests, cache them to avoid repeated checks
             if (!m_validBindingsCache.contains(cur_node)) {
+
+                // filter out nodes outside downloaded area
+                if (!cur_node.isInsideBounds(bounds, LatLonSize.Zero)) {
+                    m_requiredNodes.add(cur_node);
+                    System.out.println(" - Outside-bounds node " + Long.toString(cur_node.getUniqueId()));
+                    continue;
+                }
 
                 List<EdWay> referrers = cur_node.getAllAreaWayReferrers(m_filter);
 
