@@ -56,6 +56,9 @@ public class RuianModule implements TracerModule {
 
     private static final double resurrectNodesDistanceMeters = 10.0;
 
+    private static final double oversizeInDataBoundsMeters = 2.0;
+
+
     private static final GeomDeviation m_connectTolerance = new GeomDeviation (0.15, Math.PI / 50);
     private static final double m_discardCutoffsPercent = 15.0;
     private final ClipAreasSettings m_clipSettings =
@@ -371,10 +374,14 @@ public class RuianModule implements TracerModule {
 
             // Create traced object
             Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
-            if (trobj == null)
-                return;
             EdWay outer_way = trobj.a;
             EdMultipolygon multipolygon = trobj.b;
+
+            // Everything is inside DataSource bounds?
+            if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
+                wayIsOutsideDownloadedAreaDialog();
+                return;
+            }
 
             // Connect to near building polygons
             // (must be done before retrace updates, we want to use as much old nodes as possible)
@@ -494,11 +501,6 @@ public class RuianModule implements TracerModule {
                 } else {
                   node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(outer_rls.get(i).lat()+dAdjX),
                                                    LatLon.roundToOsmPrecision(outer_rls.get(i).lon()+dAdjY)));
-                }
-
-                if (!editor.insideDataSourceBounds(node)) {
-                    wayIsOutsideDownloadedAreaDialog();
-                    return null;
                 }
 
                 if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, precision)) {
@@ -706,6 +708,13 @@ public class RuianModule implements TracerModule {
                 else
                     retrace_multipolygon.removeInnerWay(retraces.get(i));
             }
+        }
+
+        private boolean checkInsideDataSourceBounds(EdObject new_object, EdObject retrace_object) {
+            LatLonSize bounds_oversize = LatLonSize.get(new_object.getBBox(), oversizeInDataBoundsMeters);
+            if (retrace_object != null && !retrace_object.isInsideDataSourceBounds(bounds_oversize))
+                return false;
+            return new_object.isInsideDataSourceBounds(bounds_oversize);
         }
     }
 }
