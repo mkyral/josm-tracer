@@ -387,16 +387,21 @@ public class RuianModule implements TracerModule {
             }
             else {
                 reuseNearNodes(multipolygon == null ? outer_way : multipolygon, retrace_object);
-                connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
             }
 
-            // Retrace simple ways - just use the old way
+            // Update geometries of retraced object
             if (retrace_object != null) {
                 Pair<EdWay, EdMultipolygon> reobj = this.updateRetracedObjects(multipolygon == null ? outer_way : multipolygon, retrace_object);
                 if (reobj == null)
                     return;
                 outer_way = reobj.a;
                 multipolygon = reobj.b;
+            }
+
+            // Connect to touching nodes of near buildings
+            // (must be done after retrace updates, we don't want to connect to the old polygon)
+            if (m_performNearBuildingsEdit) {
+                connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
             }
 
             // Tag object
