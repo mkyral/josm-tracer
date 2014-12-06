@@ -163,7 +163,7 @@ public final class RuianLandsModule extends TracerModule {
         private final boolean m_performWayMerging;
         private final boolean m_performRetrace;
 
-        private RuianLandsRecord m_record;
+        private RuianLandsRecord m_xrecord;
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
@@ -172,11 +172,15 @@ public final class RuianLandsModule extends TracerModule {
 
         RuianLandsTracerTask  (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (pos, ctrl, alt, shift);
-            this.m_record = null;
+            this.m_xrecord = null;
 
             this.m_performClipping = !m_ctrl;
             this.m_performWayMerging = !m_ctrl;
             this.m_performRetrace = !m_ctrl;
+        }
+
+        private RuianLandsRecord record() {
+            return m_xrecord;
         }
 
         @Override
@@ -199,7 +203,7 @@ public final class RuianLandsModule extends TracerModule {
             progressMonitor.indeterminateSubTask(tr("Downloading RUIAN data..."));
             try {
                 RuianLandsServer server = new RuianLandsServer();
-                m_record = server.trace(m_pos, sUrl);
+                m_xrecord = server.trace(m_pos, sUrl);
             }
             catch (final Exception e) {
                 e.printStackTrace();
@@ -211,7 +215,7 @@ public final class RuianLandsModule extends TracerModule {
                 return;
 
             // No data available?
-            if (!m_record.noDataAvailable()) {
+            if (!record().noDataAvailable()) {
                 TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
                 return;
             }
@@ -219,7 +223,7 @@ public final class RuianLandsModule extends TracerModule {
             // Look for incomplete multipolygons that might participate in clipping
             List<Relation> incomplete_multipolygons = null;
             if (m_performClipping)
-                incomplete_multipolygons = getIncompleteMultipolygonsForDownload (m_record.getBBox());
+                incomplete_multipolygons = getIncompleteMultipolygonsForDownload (record().getBBox());
 
             // No multipolygons to download, create traced polygon immediately within this task
             if (incomplete_multipolygons == null || incomplete_multipolygons.isEmpty()) {
@@ -268,7 +272,7 @@ public final class RuianLandsModule extends TracerModule {
 
         private void createTracedPolygonImpl(DataSet data_set) {
 
-            System.out.println("  RUIAN keys: " + m_record.getKeys());
+            System.out.println("  RUIAN keys: " + record().getKeys());
 
             WayEditor editor = new WayEditor (data_set);
 
@@ -277,11 +281,11 @@ public final class RuianLandsModule extends TracerModule {
             Match retraceAreaMatch;
 
             // Determine type of the objects
-            if (m_record.isBuilding()) {
+            if (record().isBuilding()) {
               clipWayMatch = m_clipBuildingWayMatch;
               mergeWayMatch = m_mergeBuildingWayMatch;
               retraceAreaMatch = m_retraceBuildingAreaMatch;
-            } else if (m_record.isGarden()) {
+            } else if (record().isGarden()) {
               clipWayMatch = m_clipGardenWayMatch;
               mergeWayMatch = m_mergeLanduseWayMatch;
               retraceAreaMatch = m_retraceLandsAreaMatch;
@@ -380,7 +384,7 @@ public final class RuianLandsModule extends TracerModule {
 
             Map <String, String> map = obj.getKeys();
 
-            Map <String, String> new_keys = new HashMap <> (m_record.getKeys());
+            Map <String, String> new_keys = new HashMap <> (record().getKeys());
             for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
                 map.put(new_key.getKey(), new_key.getValue());
             }
@@ -402,9 +406,9 @@ public final class RuianLandsModule extends TracerModule {
             }
 
             // Determine type of the objects
-            if (m_record.isBuilding()) {
+            if (record().isBuilding()) {
               reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingBuildingNodeMatch);
-            } else if (m_record.isGarden()) {
+            } else if (record().isGarden()) {
               reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
             } else {
               reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
@@ -414,7 +418,7 @@ public final class RuianLandsModule extends TracerModule {
 
             // Prepare outer way nodes
             List<EdNode> outer_nodes = new ArrayList<> ();
-            List<LatLon> outer = m_record.getOuter();
+            List<LatLon> outer = record().getOuter();
             LatLon prev_coor = null;
             // m_record.getCoorCount() - 1 - omit last node
             for (int i = 0; i < outer.size() - 1; i++) {
@@ -479,7 +483,7 @@ public final class RuianLandsModule extends TracerModule {
             AreaPredicate filter = new AreaPredicate(retraceAreaMatch);
             Set<EdObject> areas = editor.useNonEditedAreasContainingPoint(pos, filter);
 
-            String ruianref = Long.toString(m_record.getLandID());
+            String ruianref = Long.toString(record().getLandID());
 
             // restrict to RUIAN areas only, yet ... #### improve in the future
             boolean multiple_areas = false;

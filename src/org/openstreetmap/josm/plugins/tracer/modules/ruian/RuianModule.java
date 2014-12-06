@@ -206,18 +206,22 @@ public final class RuianModule extends TracerModule {
         private final boolean m_performRetrace;
         private final boolean m_performNearBuildingsEdit;
 
-        private RuianRecord m_record;
+        private RuianRecord m_xrecord;
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
         RuianTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (pos, ctrl, alt ,shift);
-            this.m_record = null;
+            this.m_xrecord = null;
 
             this.m_performClipping = !m_ctrl;
             this.m_performWayMerging = !m_ctrl;
             this.m_performRetrace = !m_ctrl;
             this.m_performNearBuildingsEdit = !m_ctrl;
+        }
+
+        private RuianRecord record() {
+            return m_xrecord;
         }
 
         @Override
@@ -240,7 +244,7 @@ public final class RuianModule extends TracerModule {
             progressMonitor.indeterminateSubTask(tr("Downloading RUIAN building data..."));
             try {
                 RuianServer server = new RuianServer();
-                m_record = server.trace(m_pos, sUrl);
+                m_xrecord = server.trace(m_pos, sUrl);
             }
             catch (final Exception e) {
                 e.printStackTrace();
@@ -252,7 +256,7 @@ public final class RuianModule extends TracerModule {
                 return;
 
             // No data available?
-            if (m_record.noDataAvailable()) {
+            if (record().noDataAvailable()) {
                 TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
                 return;
             }
@@ -260,7 +264,7 @@ public final class RuianModule extends TracerModule {
             // Look for incomplete multipolygons that might participate in clipping
             List<Relation> incomplete_multipolygons = null;
             if (m_performClipping)
-                incomplete_multipolygons = getIncompleteMultipolygonsForDownload (m_record.getBBox());
+                incomplete_multipolygons = getIncompleteMultipolygonsForDownload (record().getBBox());
 
             // No multipolygons to download, create traced polygon immediately within this task
             if (incomplete_multipolygons == null || incomplete_multipolygons.isEmpty()) {
@@ -309,7 +313,7 @@ public final class RuianModule extends TracerModule {
 
         private void createTracedPolygonImpl(DataSet data_set) {
 
-            System.out.println("  RUIAN keys: " + m_record.getKeys(m_alt));
+            System.out.println("  RUIAN keys: " + record().getKeys(m_alt));
 
             WayEditor editor = new WayEditor (data_set);
 
@@ -415,7 +419,7 @@ public final class RuianModule extends TracerModule {
 
             Map <String, String> map = obj.getKeys();
 
-            Map <String, String> new_keys = new HashMap <> (m_record.getKeys());
+            Map <String, String> new_keys = new HashMap <> (record().getKeys());
             for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
                 map.put(new_key.getKey(), new_key.getValue());
             }
@@ -438,7 +442,7 @@ public final class RuianModule extends TracerModule {
 
             // Prepare outer way nodes
             LatLon prev_coor = null;
-            List<LatLon> outer_rls = m_record.getOuter();
+            List<LatLon> outer_rls = record().getOuter();
             List<EdNode> outer_nodes = new ArrayList<> (outer_rls.size());
             // m_record.getCoorCount() - 1 - omit last node
             for (int i = 0; i < outer_rls.size() - 1; i++) {
@@ -465,7 +469,7 @@ public final class RuianModule extends TracerModule {
             EdWay outer_way = editor.newWay(outer_nodes);
 
             // Simple way?
-            if (!m_record.hasInners())
+            if (!record().hasInners())
                 return new Pair<>(outer_way, null);
 
             // Create multipolygon
@@ -473,7 +477,7 @@ public final class RuianModule extends TracerModule {
             EdMultipolygon multipolygon = editor.newMultipolygon();
             multipolygon.addOuterWay(outer_way);
 
-            for (List<LatLon> inner_rls: m_record.getInners()) {
+            for (List<LatLon> inner_rls: record().getInners()) {
                 List<EdNode> inner_nodes = new ArrayList<>(inner_rls.size());
                 for (int i = 0; i < inner_rls.size() - 1; i++) {
                     EdNode node;
@@ -507,7 +511,7 @@ public final class RuianModule extends TracerModule {
             AreaPredicate filter = new AreaPredicate(retraceAreaMatch);
             Set<EdObject> areas = editor.useNonEditedAreasContainingPoint(pos, filter);
 
-            String ruianref = Long.toString(m_record.getBuildingID());
+            String ruianref = Long.toString(record().getBuildingID());
 
             boolean multiple_areas = false;
             EdObject building_area = null;
