@@ -141,16 +141,20 @@ public class AngPolygonClipper {
         for (List<EdNode> list: m_outers) {
             for (EdNode n: list) {
                 if (!m_subjectNodes.contains(n))
-                    if (!n.isInsideBounds(bounds, LatLonSize.Zero))
+                    if (!n.isInsideBounds(bounds, LatLonSize.Zero)) {
+                        System.out.println("Clip adds new outer node outside downloaded area: " + Long.toString(n.getUniqueId()) + ", " + n.getCoor().toDisplayString());
                         return true;
+                    }
                 cur_nodes.add(n);
             }
         }
         for (List<EdNode> list: m_inners) {
             for (EdNode n: list) {
                 if (!m_subjectNodes.contains(n))
-                    if (!n.isInsideBounds(bounds, LatLonSize.Zero))
+                    if (!n.isInsideBounds(bounds, LatLonSize.Zero)) {
+                        System.out.println("Clip adds new inner node outside downloaded area: " + Long.toString(n.getUniqueId()) + ", " + n.getCoor().toDisplayString());
                         return true;
+                    }
                 cur_nodes.add(n);
             }
         }
@@ -158,8 +162,10 @@ public class AngPolygonClipper {
         // Test removed subject nodes not occurring in current nodes
         for (EdNode node: m_subjectNodes) {
             if (!cur_nodes.contains(node))
-                if (!node.isInsideBounds(bounds, LatLonSize.Zero))
+                if (!node.isInsideBounds(bounds, LatLonSize.Zero)) {
+                    System.out.println("Clip removes node outside downloaded area: " + Long.toString(node.getUniqueId()) + ", " + node.getCoor().toDisplayString());
                     return true;
+                }
         }
 
         return false;
