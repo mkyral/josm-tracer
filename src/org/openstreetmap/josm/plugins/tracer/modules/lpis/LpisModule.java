@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.JOptionPane;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
@@ -34,14 +33,9 @@ import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.data.osm.Relation;
-import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
-import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
-import org.openstreetmap.josm.gui.util.GuiHelper;
-import org.openstreetmap.josm.plugins.tracer.PostTraceNotifications;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
-import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
 
 // import org.openstreetmap.josm.plugins.tracer.modules.lpis.LpisRecord;
@@ -49,7 +43,6 @@ import org.openstreetmap.josm.plugins.tracer.connectways.*;
 import static org.openstreetmap.josm.tools.I18n.*;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Pair;
-import org.xml.sax.SAXException;
 
 public final class LpisModule extends TracerModule  {
 
@@ -120,14 +113,11 @@ public final class LpisModule extends TracerModule  {
         private final boolean m_performWayMerging;
         private final boolean m_performRetrace;
 
-        private LpisRecord m_xrecord;
-
         private final GeomDeviation m_connectTolerance = new GeomDeviation(0.2, Math.PI / 3);
         private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_connectTolerance);
 
         LpisTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (pos, ctrl, alt, shift);
-            this.m_xrecord = null;
 
             this.m_performClipping = !m_ctrl;
             this.m_performWayMerging = !m_ctrl;
@@ -135,90 +125,17 @@ public final class LpisModule extends TracerModule  {
         }
 
         private LpisRecord record() {
-            return m_xrecord;
+            return (LpisRecord) super.getRecord();
         }
 
         @Override
-        @SuppressWarnings({"CallToPrintStackTrace", "UseSpecificCatch", "BroadCatchBlock", "TooBroadCatch"})
-        protected void realRun() {
-
-            System.out.println("");
-            System.out.println("-----------------");
-            System.out.println("----- Trace -----");
-            System.out.println("-----------------");
-            System.out.println("");
-
-            progressMonitor.indeterminateSubTask(tr("Downloading LPIS data..."));
-            try {
-                LpisServer server = new LpisServer();
-                m_xrecord = server.getElementData(m_pos, lpisUrl);
-            }
-            catch (final Exception e) {
-                e.printStackTrace();
-                TracerUtils.showNotification(tr("LPIS download failed.") + "\n(" + m_pos.toDisplayString() + ")", "error");
-                return;
-            }
-
-            if (cancelled ())
-                return;
-
-            // No data available?
-            if (record().noDataAvailable()) {
-                TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
-                return;
-            }
-
-            // Look for incomplete multipolygons that might participate in landuse clipping
-            List<Relation> incomplete_multipolygons = null;
-            if (m_performClipping)
-                incomplete_multipolygons = getIncompleteMultipolygonsForDownload (record().getBBox());
-
-            // No multipolygons to download, create traced polygon immediately within this task
-            if (incomplete_multipolygons == null || incomplete_multipolygons.isEmpty()) {
-                progressMonitor.subTask(tr("Creating LPIS polygon..."));
-                createTracedPolygon();
-            }
-            else {
-                // Schedule task to download incomplete multipolygons
-                Main.worker.submit(new DownloadRelationTask(incomplete_multipolygons, Main.main.getEditLayer()));
-
-                // Schedule task to create traced polygon
-                Main.worker.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        createTracedPolygon();
-                    }
-                });
-            }
+        protected TracerRecord downloadRecord(LatLon pos) throws Exception {
+            LpisServer server = new LpisServer();
+            return server.getElementData(pos, lpisUrl);
         }
 
-        private void createTracedPolygon() {
-            GuiHelper.runInEDT(new Runnable() {
-                @Override
-                @SuppressWarnings("CallToPrintStackTrace")
-                public void run() {
-                    long start_time = System.nanoTime();
-                    DataSet data_set = Main.main.getCurrentDataSet();
-                    data_set.beginUpdate();
-                    try {
-                        createTracedPolygonImpl (data_set);
-                        postTraceNotifications().show();
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                        throw e;
-                    }
-                    finally {
-                        data_set.endUpdate();
-                        long end_time = System.nanoTime();
-                        long time_msecs = (end_time - start_time) / (1000*1000);
-                        System.out.println("Polygon time (ms): " + Long.toString(time_msecs));
-                    }
-                }
-            });
-        }
-
-        private void createTracedPolygonImpl(DataSet data_set) {
+        @Override
+        protected void createTracedPolygonImpl(DataSet data_set) {
 
             System.out.println("  LPIS ID: " + record().getLpisID());
             System.out.println("  LPIS usage: " + record().getUsage());
