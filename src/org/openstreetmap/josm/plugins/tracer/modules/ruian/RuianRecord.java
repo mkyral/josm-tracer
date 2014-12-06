@@ -88,18 +88,17 @@ public final class RuianRecord extends TracerRecord {
 
     init();
 
-    long     m_adr_id = 0;
-    String   m_house_number = "";
-    String   m_house_number_typ = "";
-    String   m_street_number = "";
-    String   m_street = "";
-    String   m_place = "";
-    String   m_suburb = "";
-    String   m_city = "";
-    String   m_district = "";
-    String   m_region = "";
-    String   m_postcode = "";
-
+    long     adr_id = 0;
+    String   house_number = "";
+    String   house_number_typ = "";
+    String   street_number = "";
+    String   street = "";
+    String   place = "";
+    String   suburb = "";
+    String   city = "";
+    String   district = "";
+    String   region = "";
+    String   postcode = "";
 
     JsonReader jsonReader = Json.createReader(new ByteArrayInputStream(jsonStr.getBytes()));
     JsonObject obj = jsonReader.readObject();
@@ -131,6 +130,7 @@ public final class RuianRecord extends TracerRecord {
       }
 
 // =========================================================================
+
       try {
         JsonObject building = obj.getJsonObject("stavebni_objekt");
 
@@ -141,67 +141,67 @@ public final class RuianRecord extends TracerRecord {
         }
 
         try {
-          m_house_number = building.getString("cislo_domovni");
+          house_number = building.getString("cislo_domovni");
         } catch (Exception e) {
             System.out.println("stavebni_objekt.cislo_domovni: " + e.getMessage());
         }
 
         try {
-          m_house_number_typ = building.getString("cislo_domovni_typ");
+          house_number_typ = building.getString("cislo_domovni_typ");
         } catch (Exception e) {
             System.out.println("stavebni_objekt.cislo_domovni_typ: " + e.getMessage());
         }
 
         try {
-          m_street_number = building.getString("cislo_orientacni");
+          street_number = building.getString("cislo_orientacni");
         } catch (Exception e) {
             System.out.println("stavebni_objekt.cislo_orientacni: " + e.getMessage());
         }
 
         try {
-          m_adr_id = Long.parseLong(building.getString("adresni_misto_kod"));
+          adr_id = Long.parseLong(building.getString("adresni_misto_kod"));
         } catch (Exception e) {
             System.out.println("stavebni_objek.tadresni_misto_kod: " + e.getMessage());
         }
 
         try {
-          m_street = building.getString("ulice");
+          street = building.getString("ulice");
         } catch (Exception e) {
             System.out.println("stavebni_objekt.ulice: " + e.getMessage());
         }
 
         try {
-          m_place = building.getString("cast_obce");
+          place = building.getString("cast_obce");
         } catch (Exception e) {
             System.out.println("stavebni_objekt.cast_obce: " + e.getMessage());
         }
 
         try {
-          m_suburb = building.getString("mestska_cast");
+          suburb = building.getString("mestska_cast");
         } catch (Exception e) {
             System.out.println("stavebni_objekt.mestska_cast: " + e.getMessage());
         }
 
         try {
-          m_city = building.getString("obec");
+          city = building.getString("obec");
         } catch (Exception e) {
             System.out.println("stavebni_objekt.obec: " + e.getMessage());
         }
 
         try {
-          m_district = building.getString("okres");
+          district = building.getString("okres");
         } catch (Exception e) {
             System.out.println("stavebni_objekt.okres: " + e.getMessage());
         }
 
         try {
-          m_region = building.getString("kraj");
+          region = building.getString("kraj");
         } catch (Exception e) {
             System.out.println("stavebni_objekt.kraj: " + e.getMessage());
         }
 
         try {
-          m_postcode = building.getString("psc");
+          postcode = building.getString("psc");
         } catch (Exception e) {
             System.out.println("stavebni_objekt.psc: " + e.getMessage());
         }
@@ -306,71 +306,75 @@ public final class RuianRecord extends TracerRecord {
           Address addr = new Address();
 
           try {
-            m_adr_id = Long.parseLong(addrPlace.getString("ruian_id"));
+            adr_id = Long.parseLong(addrPlace.getString("ruian_id"));
           } catch (Exception e) {
             System.out.println("adresni_mista.ruian_id: " + e.getMessage());
           }
 
           try {
-            m_house_number = addrPlace.getString("cislo_domovni");
+            house_number = addrPlace.getString("cislo_domovni");
           } catch (Exception e) {
             System.out.println("adresni_mista.cislo_domovni: " + e.getMessage());
           }
 
           try {
-            m_street_number = addrPlace.getString("cislo_orientacni");
+            street_number = addrPlace.getString("cislo_orientacni");
           } catch (Exception e) {
             System.out.println("adresni_mista.cislo_orientacni: " + e.getMessage());
           }
 
           try {
-            m_street = addrPlace.getString("ulice");
+            street = addrPlace.getString("ulice");
           } catch (Exception e) {
             System.out.println("adresni_mista.ulice: " + e.getMessage());
           }
 
-          addr.setRuianID(m_adr_id);
+          addr.setRuianID(adr_id);
 
-          if (m_house_number_typ.equals("číslo popisné"))
-            addr.setConscriptionNumber(m_house_number);
-          else if (m_house_number_typ.equals("číslo evidenční"))
-            addr.setProvisionalNumber(m_house_number);
+          if (house_number_typ.equals("číslo popisné"))
+            addr.setConscriptionNumber(house_number);
+          else if (house_number_typ.equals("číslo evidenční"))
+            addr.setProvisionalNumber(house_number);
 
-          addr.setStreetNumber(m_street_number);
-          addr.setStreet(m_street);
-          addr.setPlace(m_place);
-          addr.setSuburb(m_suburb);
-          addr.setCity(m_city);
-          addr.setDistrict(m_district);
-          addr.setRegion(m_region);
+          addr.setStreetNumber(street_number);
+          addr.setStreet(street);
+          addr.setPlace(place);
+          addr.setSuburb(suburb);
+          addr.setCity(city);
+          addr.setDistrict(district);
+          addr.setRegion(region);
           addr.setCountryCode("CZ");
-          addr.setPostCode(m_postcode);
+          addr.setPostCode(postcode);
 
           m_address_places.add(addr);
         }
       } catch (Exception e) {
       }
 
-      if (m_address_places.size() == 0 &&
-            m_house_number.length() > 0) {
+      if (m_address_places.isEmpty() &&
+            house_number.length() > 0) {
 
         Address addr = new Address();
-        addr.setRuianID(m_adr_id);
+        addr.setRuianID(adr_id);
 
-        if (m_house_number_typ.equals("číslo popisné"))
-          addr.setConscriptionNumber(m_house_number);
-        else if (m_house_number_typ.equals("číslo evidenční"))
-          addr.setProvisionalNumber(m_house_number);
+        switch (house_number_typ) {
+            case "číslo popisné":
+                addr.setConscriptionNumber(house_number);
+                break;
+            case "číslo evidenční":
+                addr.setProvisionalNumber(house_number);
+                break;
+        }
 
-        addr.setStreetNumber(m_street_number);
-        addr.setStreet(m_street);
-        addr.setPlace(m_place);
-        addr.setSuburb(m_suburb);
-        addr.setCity(m_city);
-        addr.setDistrict(m_district);
-        addr.setRegion(m_region);
+        addr.setStreetNumber(street_number);
+        addr.setStreet(street);
+        addr.setPlace(place);
+        addr.setSuburb(suburb);
+        addr.setCity(city);
+        addr.setDistrict(district);
+        addr.setRegion(region);
         addr.setCountryCode("CZ");
-        addr.setPostCode(m_postcode);
+        addr.setPostCode(postcode);
 
         m_address_places.add(addr);
       }
