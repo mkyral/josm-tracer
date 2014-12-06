@@ -28,12 +28,10 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import static org.openstreetmap.josm.tools.I18n.tr;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -44,14 +42,11 @@ import org.xml.sax.SAXException;
  *
  */
 
-public class LpisRecord {
+public final class LpisRecord extends TracerRecord {
 
     private long     m_lpis_id;
     private String   m_usage;
     private Map <String, String> m_usageOsm;
-
-    private List<LatLon> m_outer;
-    private List<List<LatLon>> m_inners;
 
     /**
     * Constructor
@@ -65,12 +60,12 @@ public class LpisRecord {
     * Initialization
     *
     */
+    @Override
     public void init () {
+        super.init();
         m_lpis_id = -1;
         m_usage = "";
         m_usageOsm = new HashMap <>();
-        m_outer = null;
-        m_inners = new ArrayList<>();
     }
 
     private void mapToOsm () {
@@ -171,18 +166,20 @@ public class LpisRecord {
             nodeList = (NodeList) xPath.compile(expOuter).evaluate(doc, XPathConstants.NODESET);
             String outer = nodeList.item(0).getFirstChild().getNodeValue();
             System.out.println("parseXML(basic) - outer: " + outer);
-            m_outer = parseGeometry(outer);
-            System.out.println("parseXML(basic) - outer list: " + m_outer);
+            List<LatLon> way = parseGeometry(outer);
+            System.out.println("parseXML(basic) - outer list: " + way);
+            super.setOuter(way);
 
             System.out.println("parseXML(basic) - expInner: " + expInner);
             nodeList = (NodeList) xPath.compile(expInner).evaluate(doc, XPathConstants.NODESET);
             for (int i = 0; i < nodeList.getLength(); i++) {
                 String inner = nodeList.item(i).getFirstChild().getNodeValue();
                 System.out.println("Inner("+i+": "+ inner);
-                m_inners.add(parseGeometry(inner));
+                super.addInner(parseGeometry(inner));
             }
-            for (int i = 0; i < m_inners.size(); i++) {
-                System.out.println("parseXML(basic) - Inner("+i+"): " + m_inners.get(i));
+            List<List<LatLon>> inner_ways = super.getInners();
+            for (int i = 0; i < inner_ways.size(); i++) {
+                System.out.println("parseXML(basic) - Inner("+i+"): " + inner_ways.get(i));
             }
         } else {
             String expUsage = "//*[name()='ms:LPIS_FB4'][1]/*[name()='ms:kultura']";
@@ -196,49 +193,6 @@ public class LpisRecord {
         }
 
         System.out.println("parseXML() - End");
-    }
-
-    /**
-     *  Return outer polygon
-     *  @return Outer polygon nodes
-     */
-    public List <LatLon> getOuter() {
-        if (m_outer == null)
-            throw new IllegalStateException("No outer geometry available");
-        return Collections.unmodifiableList(m_outer);
-    }
-
-    /**
-     *  Return whether there are inners
-     *  @return True/False
-     */
-    public boolean hasInners() {
-        return m_inners.size() > 0;
-    }
-
-    /**
-     *  Return number of inners
-     *  @return Count of inners
-     */
-    public List<List<LatLon>> getInners() {
-        return Collections.unmodifiableList(m_inners);
-    }
-
-    /**
-     * Returns BBox of LPIS (multi)polygon
-     * @return BBox of LPIS (multi)polygon
-     */
-    public BBox getBBox() {
-        List<LatLon> outer = getOuter();
-        LatLon p0 = outer.get(0);
-
-        BBox bbox = new BBox(p0.lon(), p0.lat());
-        for (int i = 1; i < outer.size(); i++) {
-            LatLon p = outer.get(i);
-            bbox.add(p.lon(), p.lat());
-        }
-
-        return bbox;
     }
 
     /**

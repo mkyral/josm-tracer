@@ -18,33 +18,23 @@
 
 package org.openstreetmap.josm.plugins.tracer.modules.ruian;
 
-import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.data.osm.BBox;
-import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.tools.Utils;
-
+import java.io.ByteArrayInputStream;
+import java.util.*;
 import javax.json.Json;
-import javax.json.JsonException;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
-import javax.json.JsonValue;
-
-import java.io.InputStream;
-import java.io.ByteArrayInputStream;
-
-import java.util.*;
-import java.lang.StringBuilder;
-
+import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+
 
 /**
  * The Tracer RUIAN record class
  *
  */
 
-public class RuianRecord {
+public final class RuianRecord extends TracerRecord {
 
     private double   m_coor_lat, m_coor_lon;
     private String   m_source;
@@ -57,8 +47,6 @@ public class RuianRecord {
     private String   m_finished;
     private String   m_valid_from;
 
-    private List<LatLon> m_outer;
-    private List<List<LatLon>> m_inners;
     private ArrayList <Address> m_address_places;
 
     /**
@@ -66,15 +54,16 @@ public class RuianRecord {
     *
     */
     public void RuianRecord () {
-      init();
+      this.init();
     }
 
     /**
     * Initialization
     *
     */
-    private void init () {
-
+    @Override
+    protected void init () {
+      super.init();
       m_coor_lat = 0;
       m_coor_lon = 0;
       m_source = "";
@@ -86,8 +75,6 @@ public class RuianRecord {
       m_usage_val = "";
       m_finished = "";
       m_valid_from = "";
-      m_outer = new ArrayList<>();
-      m_inners = new ArrayList<>();
       m_address_places = new ArrayList<Address> ();
 
     }
@@ -271,6 +258,7 @@ public class RuianRecord {
 
         // Outer
         JsonArray outerArr = geomObj.getJsonArray("outer");
+        List<LatLon> way = new ArrayList<>(outerArr.size());
         for(int i = 0; i < outerArr.size(); i++)
         {
           JsonArray node = outerArr.getJsonArray(i);
@@ -281,10 +269,11 @@ public class RuianRecord {
               LatLon.roundToOsmPrecision(node.getJsonNumber(0).doubleValue())
             );
             System.out.println("outer["+i+"]:coor: " + coor.toString());
-            m_outer.add(coor);
+            way.add(coor);
           } catch (Exception e) {
           }
         }
+        super.setOuter(way);
 
         try {
           // Inners
@@ -309,7 +298,7 @@ public class RuianRecord {
               } catch (Exception e) {
               }
             }
-            m_inners.add(inner);
+            super.addInner(inner);
           }
         } catch (Exception e) {
         }
@@ -395,48 +384,6 @@ public class RuianRecord {
         m_address_places.add(addr);
       }
     }
-
-    /**
-     *  Return outer polygon
-     *  @return Outer polygon nodes
-     */
-    public List <LatLon> getOuter() {
-        if (m_outer == null)
-            throw new IllegalStateException("No outer geometry available");
-        return Collections.unmodifiableList(m_outer);
-    }
-
-    /**
-     *  Return whether there are inners
-     *  @return True/False
-     */
-    public boolean hasInners() {
-        return m_inners.size() > 0;
-    }
-
-    /**
-     *  Return number of inners
-     *  @return List of inners
-     */
-    public List<List<LatLon>> getInners() {
-        return Collections.unmodifiableList(m_inners);
-    }
-
-  /**
-   * Returns BBox of RUIAN (multi)polygon
-   * @return BBox of RUIAN (multi)polygon
-   */
-  public BBox getBBox() {
-      LatLon p0 = m_outer.get(0);
-
-      BBox bbox = new BBox(p0.lon(), p0.lat());
-      for (int i = 1; i < m_outer.size(); i++) {
-          LatLon p = m_outer.get(i);
-          bbox.add(p.lon(), p.lat());
-      }
-
-      return bbox;
-  }
 
   /**
    *  Return number of levels in the building

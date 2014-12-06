@@ -221,7 +221,7 @@ public class RuianLandsModule implements TracerModule {
                 return;
 
             // No data available?
-            if (m_record.getCoorCount() == 0) {
+            if (m_record.hasOuter()) {
                 TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
                 return;
             }
@@ -467,17 +467,18 @@ public class RuianLandsModule implements TracerModule {
 
             // Prepare outer way nodes
             List<EdNode> outer_nodes = new ArrayList<> ();
+            List<LatLon> outer = m_record.getOuter();
             LatLon prev_coor = null;
             // m_record.getCoorCount() - 1 - omit last node
-            for (int i = 0; i < m_record.getCoorCount() - 1; i++) {
+            for (int i = 0; i < outer.size() - 1; i++) {
                 EdNode node;
 
                 // Apply corrections to node coordinates
                 if (!pref.isRuianAdjustPositionEnabled()) {
-                  node = editor.newNode(m_record.getCoor(i));
+                  node = editor.newNode(outer.get(i));
                 } else {
-                  node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(m_record.getCoor(i).lat()+dAdjX),
-                                                   LatLon.roundToOsmPrecision(m_record.getCoor(i).lon()+dAdjY)));
+                  node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(outer.get(i).lat()+dAdjX),
+                                                   LatLon.roundToOsmPrecision(outer.get(i).lon()+dAdjY)));
                 }
 
                 if (!editor.insideDataSourceBounds(node)) {
