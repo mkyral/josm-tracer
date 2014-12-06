@@ -19,9 +19,19 @@
 package org.openstreetmap.josm.plugins.tracer;
 
 import java.awt.Cursor;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JOptionPane;
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.data.osm.DataSet;
+import org.openstreetmap.josm.data.osm.Relation;
+import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
+import org.openstreetmap.josm.plugins.tracer.connectways.MultipolygonMatch;
+import static org.openstreetmap.josm.tools.I18n.tr;
 
 /**
  * Base class for Tracer modules
@@ -77,6 +87,40 @@ public abstract class TracerModule {
             this.m_ctrl = ctrl;
             this.m_alt = alt;
             this.m_shift = shift;
+        }
+
+        /**
+         * Returns list of all existing incomplete multipolygons that might participate in
+         * traced polygon clipping. These relations must be downloaded before clipping,
+         * clipping doesn't support incomplete multipolygons.
+         * @param box BBox of the traced geometry
+         * @return List of incomplete multipolygon relations
+         */
+        protected List<Relation> getIncompleteMultipolygonsForDownload(BBox box) {
+            DataSet ds = Main.main.getCurrentDataSet();
+            ds.getReadLock().lock();
+            try {
+                List<Relation> list = new ArrayList<>();
+                for (Relation rel : ds.searchRelations(box)) {
+                    if (!MultipolygonMatch.match(rel))
+                        continue;
+                    if (rel.isIncomplete() || rel.hasIncompleteMembers())
+                        list.add(rel);
+                }
+                return list;
+            } finally {
+                ds.getReadLock().unlock();
+            }
+        }
+
+        protected void wayIsOutsideDownloadedAreaDialog() {
+            ExtendedDialog ed = new ExtendedDialog(
+                Main.parent, tr("Way is outside downloaded area"),
+                new String[] {tr("Ok")});
+            ed.setButtonIcons(new String[] {"ok"});
+            ed.setIcon(JOptionPane.ERROR_MESSAGE);
+            ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
+            ed.showDialog();
         }
     }
 }

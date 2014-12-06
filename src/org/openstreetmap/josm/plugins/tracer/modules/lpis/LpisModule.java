@@ -171,7 +171,7 @@ public final class LpisModule extends TracerModule  {
             // Look for incomplete multipolygons that might participate in landuse clipping
             List<Relation> incomplete_multipolygons = null;
             if (m_performClipping)
-                incomplete_multipolygons = getIncompleteMultipolygonsForDownload ();
+                incomplete_multipolygons = getIncompleteMultipolygonsForDownload (m_record.getBBox());
 
             // No multipolygons to download, create traced polygon immediately within this task
             if (incomplete_multipolygons == null || incomplete_multipolygons.isEmpty()) {
@@ -190,39 +190,6 @@ public final class LpisModule extends TracerModule  {
                     }
                 });
             }
-        }
-
-        /**
-         * Returns list of all existing incomplete multipolygons that might participate in
-         * LPIS polygon clipping. These relations must be downloaded first, clipping
-         * doesn't support incomplete multipolygons.
-         * @return List of incomplete multipolygon relations
-         */
-        private List<Relation> getIncompleteMultipolygonsForDownload() {
-            DataSet ds = Main.main.getCurrentDataSet();
-            ds.getReadLock().lock();
-            try {
-                List<Relation> list = new ArrayList<>();
-                for (Relation rel : ds.searchRelations(m_record.getBBox())) {
-                    if (!MultipolygonMatch.match(rel))
-                        continue;
-                    if (rel.isIncomplete() || rel.hasIncompleteMembers())
-                        list.add(rel);
-                }
-                return list;
-            } finally {
-                ds.getReadLock().unlock();
-            }
-        }
-
-        private void wayIsOutsideDownloadedAreaDialog() {
-            ExtendedDialog ed = new ExtendedDialog(
-                Main.parent, tr("Way is outside downloaded area"),
-                new String[] {tr("Ok")});
-            ed.setButtonIcons(new String[] {"ok"});
-            ed.setIcon(JOptionPane.ERROR_MESSAGE);
-            ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
-            ed.showDialog();
         }
 
         private void createTracedPolygon() {
