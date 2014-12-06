@@ -180,7 +180,7 @@ public abstract class TracerModule {
                 return;
 
             // No data available?
-            if (!m_record.noDataAvailable()) {
+            if (!m_record.hasData()) {
                 TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
                 return;
             }

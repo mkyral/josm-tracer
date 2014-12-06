@@ -220,7 +220,7 @@ public final class LpisRecord extends TracerRecord {
     }
 
     @Override
-    public boolean noDataAvailable() {
-        return m_lpis_id < 0 || !super.hasOuter();
+    public boolean hasData() {
+        return m_lpis_id > 0 && super.hasOuter();
     }
 }

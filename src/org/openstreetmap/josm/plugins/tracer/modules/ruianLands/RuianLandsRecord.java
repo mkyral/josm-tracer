@@ -410,8 +410,8 @@ public final class RuianLandsRecord extends TracerRecord {
     return m_keys.containsKey("leisure") && m_keys.get("leisure").equals("garden");
   }
 
-  public boolean noDataAvailable() {
-      return !super.hasOuter();
+  public boolean hasData() {
+      return super.hasOuter();
   }
 
 }
