@@ -194,17 +194,11 @@ public final class RuianModule extends TracerModule {
 
     class RuianTracerTask extends AbstractTracerTask {
 
-        private final boolean m_performClipping;
-        private final boolean m_performWayMerging;
-        private final boolean m_performRetrace;
         private final boolean m_performNearBuildingsEdit;
 
         RuianTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (pos, ctrl, alt ,shift);
 
-            this.m_performClipping = !m_ctrl;
-            this.m_performWayMerging = !m_ctrl;
-            this.m_performRetrace = !m_ctrl;
             this.m_performNearBuildingsEdit = !m_ctrl;
         }
 

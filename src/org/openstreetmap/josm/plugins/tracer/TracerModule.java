@@ -83,6 +83,10 @@ public abstract class TracerModule {
         protected final boolean m_alt;
         protected final boolean m_shift;
 
+        protected final boolean m_performRetrace;
+        protected final boolean m_performClipping;
+        protected final boolean m_performWayMerging;
+
         private TracerRecord m_record;
         private boolean m_cancelled;
 
@@ -96,6 +100,10 @@ public abstract class TracerModule {
             this.m_shift = shift;
             this.m_record = null;
             this.m_cancelled = false;
+
+            this.m_performClipping = !m_ctrl;
+            this.m_performRetrace = !m_ctrl;
+            this.m_performWayMerging = !m_ctrl;
         }
 
         /**

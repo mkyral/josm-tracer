@@ -151,19 +151,11 @@ public final class RuianLandsModule extends TracerModule {
 
     class RuianLandsTracerTask extends AbstractTracerTask {
 
-        private final boolean m_performClipping;
-        private final boolean m_performWayMerging;
-        private final boolean m_performRetrace;
-
         private final GeomDeviation m_tolerance = new GeomDeviation (0.2, Math.PI / 3);
         private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_tolerance);
 
         RuianLandsTracerTask  (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (pos, ctrl, alt, shift);
-
-            this.m_performClipping = !m_ctrl;
-            this.m_performWayMerging = !m_ctrl;
-            this.m_performRetrace = !m_ctrl;
         }
 
         private RuianLandsRecord record() {
