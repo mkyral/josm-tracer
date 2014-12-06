@@ -41,7 +41,6 @@ import org.openstreetmap.josm.plugins.tracer.connectways.EdObject;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdWay;
 import org.openstreetmap.josm.plugins.tracer.connectways.MultipolygonMatch;
 import org.openstreetmap.josm.plugins.tracer.connectways.WayEditor;
-import static org.openstreetmap.josm.tools.I18n.tr;
 
 /**
  * Base class for Tracer modules

@@ -40,14 +40,10 @@ import org.openstreetmap.josm.tools.Pair;
 public final class RuianLandsModule extends TracerModule {
 
     protected boolean cancel;
-    private boolean ctrl;
-    private boolean alt;
-    private boolean shift;
     private boolean moduleEnabled;
 
     private static final double oversizeInDataBoundsMeters = 5.0;
 
-    private static final String source = "cuzk:ruian";
     private static final String RuianLandsUrl = "http://josm.poloha.net";
 
     private static final String reuseExistingLanduseNodePattern =
