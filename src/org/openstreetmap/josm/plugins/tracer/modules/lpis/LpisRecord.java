@@ -218,4 +218,9 @@ public final class LpisRecord extends TracerRecord {
     public long getLpisID() {
         return m_lpis_id;
     }
+
+    @Override
+    public boolean noDataAvailable() {
+        return m_lpis_id < 0 || !super.hasOuter();
+    }
 }

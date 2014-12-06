@@ -80,6 +80,7 @@ public abstract class TracerModule {
         protected final boolean m_ctrl;
         protected final boolean m_alt;
         protected final boolean m_shift;
+        private boolean m_cancelled;
 
         protected AbstractTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (tr("Tracing"));
@@ -87,6 +88,7 @@ public abstract class TracerModule {
             this.m_ctrl = ctrl;
             this.m_alt = alt;
             this.m_shift = shift;
+            this.m_cancelled = false;
         }
 
         /**
@@ -121,6 +123,20 @@ public abstract class TracerModule {
             ed.setIcon(JOptionPane.ERROR_MESSAGE);
             ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
             ed.showDialog();
+        }
+
+        @Override
+        protected final void finish() {
+        }
+
+        @Override
+        protected final void cancel() {
+            m_cancelled = true;
+            // #### TODO: break the connection to remote server
+        }
+
+        protected boolean cancelled() {
+            return m_cancelled;
         }
     }
 }

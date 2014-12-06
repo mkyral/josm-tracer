@@ -498,4 +498,10 @@ public final class RuianRecord extends TracerRecord {
     return tags;
   }
 
+    @Override
+    public boolean noDataAvailable() {
+        return this.getBuildingID() < 0 || !super.hasOuter();
+    }
+
+
 }

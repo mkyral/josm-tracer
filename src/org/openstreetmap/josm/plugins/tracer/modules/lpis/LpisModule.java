@@ -121,7 +121,6 @@ public final class LpisModule extends TracerModule  {
         private final boolean m_performRetrace;
 
         private LpisRecord m_record;
-        private boolean m_cancelled;
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
@@ -131,7 +130,6 @@ public final class LpisModule extends TracerModule  {
         LpisTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (pos, ctrl, alt, shift);
             this.m_record = null;
-            this.m_cancelled = false;
 
             this.m_performClipping = !m_ctrl;
             this.m_performWayMerging = !m_ctrl;
@@ -159,11 +157,11 @@ public final class LpisModule extends TracerModule  {
                 return;
             }
 
-            if (m_cancelled)
+            if (cancelled ())
                 return;
 
             // No data available?
-            if (m_record.getLpisID() == -1) {
+            if (m_record.noDataAvailable()) {
                 TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
                 return;
             }
@@ -308,16 +306,6 @@ public final class LpisModule extends TracerModule  {
             } else {
                 m_postTraceNotifications.add(tr("Nothing changed."));
             }
-        }
-
-        @Override
-        protected void finish() {
-        }
-
-        @Override
-        protected void cancel() {
-            m_cancelled = true;
-            // #### TODO: break the connection to remote LPIS server
         }
 
         private void tagTracedObject (EdObject obj) {
