@@ -183,7 +183,7 @@ public final class RuianLandsModule extends TracerModule {
 
         @Override
         @SuppressWarnings({"CallToPrintStackTrace", "UseSpecificCatch", "BroadCatchBlock", "TooBroadCatch"})
-        protected void realRun() throws SAXException {
+        protected void realRun() {
 
             TracerPreferences pref = TracerPreferences.getInstance();
 

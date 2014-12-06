@@ -140,7 +140,7 @@ public final class LpisModule extends TracerModule  {
 
         @Override
         @SuppressWarnings({"CallToPrintStackTrace", "UseSpecificCatch", "BroadCatchBlock", "TooBroadCatch"})
-        protected void realRun() throws SAXException {
+        protected void realRun() {
 
             System.out.println("");
             System.out.println("-----------------");
