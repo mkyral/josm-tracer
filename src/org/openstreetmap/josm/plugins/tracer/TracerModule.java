@@ -19,51 +19,65 @@
 package org.openstreetmap.josm.plugins.tracer;
 
 import java.awt.Cursor;
-
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
-import org.openstreetmap.josm.gui.progress.ProgressMonitor;
+import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
 
 /**
- * The main interface for Tracer modules
+ * Base class for Tracer modules
  *
  */
 
-public interface TracerModule {
+public abstract class TracerModule {
     /**
      *  Function for initialization
      */
-    void init();
+    public abstract void init();
 
     /**
      *  Returns cursor image
      *  @return Module cursor image
      */
-    Cursor getCursor();
+    public abstract Cursor getCursor();
 
     /**
      *  Returns module name
      *  @return the module name
      */
-    String getName();
+    public abstract String getName();
 
     /**
      *  Returns whether is module enabled or not
      *  @return True/False
      */
-    boolean moduleIsEnabled();
+    public abstract boolean moduleIsEnabled();
 
     /**
      *  Sets module status to Enabled or Disabled
      *  @param enabled True/False
      */
-    void setModuleIsEnabled(boolean enabled);
+    public abstract void setModuleIsEnabled(boolean enabled);
 
     /**
      *  Returns a tracer task that extracts the object for given position
      *  @param pos position to trase
-     *  @param progressMonitor - the progressMonitor object
      */
-    PleaseWaitRunnable trace(LatLon pos, boolean ctrl, boolean alt, boolean shift);
+    public abstract PleaseWaitRunnable trace(LatLon pos, boolean ctrl, boolean alt, boolean shift);
+
+    public abstract class AbstractTracerTask extends PleaseWaitRunnable {
+
+        protected final LatLon m_pos;
+        protected final boolean m_ctrl;
+        protected final boolean m_alt;
+        protected final boolean m_shift;
+
+        protected AbstractTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
+            super (tr("Tracing"));
+            this.m_pos = pos;
+            this.m_ctrl = ctrl;
+            this.m_alt = alt;
+            this.m_shift = shift;
+        }
+    }
 }
 

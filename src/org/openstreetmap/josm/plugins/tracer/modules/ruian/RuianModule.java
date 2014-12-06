@@ -47,7 +47,7 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Pair;
 import org.xml.sax.SAXException;
 
-public class RuianModule implements TracerModule {
+public final class RuianModule extends TracerModule {
 
     protected boolean cancel;
     private boolean moduleEnabled;
@@ -199,12 +199,8 @@ public class RuianModule implements TracerModule {
     }
 
 
-    class RuianTracerTask extends PleaseWaitRunnable {
+    class RuianTracerTask extends AbstractTracerTask {
 
-        private final LatLon m_pos;
-        private final boolean m_ctrl;
-        private final boolean m_alt;
-        private final boolean m_shift;
         private final boolean m_performClipping;
         private final boolean m_performWayMerging;
         private final boolean m_performRetrace;
@@ -216,11 +212,7 @@ public class RuianModule implements TracerModule {
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
         RuianTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
-            super (tr("Tracing"));
-            this.m_pos = pos;
-            this.m_ctrl = ctrl;
-            this.m_alt = alt;
-            this.m_shift = shift;
+            super (pos, ctrl, alt ,shift);
             this.m_record = null;
             this.m_cancelled = false;
 

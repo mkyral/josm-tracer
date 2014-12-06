@@ -50,7 +50,7 @@ import org.openstreetmap.josm.tools.Pair;
 
 import org.xml.sax.SAXException;
 
-public class RuianLandsModule implements TracerModule {
+public final class RuianLandsModule extends TracerModule {
 
     protected boolean cancel;
     private boolean ctrl;
@@ -157,12 +157,8 @@ public class RuianLandsModule implements TracerModule {
         return new RuianLandsTracerTask (pos, ctrl, alt, shift);
     }
 
-    class RuianLandsTracerTask extends PleaseWaitRunnable {
+    class RuianLandsTracerTask extends AbstractTracerTask {
 
-        private final LatLon m_pos;
-        private final boolean m_ctrl;
-        private final boolean m_alt;
-        private final boolean m_shift;
         private final boolean m_performClipping;
         private final boolean m_performWayMerging;
         private final boolean m_performRetrace;
@@ -176,11 +172,7 @@ public class RuianLandsModule implements TracerModule {
         private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_tolerance);
 
         RuianLandsTracerTask  (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
-            super (tr("Tracing"));
-            this.m_pos = pos;
-            this.m_ctrl = ctrl;
-            this.m_alt = alt;
-            this.m_shift = shift;
+            super (pos, ctrl, alt, shift);
             this.m_record = null;
             this.m_cancelled = false;
 

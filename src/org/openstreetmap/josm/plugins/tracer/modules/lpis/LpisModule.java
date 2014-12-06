@@ -51,7 +51,7 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Pair;
 import org.xml.sax.SAXException;
 
-public class LpisModule implements TracerModule  {
+public final class LpisModule extends TracerModule  {
 
     private boolean moduleEnabled;
 
@@ -114,12 +114,8 @@ public class LpisModule implements TracerModule  {
         return new LpisTracerTask (pos, ctrl, alt, shift);
     }
 
-    class LpisTracerTask extends PleaseWaitRunnable {
+    class LpisTracerTask extends AbstractTracerTask {
 
-        private final LatLon m_pos;
-        private final boolean m_ctrl;
-        private final boolean m_alt;
-        private final boolean m_shift;
         private final boolean m_performClipping;
         private final boolean m_performWayMerging;
         private final boolean m_performRetrace;
@@ -133,11 +129,7 @@ public class LpisModule implements TracerModule  {
         private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_connectTolerance);
 
         LpisTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
-            super (tr("Tracing"));
-            this.m_pos = pos;
-            this.m_ctrl = ctrl;
-            this.m_alt = alt;
-            this.m_shift = shift;
+            super (pos, ctrl, alt, shift);
             this.m_record = null;
             this.m_cancelled = false;
 
