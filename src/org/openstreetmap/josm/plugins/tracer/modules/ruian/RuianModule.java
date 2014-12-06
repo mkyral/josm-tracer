@@ -47,10 +47,7 @@ public final class RuianModule extends TracerModule {
 
     private final String ruianUrl = "http://josm.poloha.net";
 
-    private static final double resurrectNodesDistanceMeters = 10.0;
-
     private static final double oversizeInDataBoundsMeters = 2.0;
-
 
     private static final GeomDeviation m_connectTolerance = new GeomDeviation (0.15, Math.PI / 50);
     private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.10, Math.PI / 50);
@@ -217,11 +214,9 @@ public final class RuianModule extends TracerModule {
         }
 
         @Override
-        protected void createTracedPolygonImpl(DataSet data_set) {
+        protected EdObject createTracedPolygonImpl(WayEditor editor) {
 
             System.out.println("  RUIAN keys: " + record().getKeys(m_alt));
-
-            WayEditor editor = new WayEditor (data_set);
 
             // Look for object to retrace
             EdObject retrace_object = null;
@@ -232,7 +227,7 @@ public final class RuianModule extends TracerModule {
 
                 if (ambiguous_retrace) {
                     postTraceNotifications().add(tr("Multiple existing Ruian building polygons found, retrace is not possible."));
-                    return;
+                    return null;
                 }
             }
 
@@ -244,7 +239,7 @@ public final class RuianModule extends TracerModule {
             // Everything is inside DataSource bounds?
             if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
                 wayIsOutsideDownloadedAreaDialog();
-                return;
+                return null;
             }
 
             // Connect to near building polygons
@@ -260,7 +255,7 @@ public final class RuianModule extends TracerModule {
             if (retrace_object != null) {
                 Pair<EdWay, EdMultipolygon> reobj = this.updateRetracedObjects(multipolygon == null ? outer_way : multipolygon, retrace_object);
                 if (reobj == null)
-                    return;
+                    return null;
                 outer_way = reobj.a;
                 multipolygon = reobj.b;
             }
@@ -296,29 +291,7 @@ public final class RuianModule extends TracerModule {
                 outer_way = merger.mergeWays(editor.getModifiedWays(), true, outer_way);
             }
 
-            List<Command> commands = editor.finalizeEdit(resurrectNodesDistanceMeters);
-
-            if (!commands.isEmpty()) {
-
-                long start_time = System.nanoTime();
-
-                Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
-
-                OsmPrimitive sel = (multipolygon != null ?
-                    multipolygon.finalMultipolygon() : outer_way.finalWay());
-
-                if (m_shift) {
-                    editor.getDataSet().addSelected(sel);
-                } else {
-                    editor.getDataSet().setSelected(sel);
-                }
-                long end_time = System.nanoTime();
-                long time_msecs = (end_time - start_time) / (1000*1000);
-                System.out.println("undoRedo time (ms): " + Long.toString(time_msecs));
-
-            } else {
-                postTraceNotifications().add(tr("Nothing changed."));
-            }
+            return multipolygon == null ? outer_way : multipolygon;
         }
 
         private void tagTracedObject (EdObject obj) {

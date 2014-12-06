@@ -23,16 +23,24 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JOptionPane;
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.command.Command;
+import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
 import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
 import org.openstreetmap.josm.gui.util.GuiHelper;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdMultipolygon;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdNode;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdObject;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdWay;
 import org.openstreetmap.josm.plugins.tracer.connectways.MultipolygonMatch;
+import org.openstreetmap.josm.plugins.tracer.connectways.WayEditor;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 /**
@@ -89,6 +97,8 @@ public abstract class TracerModule {
 
         private TracerRecord m_record;
         private boolean m_cancelled;
+
+        private static final double resurrectNodesDistanceMeters = 10.0;
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
@@ -224,7 +234,11 @@ public abstract class TracerModule {
                     DataSet data_set = Main.main.getCurrentDataSet();
                     data_set.beginUpdate();
                     try {
-                        createTracedPolygonImpl (data_set);
+                        WayEditor editor = new WayEditor (data_set);
+                        EdObject object = createTracedPolygonImpl (editor);
+                        if (object != null) {
+                            finalizeEdit(editor, object);
+                        }
                         postTraceNotifications().show();
                     }
                     catch (Exception e) {
@@ -238,10 +252,49 @@ public abstract class TracerModule {
                         System.out.println("Polygon time (ms): " + Long.toString(time_msecs));
                     }
                 }
+
+                private void finalizeEdit(WayEditor editor, EdObject object) {
+
+                    List<Command> commands = editor.finalizeEdit(getResurrectNodesDistanceMeters());
+
+                    if (commands.isEmpty()) {
+                        postTraceNotifications().add(tr("Nothing changed."));
+                        return;
+                    }
+
+                    long start_time = System.nanoTime();
+
+                    Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
+
+                    OsmPrimitive sel = null;
+
+                    if (object instanceof EdMultipolygon) {
+                        sel = ((EdMultipolygon)object).finalMultipolygon();
+                    }
+                    else if (object instanceof EdWay) {
+                        sel = ((EdWay)object).finalWay();
+                    }
+                    else {
+                        sel = ((EdNode)object).finalNode();
+                    }
+
+                    if (m_shift) {
+                        editor.getDataSet().addSelected(sel);
+                    } else {
+                        editor.getDataSet().setSelected(sel);
+                    }
+                    long end_time = System.nanoTime();
+                    long time_msecs = (end_time - start_time) / (1000 * 1000);
+                    System.out.println("undoRedo time (ms): " + Long.toString(time_msecs));
+                }
             });
         }
 
-        protected abstract void createTracedPolygonImpl(DataSet data_set);
+        protected double getResurrectNodesDistanceMeters() {
+            return resurrectNodesDistanceMeters;
+        }
+
+        protected abstract EdObject createTracedPolygonImpl(WayEditor editor);
         protected abstract TracerRecord downloadRecord(LatLon pos) throws Exception;
     }
 }

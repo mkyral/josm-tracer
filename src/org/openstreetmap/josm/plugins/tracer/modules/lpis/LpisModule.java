@@ -24,15 +24,10 @@ import java.util.*;
 import java.util.List;
 import java.util.Map;
 
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
-import org.openstreetmap.josm.command.Command;
-import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.DataSet;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
@@ -127,12 +122,10 @@ public final class LpisModule extends TracerModule  {
         }
 
         @Override
-        protected void createTracedPolygonImpl(DataSet data_set) {
+        protected EdObject createTracedPolygonImpl(WayEditor editor) {
 
             System.out.println("  LPIS ID: " + record().getLpisID());
             System.out.println("  LPIS usage: " + record().getUsage());
-
-            WayEditor editor = new WayEditor (data_set);
 
             // Look for object to retrace
             EdObject retrace_object = null;
@@ -143,14 +136,14 @@ public final class LpisModule extends TracerModule  {
 
                 if (ambiguous_retrace) {
                     postTraceNotifications().add(tr("Multiple existing LPIS polygons found, retrace is not possible."));
-                    return;
+                    return null;
                 }
             }
 
             // Create traced object
             Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
             if (trobj == null)
-                return;
+                return null;
             EdWay outer_way = trobj.a;
             EdMultipolygon multipolygon = trobj.b;
 
@@ -158,7 +151,7 @@ public final class LpisModule extends TracerModule  {
             if (retrace_object != null) {
                 if ((multipolygon != null) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
                     postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
-                    return;
+                    return null;
                 }
                 EdWay retrace_way = (EdWay)retrace_object;
                 retrace_way.setNodes(outer_way.getNodes());
@@ -168,7 +161,7 @@ public final class LpisModule extends TracerModule  {
             // Everything is inside DataSource bounds?
             if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
                 wayIsOutsideDownloadedAreaDialog();
-                return;
+                return null;
             }
 
             // Tag object
@@ -194,29 +187,7 @@ public final class LpisModule extends TracerModule  {
                 outer_way = merger.mergeWays(editor.getModifiedWays(), true, outer_way);
             }
 
-            List<Command> commands = editor.finalizeEdit();
-
-            if (!commands.isEmpty()) {
-
-                long start_time = System.nanoTime();
-
-                Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
-
-                OsmPrimitive sel = (multipolygon != null ?
-                    multipolygon.finalMultipolygon() : outer_way.finalWay());
-
-                if (m_shift) {
-                    editor.getDataSet().addSelected(sel);
-                } else {
-                    editor.getDataSet().setSelected(sel);
-                }
-                long end_time = System.nanoTime();
-                long time_msecs = (end_time - start_time) / (1000*1000);
-                System.out.println("undoRedo time (ms): " + Long.toString(time_msecs));
-
-            } else {
-                postTraceNotifications().add(tr("Nothing changed."));
-            }
+            return multipolygon == null ? outer_way : multipolygon;
         }
 
         private void tagTracedObject (EdObject obj) {
