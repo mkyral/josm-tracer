@@ -86,6 +86,11 @@ public class ClipAreas {
 
         AngPolygonClipper clipper = new AngPolygonClipper(m_editor, m_settings.clipperWayCleanupsTolerance(), m_settings.discardCutoffsPercent());
         clipper.polygonDifference(clip_way, subject_way);
+        if (clipper.changesOutsideDataBounds()) {
+            addPostTraceNotification(tr("Simple way {0} would be modified outside downloaded area, ignoring.", subject_way.getUniqueId()));
+            return;
+        }
+
         List<List<EdNode>> outers = clipper.outerPolygons();
         List<List<EdNode>> inners = clipper.innerPolygons();
 
@@ -131,6 +136,11 @@ public class ClipAreas {
 
         AngPolygonClipper clipper = new AngPolygonClipper(m_editor, m_settings.clipperWayCleanupsTolerance(), m_settings.discardCutoffsPercent());
         clipper.polygonDifference(clip_way, subject_mp);
+        if (clipper.changesOutsideDataBounds()) {
+            addPostTraceNotification(tr("Multipolygon {0} would be modified outside downloaded area, ignoring.", subject_mp.getUniqueId()));
+            return;
+        }
+
         List<List<EdNode>> unmapped_new_outers = new ArrayList<>(clipper.outerPolygons());
         List<List<EdNode>> unmapped_new_inners = new ArrayList<>(clipper.innerPolygons());
 

@@ -58,6 +58,8 @@ public class RuianLandsModule implements TracerModule {
     private boolean shift;
     private boolean moduleEnabled;
 
+    private static final double oversizeInDataBoundsMeters = 5.0;
+
     private static final String source = "cuzk:ruian";
     private static final String RuianLandsUrl = "http://josm.poloha.net";
 
@@ -363,6 +365,12 @@ public class RuianLandsModule implements TracerModule {
                 outer_way = retrace_way;
             }
 
+            // Everything is inside DataSource bounds?
+            if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
+                wayIsOutsideDownloadedAreaDialog();
+                return;
+            }
+
             // Tag object
             tagTracedObject(multipolygon == null ? outer_way : multipolygon);
 
@@ -567,6 +575,13 @@ public class RuianLandsModule implements TracerModule {
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, area_filter);
 
             obj.connectExistingTouchingNodes(m_tolerance, filter);
+        }
+
+        private boolean checkInsideDataSourceBounds(EdObject new_object, EdObject retrace_object) {
+            LatLonSize bounds_oversize = LatLonSize.get(new_object.getBBox(), oversizeInDataBoundsMeters);
+            if (retrace_object != null && !retrace_object.isInsideDataSourceBounds(bounds_oversize))
+                return false;
+            return new_object.isInsideDataSourceBounds(bounds_oversize);
         }
     }
 }

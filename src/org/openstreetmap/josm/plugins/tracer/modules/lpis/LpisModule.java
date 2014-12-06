@@ -55,6 +55,8 @@ public class LpisModule implements TracerModule  {
 
     private boolean moduleEnabled;
 
+    private static final double oversizeInDataBoundsMeters = 5.0;
+
     private static final String source = "lpis";
     private static final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
     private static final String reuseExistingLanduseNodePattern =
@@ -295,6 +297,12 @@ public class LpisModule implements TracerModule  {
                 outer_way = retrace_way;
             }
 
+            // Everything is inside DataSource bounds?
+            if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
+                wayIsOutsideDownloadedAreaDialog();
+                return;
+            }
+
             // Tag object
             tagTracedObject(multipolygon == null ? outer_way : multipolygon);
 
@@ -378,12 +386,6 @@ public class LpisModule implements TracerModule  {
             List<EdNode> outer_nodes = new ArrayList<> (outer_lls.size());
             for (int i = 0; i < outer_lls.size() - 1; i++) {
                 EdNode node = editor.newNode(outer_lls.get(i));
-
-                if (!editor.insideDataSourceBounds(node)) {
-                    wayIsOutsideDownloadedAreaDialog();
-                    return null;
-                }
-
                 outer_nodes.add(node);
             }
             if (outer_nodes.size() < 3)
@@ -468,6 +470,13 @@ public class LpisModule implements TracerModule  {
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
 
             obj.connectExistingTouchingNodes(m_connectTolerance, filter);
+        }
+
+        private boolean checkInsideDataSourceBounds(EdObject new_object, EdObject retrace_object) {
+            LatLonSize bounds_oversize = LatLonSize.get(new_object.getBBox(), oversizeInDataBoundsMeters);
+            if (retrace_object != null && !retrace_object.isInsideDataSourceBounds(bounds_oversize))
+                return false;
+            return new_object.isInsideDataSourceBounds(bounds_oversize);
         }
     }
 }

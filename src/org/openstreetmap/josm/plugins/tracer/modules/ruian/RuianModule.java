@@ -50,17 +50,17 @@ import org.xml.sax.SAXException;
 public class RuianModule implements TracerModule {
 
     protected boolean cancel;
-    private boolean ctrl;
-    private boolean alt;
-    private boolean shift;
     private boolean moduleEnabled;
 
-    private final String source = "cuzk:ruian"; // obsolete
     private final String ruianUrl = "http://josm.poloha.net";
 
     private static final double resurrectNodesDistanceMeters = 10.0;
 
+    private static final double oversizeInDataBoundsMeters = 2.0;
+
+
     private static final GeomDeviation m_connectTolerance = new GeomDeviation (0.15, Math.PI / 50);
+    private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.10, Math.PI / 50);
     private static final double m_discardCutoffsPercent = 15.0;
     private final ClipAreasSettings m_clipSettings =
         new ClipAreasSettings (m_connectTolerance, m_discardCutoffsPercent, new DiscardableBuildingCutoff());
@@ -153,7 +153,7 @@ public class RuianModule implements TracerModule {
         private final double m_reuseNearNodesToleranceNonRuian = 0.30;
         private final double m_reuseNearNodesToleranceRetracedNodes = 0.40;
 
-        private final double m_lookupDistanceLatLon;
+        private final double m_lookupDistanceMeters;
         private final ReuseNearNodeMethod m_reuseMethod = ReuseNearNodeMethod.moveAndReuseNode;
         private final AreaBoundaryWayNodePredicate m_ruianArea = new AreaBoundaryWayNodePredicate(m_ruianSourceMatch);
 
@@ -161,8 +161,7 @@ public class RuianModule implements TracerModule {
 
         ReuseBuildingNearNodes (Set<EdNode> retraced_nodes) {
             m_retracedNodes = retraced_nodes;
-            double max = Math.max (Math.max(m_reuseNearNodesToleranceDefault, m_reuseNearNodesToleranceRetracedNodes), m_reuseNearNodesToleranceNonRuian);
-            m_lookupDistanceLatLon = 1.2 * (max/GeomUtils.metersPerDegree);
+            m_lookupDistanceMeters = Math.max (Math.max(m_reuseNearNodesToleranceDefault, m_reuseNearNodesToleranceRetracedNodes), m_reuseNearNodesToleranceNonRuian);
         }
 
         @Override
@@ -194,8 +193,8 @@ public class RuianModule implements TracerModule {
         }
 
         @Override
-        public double lookupDistanceLatLon() {
-            return m_lookupDistanceLatLon;
+        public double lookupDistanceMeters() {
+            return m_lookupDistanceMeters;
         }
     }
 
@@ -370,16 +369,16 @@ public class RuianModule implements TracerModule {
                 }
             }
 
-            Set<EdNode> retrace_nodes = null;
-            if (retrace_object != null)
-                retrace_nodes = retrace_object.getAllNodes();
-
             // Create traced object
             Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
-            if (trobj == null)
-                return;
             EdWay outer_way = trobj.a;
             EdMultipolygon multipolygon = trobj.b;
+
+            // Everything is inside DataSource bounds?
+            if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
+                wayIsOutsideDownloadedAreaDialog();
+                return;
+            }
 
             // Connect to near building polygons
             // (must be done before retrace updates, we want to use as much old nodes as possible)
@@ -387,17 +386,22 @@ public class RuianModule implements TracerModule {
                 reuseExistingNodes(multipolygon == null ? outer_way : multipolygon);
             }
             else {
-                reuseNearNodes(multipolygon == null ? outer_way : multipolygon, retrace_nodes);
-                connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
+                reuseNearNodes(multipolygon == null ? outer_way : multipolygon, retrace_object);
             }
 
-            // Retrace simple ways - just use the old way
+            // Update geometries of retraced object
             if (retrace_object != null) {
                 Pair<EdWay, EdMultipolygon> reobj = this.updateRetracedObjects(multipolygon == null ? outer_way : multipolygon, retrace_object);
                 if (reobj == null)
                     return;
                 outer_way = reobj.a;
                 multipolygon = reobj.b;
+            }
+
+            // Connect to touching nodes of near buildings
+            // (must be done after retrace updates, we don't want to connect to the old polygon)
+            if (m_performNearBuildingsEdit) {
+                connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
             }
 
             // Tag object
@@ -412,7 +416,7 @@ public class RuianModule implements TracerModule {
 
                 // Remove needless nodes
                 AreaPredicate remove_filter = new AreaPredicate (m_clipBuildingWayMatch);
-                RemoveNeedlessNodes remover = new RemoveNeedlessNodes(remove_filter, 0.07, (Math.PI*2)/3);
+                RemoveNeedlessNodes remover = new RemoveNeedlessNodes(remove_filter, m_removeNeedlesNodesTolerance, (Math.PI*2)/3);
                 remover.removeNeedlessNodes(editor.getModifiedWays());
             }
 
@@ -483,7 +487,6 @@ public class RuianModule implements TracerModule {
               dAdjY = pref.getRuianAdjustPositionLon();
             }
 
-            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingBuildingNodeMatch);
             final double precision = GeomUtils.duplicateNodesPrecision();
 
             // Prepare outer way nodes
@@ -500,11 +503,6 @@ public class RuianModule implements TracerModule {
                 } else {
                   node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(outer_rls.get(i).lat()+dAdjX),
                                                    LatLon.roundToOsmPrecision(outer_rls.get(i).lon()+dAdjY)));
-                }
-
-                if (!editor.insideDataSourceBounds(node)) {
-                    wayIsOutsideDownloadedAreaDialog();
-                    return null;
                 }
 
                 if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, precision)) {
@@ -564,15 +562,9 @@ public class RuianModule implements TracerModule {
 
             String ruianref = Long.toString(m_record.getBuildingID());
 
-            // restrict to RUIAN areas only, yet ... #### improve in the future
             boolean multiple_areas = false;
             EdObject building_area = null;
             for (EdObject area: areas) {
-                  // Retrace all building if possible
-//                 String source = area.get("source");
-//                 if (source == null || !source.equals("cuzk:ruian"))
-//                     continue;
-
                 if (area instanceof EdWay)
                     System.out.println("Retrace candidate EdWay: " + Long.toString(area.getUniqueId()));
                 else if (area instanceof EdMultipolygon)
@@ -608,8 +600,11 @@ public class RuianModule implements TracerModule {
             obj.reuseExistingNodes (reuseExistingNodesFilter(obj));
         }
 
-        private void reuseNearNodes(EdObject obj, Set<EdNode> retraced_nodes) {
-            obj.reuseNearNodes (new ReuseBuildingNearNodes(retraced_nodes), reuseExistingNodesFilter(obj));
+        private void reuseNearNodes(EdObject obj, EdObject retrace_object) {
+            Set<EdNode> retrace_nodes = null;
+            if (retrace_object != null)
+                retrace_nodes = retrace_object.getAllNodes();
+            obj.reuseNearNodes (new ReuseBuildingNearNodes(retrace_nodes), reuseExistingNodesFilter(obj));
         }
 
         private IEdNodePredicate reuseExistingNodesFilter(EdObject obj) {
@@ -718,6 +713,13 @@ public class RuianModule implements TracerModule {
                 else
                     retrace_multipolygon.removeInnerWay(retraces.get(i));
             }
+        }
+
+        private boolean checkInsideDataSourceBounds(EdObject new_object, EdObject retrace_object) {
+            LatLonSize bounds_oversize = LatLonSize.get(new_object.getBBox(), oversizeInDataBoundsMeters);
+            if (retrace_object != null && !retrace_object.isInsideDataSourceBounds(bounds_oversize))
+                return false;
+            return new_object.isInsideDataSourceBounds(bounds_oversize);
         }
     }
 }

@@ -22,8 +22,11 @@ package org.openstreetmap.josm.plugins.tracer.connectways;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.projection.Projections;
@@ -45,6 +48,8 @@ public class AngPolygonClipper {
     private final double m_DiscardCutoffsPercent;
     private double m_DiscardedPercent;
 
+    private Set<EdNode> m_subjectNodes;
+
     private List<List<EdNode>> m_outers;
     private List<List<EdNode>> m_inners;
 
@@ -62,6 +67,7 @@ public class AngPolygonClipper {
         m_outers = null;
         m_inners = null;
         m_nodesMap = null;
+        m_subjectNodes = null;
     }
 
     public List<List<EdNode>> outerPolygons() {
@@ -87,6 +93,7 @@ public class AngPolygonClipper {
         m_outers = new ArrayList<>();
         m_inners = new ArrayList<>();
         m_nodesMap = new HashMap<>();
+        m_subjectNodes = new HashSet<>();
 
         m_DiscardedPercent = 0.0;
 
@@ -121,6 +128,47 @@ public class AngPolygonClipper {
         m_nodesMap = null;
         m_outers = Collections.unmodifiableList(m_outers);
         m_inners = Collections.unmodifiableList(m_inners);
+    }
+
+    public boolean changesOutsideDataBounds() {
+        if (m_subjectNodes == null || m_outers == null || m_inners == null)
+            throw new IllegalStateException();
+
+        List<Bounds> bounds = m_editor.getDataSet().getDataSourceBounds();
+        Set<EdNode> cur_nodes = new HashSet<>();
+
+        // Test new nodes not occurring in subject nodes
+        for (List<EdNode> list: m_outers) {
+            for (EdNode n: list) {
+                if (!m_subjectNodes.contains(n))
+                    if (!n.isInsideBounds(bounds, LatLonSize.Zero)) {
+                        System.out.println("Clip adds new outer node outside downloaded area: " + Long.toString(n.getUniqueId()) + ", " + n.getCoor().toDisplayString());
+                        return true;
+                    }
+                cur_nodes.add(n);
+            }
+        }
+        for (List<EdNode> list: m_inners) {
+            for (EdNode n: list) {
+                if (!m_subjectNodes.contains(n))
+                    if (!n.isInsideBounds(bounds, LatLonSize.Zero)) {
+                        System.out.println("Clip adds new inner node outside downloaded area: " + Long.toString(n.getUniqueId()) + ", " + n.getCoor().toDisplayString());
+                        return true;
+                    }
+                cur_nodes.add(n);
+            }
+        }
+
+        // Test removed subject nodes not occurring in current nodes
+        for (EdNode node: m_subjectNodes) {
+            if (!cur_nodes.contains(node))
+                if (!node.isInsideBounds(bounds, LatLonSize.Zero)) {
+                    System.out.println("Clip removes node outside downloaded area: " + Long.toString(node.getUniqueId()) + ", " + node.getCoor().toDisplayString());
+                    return true;
+                }
+        }
+
+        return false;
     }
 
     private void processPolyNode(PolyNode pn, List<List<EdNode>> aouters, List<List<EdNode>> ainners, double subj_area) {
@@ -284,6 +332,7 @@ public class AngPolygonClipper {
         long y = (long)(en.getY() * fixedPointScale);
         Point2d pt = new Point2d(x, y);
         m_nodesMap.put(node.getCoor().getRoundedToOsmPrecision(), node);
+        m_subjectNodes.add(node);
         return pt;
     }
 

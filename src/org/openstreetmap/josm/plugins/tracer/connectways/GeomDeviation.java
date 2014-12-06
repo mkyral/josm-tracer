@@ -21,7 +21,6 @@ package org.openstreetmap.josm.plugins.tracer.connectways;
 
 public class GeomDeviation {
     private final double m_distanceMeters;
-    private final double m_distanceLatLon;
     private final double m_angleRad;
 
     public GeomDeviation (double distance_meters, double angle_rad) {
@@ -32,15 +31,10 @@ public class GeomDeviation {
 
         m_distanceMeters = distance_meters;
         m_angleRad = angle_rad;
-        m_distanceLatLon = m_distanceMeters/GeomUtils.metersPerDegree;
     }
 
     public double distanceMeters() {
         return m_distanceMeters;
-    }
-
-    public double distanceLatLon() {
-        return m_distanceLatLon;
     }
 
     public double angleRad() {

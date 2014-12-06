@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
@@ -286,6 +287,16 @@ public class EdWay extends EdObject {
         return new HashSet<>(m_nodes);
     }
 
+    @Override
+    public boolean isInsideBounds(List<Bounds> bounds, LatLonSize oversize) {
+        checkEditable();
+        for (EdNode n: m_nodes) {
+            if (!n.isInsideBounds(bounds, oversize))
+                return false;
+        }
+        return true;
+    }
+
     class NearNodesPair implements Comparable<NearNodesPair> {
         public final int src_index;
         public final EdNode dst;
@@ -311,6 +322,9 @@ public class EdWay extends EdObject {
         if (filter == null)
             throw new IllegalArgumentException(tr("No filter specified"));
 
+        BBox way_box = this.getBBox();
+        final LatLonSize oversize = LatLonSize.get (way_box, reuse.lookupDistanceMeters() * 1.1);
+
         int mynodes = m_nodes.size();
         boolean closed = this.isClosed();
         if (closed)
@@ -320,7 +334,7 @@ public class EdWay extends EdObject {
         PriorityQueue<NearNodesPair> queue = new PriorityQueue<>();
         for (int i = 0; i < mynodes; i++) {
             final EdNode x = m_nodes.get(i);
-            BBox box = x.getBBox(reuse.lookupDistanceLatLon());
+            BBox box = x.getBBox(oversize);
             Set<EdNode> tn = getEditor().findExistingNodesInBBox(box, filter);
             for(EdNode node: tn) {
                 if (x == node)
@@ -380,11 +394,13 @@ public class EdWay extends EdObject {
 
         Map<EdNode, Pair<Double, Integer>> nodes_map = new HashMap<>();
 
+        final LatLonSize oversize = LatLonSize.get (this.getBBox(), tolerance.distanceMeters() * 1.1);
+
         // get every node touching the way, assign it to closest way segment
         for (int i = 0; i < m_nodes.size() - 1; i++) {
             final EdNode x = m_nodes.get(i);
             final EdNode y = m_nodes.get(i+1);
-            Set<EdNode> tn = getEditor().findExistingNodesTouchingWaySegment(tolerance, x, y, filter);
+            Set<EdNode> tn = getEditor().findExistingNodesTouchingWaySegment(tolerance, oversize, x, y, filter);
             for (EdNode node: tn) {
                 Pair<Double, Integer> best_segment = nodes_map.get(node);
                 double dist = GeomUtils.distanceToSegmentMeters(node, x, y);
@@ -422,12 +438,14 @@ public class EdWay extends EdObject {
         if (this == other)
             return false;
 
-        final BBox way_bbox = this.getBBox(tolerance.distanceLatLon());
+        BBox way_box = this.getBBox();
+        final LatLonSize oversize = LatLonSize.get (way_box, tolerance.distanceMeters() * 1.1);
+        BBoxUtils.extendBBox(way_box, oversize);
 
         // filter nodes
         Set<EdNode> other_nodes = new HashSet<>();
         for (EdNode node: other.m_nodes) {
-            if (!way_bbox.bounds(node.getCoor()))
+            if (!way_box.bounds(node.getCoor()))
                 continue;
             if (filter.evaluate(node))
                other_nodes.add(node);
@@ -445,7 +463,7 @@ public class EdWay extends EdObject {
 
             BBox seg_bbox = new BBox(x.currentNodeUnsafe());
             seg_bbox.add(y.getCoor());
-            BBoxUtils.extendBBox(seg_bbox, tolerance.distanceLatLon());
+            BBoxUtils.extendBBox(seg_bbox, oversize);
 
             for (EdNode node: other_nodes) {
                 if (!seg_bbox.bounds(node.getCoor()))

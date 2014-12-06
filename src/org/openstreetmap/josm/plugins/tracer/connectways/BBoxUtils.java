@@ -23,8 +23,8 @@ import org.openstreetmap.josm.data.osm.BBox;
 
 public abstract class BBoxUtils {
 
-    public static void extendBBox(BBox box, double oversize) {
-        box.add(box.getTopLeftLon() - oversize, box.getBottomRightLat() - oversize);
-        box.add(box.getBottomRightLon() + oversize, box.getTopLeftLat() + oversize);
+    public static void extendBBox(BBox box, LatLonSize oversize) {
+        box.add(box.getTopLeftLon() - oversize.lonSize(), box.getBottomRightLat() - oversize.latSize());
+        box.add(box.getBottomRightLon() + oversize.lonSize(), box.getTopLeftLat() + oversize.latSize());
     }
 }
