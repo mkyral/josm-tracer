@@ -122,8 +122,6 @@ public final class LpisModule extends TracerModule  {
 
         private LpisRecord m_xrecord;
 
-        private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
-
         private final GeomDeviation m_connectTolerance = new GeomDeviation(0.2, Math.PI / 3);
         private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_connectTolerance);
 
@@ -204,7 +202,7 @@ public final class LpisModule extends TracerModule  {
                     data_set.beginUpdate();
                     try {
                         createTracedPolygonImpl (data_set);
-                        m_postTraceNotifications.show();
+                        postTraceNotifications().show();
                     }
                     catch (Exception e) {
                         e.printStackTrace();
@@ -235,7 +233,7 @@ public final class LpisModule extends TracerModule  {
                 boolean ambiguous_retrace = repl.b;
 
                 if (ambiguous_retrace) {
-                    m_postTraceNotifications.add(tr("Multiple existing LPIS polygons found, retrace is not possible."));
+                    postTraceNotifications().add(tr("Multiple existing LPIS polygons found, retrace is not possible."));
                     return;
                 }
             }
@@ -250,7 +248,7 @@ public final class LpisModule extends TracerModule  {
             // Retrace simple ways - just use the old way
             if (retrace_object != null) {
                 if ((multipolygon != null) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
-                    m_postTraceNotifications.add(tr("Multipolygon retrace is not supported yet."));
+                    postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
                     return;
                 }
                 EdWay retrace_way = (EdWay)retrace_object;
@@ -274,7 +272,7 @@ public final class LpisModule extends TracerModule  {
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipLanduseWayMatch);
-                ClipAreas clip = new ClipAreas(editor, m_clipSettings, m_postTraceNotifications);
+                ClipAreas clip = new ClipAreas(editor, m_clipSettings, postTraceNotifications());
                 clip.clipAreas(outer_way, filter);
             }
 
@@ -308,7 +306,7 @@ public final class LpisModule extends TracerModule  {
                 System.out.println("undoRedo time (ms): " + Long.toString(time_msecs));
 
             } else {
-                m_postTraceNotifications.add(tr("Nothing changed."));
+                postTraceNotifications().add(tr("Nothing changed."));
             }
         }
 

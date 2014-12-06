@@ -82,6 +82,8 @@ public abstract class TracerModule {
         protected final boolean m_shift;
         private boolean m_cancelled;
 
+        private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
+
         protected AbstractTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (tr("Tracing"));
             this.m_pos = pos;
@@ -137,6 +139,10 @@ public abstract class TracerModule {
 
         protected boolean cancelled() {
             return m_cancelled;
+        }
+
+        protected PostTraceNotifications postTraceNotifications() {
+            return m_postTraceNotifications;
         }
     }
 }

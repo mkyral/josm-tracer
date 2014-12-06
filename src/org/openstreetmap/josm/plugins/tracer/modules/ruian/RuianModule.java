@@ -208,8 +208,6 @@ public final class RuianModule extends TracerModule {
 
         private RuianRecord m_xrecord;
 
-        private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
-
         RuianTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (pos, ctrl, alt ,shift);
             this.m_xrecord = null;
@@ -295,7 +293,7 @@ public final class RuianModule extends TracerModule {
                     data_set.beginUpdate();
                     try {
                         createTracedPolygonImpl (data_set);
-                        m_postTraceNotifications.show();
+                        postTraceNotifications().show();
                     }
                     catch (Exception e) {
                         e.printStackTrace();
@@ -325,7 +323,7 @@ public final class RuianModule extends TracerModule {
                 boolean ambiguous_retrace = repl.b;
 
                 if (ambiguous_retrace) {
-                    m_postTraceNotifications.add(tr("Multiple existing Ruian building polygons found, retrace is not possible."));
+                    postTraceNotifications().add(tr("Multiple existing Ruian building polygons found, retrace is not possible."));
                     return;
                 }
             }
@@ -372,7 +370,7 @@ public final class RuianModule extends TracerModule {
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipBuildingWayMatch);
-                ClipAreas clip = new ClipAreas(editor, m_clipSettings, m_postTraceNotifications);
+                ClipAreas clip = new ClipAreas(editor, m_clipSettings, postTraceNotifications());
                 clip.clipAreas(outer_way, filter);
 
                 // Remove needless nodes
@@ -411,7 +409,7 @@ public final class RuianModule extends TracerModule {
                 System.out.println("undoRedo time (ms): " + Long.toString(time_msecs));
 
             } else {
-                m_postTraceNotifications.add(tr("Nothing changed."));
+                postTraceNotifications().add(tr("Nothing changed."));
             }
         }
 
@@ -604,7 +602,7 @@ public final class RuianModule extends TracerModule {
                     return res;
             }
 
-            m_postTraceNotifications.add(tr("This kind of multipolygon retrace is not supported."));
+            postTraceNotifications().add(tr("This kind of multipolygon retrace is not supported."));
             return null;
         }
 
