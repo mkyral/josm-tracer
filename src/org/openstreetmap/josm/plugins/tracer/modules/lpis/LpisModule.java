@@ -44,6 +44,7 @@ public final class LpisModule extends TracerModule  {
     private boolean moduleEnabled;
 
     private static final double oversizeInDataBoundsMeters = 5.0;
+    private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.2, Math.PI / 3);
 
     private static final String source = "lpis";
     private static final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
@@ -102,9 +103,50 @@ public final class LpisModule extends TracerModule  {
         return new LpisTracerTask (pos, ctrl, alt, shift);
     }
 
+    class ReuseLanduseNearNodes implements IReuseNearNodePredicate {
+
+        // distance tolerancies are in meters
+        private final double m_reuseNearNodesToleranceDefault = m_connectTolerance.distanceMeters();
+        private final double m_reuseNearNodesToleranceRetracedNodes = 0.40;
+
+        private final double m_lookupDistanceMeters;
+
+        private final Set<EdNode> m_retracedNodes;
+
+        ReuseLanduseNearNodes (Set<EdNode> retraced_nodes) {
+            m_retracedNodes = retraced_nodes;
+            m_lookupDistanceMeters = Math.max(m_reuseNearNodesToleranceDefault, m_reuseNearNodesToleranceRetracedNodes);
+        }
+
+        @Override
+        public ReuseNearNodeMethod reuseNearNode(EdNode node, EdNode near_node, double distance_meters) {
+
+            boolean retraced = m_retracedNodes != null && m_retracedNodes.contains(near_node);
+
+            // be more tolerant for untagged nodes occurring in retraced ways, feel free to move them
+            if (retraced) {
+                System.out.println("RNN: retraced, dist=" + Double.toString(distance_meters));
+                if (distance_meters <= m_reuseNearNodesToleranceRetracedNodes)
+                    if (!near_node.isTagged())
+                        return ReuseNearNodeMethod.moveAndReuseNode;
+            }
+
+            // use default tolerance for others, don't move them, just reuse
+            System.out.println("RNN: default, dist=" + Double.toString(distance_meters));
+            if (distance_meters <= m_reuseNearNodesToleranceDefault)
+                return ReuseNearNodeMethod.reuseNode;
+
+            return ReuseNearNodeMethod.dontReuseNode;
+        }
+
+        @Override
+        public double lookupDistanceMeters() {
+            return m_lookupDistanceMeters;
+        }
+    }
+
     class LpisTracerTask extends AbstractTracerTask {
 
-        private final GeomDeviation m_connectTolerance = new GeomDeviation(0.2, Math.PI / 3);
         private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_connectTolerance);
 
         LpisTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
@@ -147,6 +189,21 @@ public final class LpisModule extends TracerModule  {
             EdWay outer_way = trobj.a;
             EdMultipolygon multipolygon = trobj.b;
 
+            // Everything is inside DataSource bounds?
+            if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
+                wayIsOutsideDownloadedAreaDialog();
+                return null;
+            }
+
+            // Connect nodes to near landuse nodes
+            // (must be done before retrace updates, we want to use as much old nodes as possible)
+            if (!m_performClipping) {
+                reuseExistingNodes(multipolygon == null ? outer_way : multipolygon);
+            }
+            else {
+                reuseNearNodes(multipolygon == null ? outer_way : multipolygon, retrace_object);
+            }
+
             // Retrace simple ways - just use the old way
             if (retrace_object != null) {
                 if ((multipolygon != null) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
@@ -156,12 +213,6 @@ public final class LpisModule extends TracerModule  {
                 EdWay retrace_way = (EdWay)retrace_object;
                 retrace_way.setNodes(outer_way.getNodes());
                 outer_way = retrace_way;
-            }
-
-            // Everything is inside DataSource bounds?
-            if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
-                wayIsOutsideDownloadedAreaDialog();
-                return null;
             }
 
             // Tag object
@@ -208,8 +259,6 @@ public final class LpisModule extends TracerModule  {
 
         private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
 
-            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
-
             // Prepare outer way nodes
             List<LatLon> outer_lls = record().getOuter();
             List<EdNode> outer_nodes = new ArrayList<> (outer_lls.size());
@@ -223,7 +272,6 @@ public final class LpisModule extends TracerModule  {
             // Close & create outer way
             outer_nodes.add(outer_nodes.get(0));
             EdWay outer_way = editor.newWay(outer_nodes);
-            outer_way.reuseExistingNodes(reuse_filter);
 
             // Simple way?
             if (!record().hasInners())
@@ -244,8 +292,6 @@ public final class LpisModule extends TracerModule  {
                     throw new AssertionError(tr("Inner way consists of less than 3 nodes"));
                 inner_nodes.add(inner_nodes.get(0));
                 EdWay way = editor.newWay(inner_nodes);
-                way.reuseExistingNodes(reuse_filter);
-
                 multipolygon.addInnerWay(way);
             }
 
@@ -299,6 +345,24 @@ public final class LpisModule extends TracerModule  {
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
 
             obj.connectExistingTouchingNodes(m_connectTolerance, filter);
+        }
+
+        private void reuseExistingNodes(EdObject obj) {
+            obj.reuseExistingNodes (reuseExistingNodesFilter(obj));
+        }
+
+        private void reuseNearNodes(EdObject obj, EdObject retrace_object) {
+            Set<EdNode> retrace_nodes = null;
+            if (retrace_object != null)
+                retrace_nodes = retrace_object.getAllNodes();
+            obj.reuseNearNodes (new ReuseLanduseNearNodes(retrace_nodes), reuseExistingNodesFilter(obj));
+        }
+
+        private IEdNodePredicate reuseExistingNodesFilter(EdObject obj) {
+            // Setup filters - include landuse nodes only, exclude all nodes of the object itself
+            IEdNodePredicate nodes_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
+            IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(obj);
+            return new EdNodeLogicalAndPredicate (exclude_my_nodes, nodes_filter);
         }
 
         private boolean checkInsideDataSourceBounds(EdObject new_object, EdObject retrace_object) {
