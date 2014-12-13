@@ -28,6 +28,7 @@ import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
@@ -44,7 +45,8 @@ public final class LpisModule extends TracerModule  {
     private boolean moduleEnabled;
 
     private static final double oversizeInDataBoundsMeters = 5.0;
-    private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.2, Math.PI / 3);
+    private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.20, Math.PI / 3);
+    private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.20, Math.PI / 40);
 
     private static final String source = "lpis";
     private static final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
@@ -227,6 +229,13 @@ public final class LpisModule extends TracerModule  {
                 AreaPredicate filter = new AreaPredicate (m_clipLanduseWayMatch);
                 ClipAreas clip = new ClipAreas(editor, m_clipSettings, postTraceNotifications());
                 clip.clipAreas(outer_way, filter);
+
+                // Remove needless nodes
+                AreaPredicate remove_filter = new AreaPredicate (m_clipLanduseWayMatch);
+                BBox remove_bbox = (multipolygon == null ? outer_way : multipolygon).getBBox();
+                BBoxUtils.extendBBox(remove_bbox, LatLonSize.get(remove_bbox, oversizeInDataBoundsMeters));
+                RemoveNeedlessNodes remover = new RemoveNeedlessNodes(remove_filter, m_removeNeedlesNodesTolerance, (Math.PI*2)/3, remove_bbox);
+                remover.removeNeedlessNodes(editor.getModifiedWays());
             }
 
             // Merge duplicate ways
