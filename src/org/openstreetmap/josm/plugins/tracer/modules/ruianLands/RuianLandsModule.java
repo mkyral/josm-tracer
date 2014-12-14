@@ -283,12 +283,9 @@ public final class RuianLandsModule extends TracerModule {
               reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
             }
 
-            final double precision = GeomUtils.duplicateNodesPrecision();
-
             // Prepare outer way nodes
             List<EdNode> outer_nodes = new ArrayList<> ();
             List<LatLon> outer = record().getOuter();
-            LatLon prev_coor = null;
             // m_record.getCoorCount() - 1 - omit last node
             for (int i = 0; i < outer.size() - 1; i++) {
                 EdNode node = editor.newNode(outer.get(i));
@@ -298,10 +295,7 @@ public final class RuianLandsModule extends TracerModule {
                     return null;
                 }
 
-                if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, precision)) {
-                    outer_nodes.add(node);
-                    prev_coor = node.getCoor();
-                }
+                outer_nodes.add(node);
             }
             if (outer_nodes.size() < 3)
                 throw new AssertionError(tr("Outer way consists of less than 3 nodes"));

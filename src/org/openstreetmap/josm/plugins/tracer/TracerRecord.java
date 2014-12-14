@@ -23,15 +23,21 @@ import java.util.Collections;
 import java.util.List;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.plugins.tracer.connectways.GeomUtils;
 
 public abstract class TracerRecord {
 
     private List<LatLon> m_outer;
     private List<List<LatLon>> m_inners;
 
-    public TracerRecord () {
+    private final double m_adjustLat;
+    private final double m_adjustLon;
+
+    public TracerRecord (double adjlat, double adjlon) {
         m_outer = null;
         m_inners = new ArrayList<>();
+        m_adjustLat = adjlat;
+        m_adjustLon = adjlon;
     }
 
     protected void init() {
@@ -91,12 +97,36 @@ public abstract class TracerRecord {
     }
 
     protected final void setOuter(List<LatLon> outer) {
-        m_outer = outer;
+        m_outer = adjustWay (outer);
     }
 
     protected final void addInner(List<LatLon> inner) {
-        m_inners.add(inner);
+        m_inners.add(adjustWay (inner));
     }
 
     public abstract boolean hasData();
+
+    private List<LatLon> adjustWay(List<LatLon> way) {
+        List<LatLon> list = new ArrayList<>(way.size());
+        boolean adj = m_adjustLat != 0.0 && m_adjustLon != 0;
+        final double precision = GeomUtils.duplicateNodesPrecision();
+        LatLon prev_coor = null;
+
+        for (LatLon ll: way) {
+            // apply coordinate corrections
+            LatLon latlon = (!adj) ?
+                ll.getRoundedToOsmPrecision() :
+                new LatLon(
+                    LatLon.roundToOsmPrecision(ll.lat() + m_adjustLat),
+                    LatLon.roundToOsmPrecision(ll.lon() + m_adjustLon));
+
+            // avoid duplicate nodes
+            if (GeomUtils.duplicateNodes(latlon, prev_coor, precision))
+                continue;
+
+            list.add(latlon);
+            prev_coor = latlon;
+        }
+        return list;
+    }
 }

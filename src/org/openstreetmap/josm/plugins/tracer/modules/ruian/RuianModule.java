@@ -312,20 +312,12 @@ public final class RuianModule extends TracerModule {
 
         private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
 
-            final double precision = GeomUtils.duplicateNodesPrecision();
-
             // Prepare outer way nodes
-            LatLon prev_coor = null;
             List<LatLon> outer_rls = record().getOuter();
             List<EdNode> outer_nodes = new ArrayList<> (outer_rls.size());
-            // m_record.getCoorCount() - 1 - omit last node
             for (int i = 0; i < outer_rls.size() - 1; i++) {
                 EdNode node = editor.newNode(outer_rls.get(i));
-
-                if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, precision)) {
-                    outer_nodes.add(node);
-                    prev_coor = node.getCoor();
-                }
+                outer_nodes.add(node);
             }
             if (outer_nodes.size() < 3)
                 throw new AssertionError(tr("Outer way consists of less than 3 nodes"));
@@ -339,19 +331,13 @@ public final class RuianModule extends TracerModule {
                 return new Pair<>(outer_way, null);
 
             // Create multipolygon
-            prev_coor = null;
             EdMultipolygon multipolygon = editor.newMultipolygon();
             multipolygon.addOuterWay(outer_way);
 
             for (List<LatLon> inner_rls: record().getInners()) {
                 List<EdNode> inner_nodes = new ArrayList<>(inner_rls.size());
                 for (int i = 0; i < inner_rls.size() - 1; i++) {
-                    EdNode node = editor.newNode(inner_rls.get(i));
-
-                    if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, precision)) {
-                        inner_nodes.add(node);
-                        prev_coor = node.getCoor();
-                    }
+                    inner_nodes.add(editor.newNode(inner_rls.get(i)));
                 }
 
                 // Close & create inner way
@@ -359,7 +345,6 @@ public final class RuianModule extends TracerModule {
                     throw new AssertionError(tr("Inner way consists of less than 3 nodes"));
                 inner_nodes.add(inner_nodes.get(0));
                 EdWay way = editor.newWay(inner_nodes);
-
                 multipolygon.addInnerWay(way);
             }
 
