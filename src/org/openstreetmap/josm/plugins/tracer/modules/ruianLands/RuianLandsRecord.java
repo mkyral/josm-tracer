@@ -58,8 +58,9 @@ public final class RuianLandsRecord extends TracerRecord {
     * Constructor
     *
     */
-    public void RuianLandsRecord () {
-      init();
+    public RuianLandsRecord (double adjlat, double adjlon) {
+        super(adjlat, adjlon);
+        init();
     }
 
     /**

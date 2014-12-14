@@ -159,8 +159,16 @@ public final class RuianLandsModule extends TracerModule {
             String sUrl = RuianLandsUrl;
             if (pref.isCustomRuainUrlEnabled())
               sUrl = pref.getCustomRuainUrl();
+
+            // Get coordinate corrections
+            double adjlat = 0, adjlon = 0;
+            if (pref.isRuianAdjustPositionEnabled()) {
+              adjlat = pref.getRuianAdjustPositionLat();
+              adjlon = pref.getRuianAdjustPositionLon();
+            }
+
             RuianLandsServer server = new RuianLandsServer();
-            return server.trace(m_pos, sUrl);
+            return server.trace(m_pos, sUrl, adjlat, adjlon);
         }
 
         @Override
@@ -266,15 +274,6 @@ public final class RuianLandsModule extends TracerModule {
 
             IEdNodePredicate reuse_filter;
 
-            TracerPreferences pref = TracerPreferences.getInstance();
-
-            double dAdjX = 0, dAdjY = 0;
-
-            if (pref.isRuianAdjustPositionEnabled()) {
-              dAdjX = pref.getRuianAdjustPositionLat();
-              dAdjY = pref.getRuianAdjustPositionLon();
-            }
-
             // Determine type of the objects
             if (record().isBuilding()) {
               reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingBuildingNodeMatch);
@@ -292,15 +291,7 @@ public final class RuianLandsModule extends TracerModule {
             LatLon prev_coor = null;
             // m_record.getCoorCount() - 1 - omit last node
             for (int i = 0; i < outer.size() - 1; i++) {
-                EdNode node;
-
-                // Apply corrections to node coordinates
-                if (!pref.isRuianAdjustPositionEnabled()) {
-                  node = editor.newNode(outer.get(i));
-                } else {
-                  node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(outer.get(i).lat()+dAdjX),
-                                                   LatLon.roundToOsmPrecision(outer.get(i).lon()+dAdjY)));
-                }
+                EdNode node = editor.newNode(outer.get(i));
 
                 if (!editor.insideDataSourceBounds(node)) {
                     wayIsOutsideDownloadedAreaDialog();

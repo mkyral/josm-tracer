@@ -67,7 +67,7 @@ public class LpisServer {
      * @throws org.xml.sax.SAXException
      * @throws javax.xml.xpath.XPathExpressionException
      */
-    public LpisRecord getElementData(LatLon pos, String url) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+    public LpisRecord getElementData(LatLon pos, String url, double adjlat, double adjlon) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
         krovak k = new krovak();
         xyCoor xy = k.LatLon2krovak(pos);
 
@@ -79,7 +79,7 @@ public class LpisServer {
         System.out.println("Request: " + request);
         String content = callServer(request);
         System.out.println("Reply: " + content);
-        LpisRecord lpis = new LpisRecord();
+        LpisRecord lpis = new LpisRecord(adjlat, adjlon);
         lpis.parseXML("basic", content);
 
         // get additional information for given ID

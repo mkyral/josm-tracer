@@ -53,8 +53,9 @@ public final class RuianRecord extends TracerRecord {
     * Constructor
     *
     */
-    public void RuianRecord () {
-      this.init();
+    public RuianRecord (double adjlat, double adjlon) {
+        super (adjlat, adjlon);
+        this.init();
     }
 
     /**

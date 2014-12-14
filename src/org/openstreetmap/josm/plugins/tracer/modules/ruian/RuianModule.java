@@ -205,8 +205,16 @@ public final class RuianModule extends TracerModule {
             String sUrl = ruianUrl;
             if (pref.isCustomRuainUrlEnabled())
               sUrl = pref.getCustomRuainUrl();
+
+            // Get coordinate corrections
+            double adjlat = 0, adjlon = 0;
+            if (pref.isRuianAdjustPositionEnabled()) {
+              adjlat = pref.getRuianAdjustPositionLat();
+              adjlon = pref.getRuianAdjustPositionLon();
+            }
+
             RuianServer server = new RuianServer();
-            return server.trace(m_pos, sUrl);
+            return server.trace(m_pos, sUrl, adjlat, adjlon);
         }
 
         @Override
@@ -304,15 +312,6 @@ public final class RuianModule extends TracerModule {
 
         private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
 
-            TracerPreferences pref = TracerPreferences.getInstance();
-
-            double dAdjX = 0, dAdjY = 0;
-
-            if (pref.isRuianAdjustPositionEnabled()) {
-              dAdjX = pref.getRuianAdjustPositionLat();
-              dAdjY = pref.getRuianAdjustPositionLon();
-            }
-
             final double precision = GeomUtils.duplicateNodesPrecision();
 
             // Prepare outer way nodes
@@ -321,15 +320,7 @@ public final class RuianModule extends TracerModule {
             List<EdNode> outer_nodes = new ArrayList<> (outer_rls.size());
             // m_record.getCoorCount() - 1 - omit last node
             for (int i = 0; i < outer_rls.size() - 1; i++) {
-                EdNode node;
-
-                // Apply corrections to node coordinates
-                if (!pref.isRuianAdjustPositionEnabled()) {
-                  node = editor.newNode(outer_rls.get(i));
-                } else {
-                  node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(outer_rls.get(i).lat()+dAdjX),
-                                                   LatLon.roundToOsmPrecision(outer_rls.get(i).lon()+dAdjY)));
-                }
+                EdNode node = editor.newNode(outer_rls.get(i));
 
                 if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, precision)) {
                     outer_nodes.add(node);
@@ -355,14 +346,7 @@ public final class RuianModule extends TracerModule {
             for (List<LatLon> inner_rls: record().getInners()) {
                 List<EdNode> inner_nodes = new ArrayList<>(inner_rls.size());
                 for (int i = 0; i < inner_rls.size() - 1; i++) {
-                    EdNode node;
-                    // Apply corrections to node coordinates
-                    if (!pref.isRuianAdjustPositionEnabled()) {
-                      node = editor.newNode(inner_rls.get(i));
-                    } else {
-                      node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(inner_rls.get(i).lat()+dAdjX),
-                                                      LatLon.roundToOsmPrecision(inner_rls.get(i).lon()+dAdjY)));
-                    }
+                    EdNode node = editor.newNode(inner_rls.get(i));
 
                     if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, precision)) {
                         inner_nodes.add(node);

@@ -162,7 +162,7 @@ public final class LpisModule extends TracerModule  {
         @Override
         protected TracerRecord downloadRecord(LatLon pos) throws Exception {
             LpisServer server = new LpisServer();
-            return server.getElementData(pos, lpisUrl);
+            return server.getElementData(pos, lpisUrl, 0.0, 0.0);
         }
 
         @Override

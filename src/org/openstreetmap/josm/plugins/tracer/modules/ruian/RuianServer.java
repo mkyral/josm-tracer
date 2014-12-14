@@ -63,17 +63,17 @@ public class RuianServer {
      * @param pos Position of building.
      * @return Building border.
      */
-    public RuianRecord trace(LatLon pos, String url) {
+    public RuianRecord trace(LatLon pos, String url, double adjlat, double adjlon) {
         try {
             String call_url = url + "/ruian-buildings/?req=full&lat=" + pos.lat() + "&lon=" + pos.lon();
             System.out.println("Request: " + call_url);
             String content = callServer(call_url);
             System.out.println("Reply: " + content);
-            RuianRecord ruian = new RuianRecord();
+            RuianRecord ruian = new RuianRecord(adjlat, adjlon);
             ruian.parseJSON(content);
             return ruian;
         } catch (Exception e) {
-            return new RuianRecord();
+            return new RuianRecord(adjlat, adjlon);
         }
     }
 }
