@@ -45,8 +45,8 @@ public final class LpisModule extends TracerModule  {
     private boolean moduleEnabled;
 
     private static final double oversizeInDataBoundsMeters = 5.0;
-    private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.20, Math.PI / 3);
-    private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.20, Math.PI / 40);
+    private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.30, Math.PI / 3);
+    private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.30, Math.PI / 40);
 
     private static final String source = "lpis";
     private static final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
