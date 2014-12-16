@@ -524,7 +524,7 @@ public class WayEditor {
     }
 
     public Set<EdWay> getModifiedWays() {
-        Set<EdWay> result = new HashSet<>(m_ways);
+        Set<EdWay> result = new HashSet<>();
         for (EdWay w: m_ways) {
             if (w.isModified())
                 result.add(w);

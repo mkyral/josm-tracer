@@ -21,26 +21,14 @@ package org.openstreetmap.josm.plugins.tracer.modules.ruianLands;
 import java.awt.Cursor;
 import java.util.*;
 
-import javax.swing.JOptionPane;
-
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
-import org.openstreetmap.josm.command.Command;
-import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.DataSet;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.data.osm.Relation;
-import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
-import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
-import org.openstreetmap.josm.gui.util.GuiHelper;
-import org.openstreetmap.josm.plugins.tracer.PostTraceNotifications;
-import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
-import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
+import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
 
 import static org.openstreetmap.josm.tools.I18n.*;
@@ -48,19 +36,14 @@ import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Pair;
 
 
-import org.xml.sax.SAXException;
 
-public class RuianLandsModule implements TracerModule {
+public final class RuianLandsModule extends TracerModule {
 
     protected boolean cancel;
-    private boolean ctrl;
-    private boolean alt;
-    private boolean shift;
     private boolean moduleEnabled;
 
     private static final double oversizeInDataBoundsMeters = 5.0;
 
-    private static final String source = "cuzk:ruian";
     private static final String RuianLandsUrl = "http://josm.poloha.net";
 
     private static final String reuseExistingLanduseNodePattern =
@@ -157,174 +140,44 @@ public class RuianLandsModule implements TracerModule {
         return new RuianLandsTracerTask (pos, ctrl, alt, shift);
     }
 
-    class RuianLandsTracerTask extends PleaseWaitRunnable {
-
-        private final LatLon m_pos;
-        private final boolean m_ctrl;
-        private final boolean m_alt;
-        private final boolean m_shift;
-        private final boolean m_performClipping;
-        private final boolean m_performWayMerging;
-        private final boolean m_performRetrace;
-
-        private RuianLandsRecord m_record;
-        private boolean m_cancelled;
-
-        private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
+    class RuianLandsTracerTask extends AbstractTracerTask {
 
         private final GeomDeviation m_tolerance = new GeomDeviation (0.2, Math.PI / 3);
         private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_tolerance);
 
         RuianLandsTracerTask  (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
-            super (tr("Tracing"));
-            this.m_pos = pos;
-            this.m_ctrl = ctrl;
-            this.m_alt = alt;
-            this.m_shift = shift;
-            this.m_record = null;
-            this.m_cancelled = false;
+            super (pos, ctrl, alt, shift);
+        }
 
-            this.m_performClipping = !m_ctrl;
-            this.m_performWayMerging = !m_ctrl;
-            this.m_performRetrace = !m_ctrl;
+        private RuianLandsRecord record() {
+            return (RuianLandsRecord)super.getRecord();
         }
 
         @Override
-        @SuppressWarnings({"CallToPrintStackTrace", "UseSpecificCatch", "BroadCatchBlock", "TooBroadCatch"})
-        protected void realRun() throws SAXException {
-
+        protected TracerRecord downloadRecord(LatLon pos) throws Exception {
             TracerPreferences pref = TracerPreferences.getInstance();
-
             String sUrl = RuianLandsUrl;
-
             if (pref.isCustomRuainUrlEnabled())
               sUrl = pref.getCustomRuainUrl();
-
-            System.out.println("");
-            System.out.println("-----------------");
-            System.out.println("----- Trace -----");
-            System.out.println("-----------------");
-            System.out.println("");
-
-            progressMonitor.indeterminateSubTask(tr("Downloading RUIAN data..."));
-            try {
-                RuianLandsServer server = new RuianLandsServer();
-                m_record = server.trace(m_pos, sUrl);
-            }
-            catch (final Exception e) {
-                e.printStackTrace();
-                TracerUtils.showNotification(tr("RUIAN download failed.") + "\n(" + m_pos.toDisplayString() + ")", "error");
-                return;
-            }
-
-            if (m_cancelled)
-                return;
-
-            // No data available?
-            if (m_record.getCoorCount() == 0) {
-                TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
-                return;
-            }
-
-            // Look for incomplete multipolygons that might participate in clipping
-            List<Relation> incomplete_multipolygons = null;
-            if (m_performClipping)
-                incomplete_multipolygons = getIncompleteMultipolygonsForDownload ();
-
-            // No multipolygons to download, create traced polygon immediately within this task
-            if (incomplete_multipolygons == null || incomplete_multipolygons.isEmpty()) {
-                progressMonitor.subTask(tr("Creating RUIAN polygon..."));
-                createTracedPolygon();
-            }
-            else {
-                // Schedule task to download incomplete multipolygons
-                Main.worker.submit(new DownloadRelationTask(incomplete_multipolygons, Main.main.getEditLayer()));
-
-                // Schedule task to create traced polygon
-                Main.worker.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        createTracedPolygon();
-                    }
-                });
-            }
+            RuianLandsServer server = new RuianLandsServer();
+            return server.trace(m_pos, sUrl);
         }
 
-        /**
-         * Returns list of all existing incomplete multipolygons that might participate in
-         * polygon clipping. These relations must be downloaded first, clipping
-         * doesn't support incomplete multipolygons.
-         * @return List of incomplete multipolygon relations
-         */
-        private List<Relation> getIncompleteMultipolygonsForDownload() {
-            DataSet ds = Main.main.getCurrentDataSet();
-            ds.getReadLock().lock();
-            try {
-                List<Relation> list = new ArrayList<>();
-                for (Relation rel : ds.searchRelations(m_record.getBBox())) {
-                    if (!MultipolygonMatch.match(rel))
-                        continue;
-                    if (rel.isIncomplete() || rel.hasIncompleteMembers())
-                        list.add(rel);
-                }
-                return list;
-            } finally {
-                ds.getReadLock().unlock();
-            }
-        }
+        @Override
+        protected EdObject createTracedPolygonImpl(WayEditor editor) {
 
-        private void wayIsOutsideDownloadedAreaDialog() {
-            ExtendedDialog ed = new ExtendedDialog(
-                Main.parent, tr("Way is outside downloaded area"),
-                new String[] {tr("Ok")});
-            ed.setButtonIcons(new String[] {"ok"});
-            ed.setIcon(JOptionPane.ERROR_MESSAGE);
-            ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
-            ed.showDialog();
-        }
-
-        private void createTracedPolygon() {
-            GuiHelper.runInEDT(new Runnable() {
-                @Override
-                @SuppressWarnings("CallToPrintStackTrace")
-                public void run() {
-                    long start_time = System.nanoTime();
-                    DataSet data_set = Main.main.getCurrentDataSet();
-                    data_set.beginUpdate();
-                    try {
-                        createTracedPolygonImpl (data_set);
-                        m_postTraceNotifications.show();
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                        throw e;
-                    }
-                    finally {
-                        data_set.endUpdate();
-                        long end_time = System.nanoTime();
-                        long time_msecs = (end_time - start_time) / (1000*1000);
-                        System.out.println("Polygon time (ms): " + Long.toString(time_msecs));
-                    }
-                }
-            });
-        }
-
-        private void createTracedPolygonImpl(DataSet data_set) {
-
-            System.out.println("  RUIAN keys: " + m_record.getKeys());
-
-            WayEditor editor = new WayEditor (data_set);
+            System.out.println("  RUIAN keys: " + record().getKeys());
 
             Match clipWayMatch;
             Match mergeWayMatch;
             Match retraceAreaMatch;
 
             // Determine type of the objects
-            if (m_record.isBuilding()) {
+            if (record().isBuilding()) {
               clipWayMatch = m_clipBuildingWayMatch;
               mergeWayMatch = m_mergeBuildingWayMatch;
               retraceAreaMatch = m_retraceBuildingAreaMatch;
-            } else if (m_record.isGarden()) {
+            } else if (record().isGarden()) {
               clipWayMatch = m_clipGardenWayMatch;
               mergeWayMatch = m_mergeLanduseWayMatch;
               retraceAreaMatch = m_retraceLandsAreaMatch;
@@ -342,23 +195,23 @@ public class RuianLandsModule implements TracerModule {
                 boolean ambiguous_retrace = repl.b;
 
                 if (ambiguous_retrace) {
-                    m_postTraceNotifications.add(tr("Multiple existing Ruian building polygons found, retrace is not possible."));
-                    return;
+                    postTraceNotifications().add(tr("Multiple existing Ruian building polygons found, retrace is not possible."));
+                    return null;
                 }
             }
 
             // Create traced object
             Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
             if (trobj == null)
-                return;
+                return null;
             EdWay outer_way = trobj.a;
             EdMultipolygon multipolygon = trobj.b;
 
             // Retrace simple ways - just use the old way
             if (retrace_object != null) {
                 if ((multipolygon != null) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
-                    m_postTraceNotifications.add(tr("Multipolygon retrace is not supported yet."));
-                    return;
+                    postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
+                    return null;
                 }
                 EdWay retrace_way = (EdWay)retrace_object;
                 retrace_way.setNodes(outer_way.getNodes());
@@ -368,7 +221,7 @@ public class RuianLandsModule implements TracerModule {
             // Everything is inside DataSource bounds?
             if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
                 wayIsOutsideDownloadedAreaDialog();
-                return;
+                return null;
             }
 
             // Tag object
@@ -381,7 +234,7 @@ public class RuianLandsModule implements TracerModule {
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (clipWayMatch);
-                ClipAreas clip = new ClipAreas(editor, m_clipSettings, m_postTraceNotifications);
+                ClipAreas clip = new ClipAreas(editor, m_clipSettings, postTraceNotifications());
                 clip.clipAreas(outer_way, filter);
             }
 
@@ -394,46 +247,14 @@ public class RuianLandsModule implements TracerModule {
                 outer_way = merger.mergeWays(editor.getModifiedWays(), true, outer_way);
             }
 
-            List<Command> commands = editor.finalizeEdit();
-
-            if (!commands.isEmpty()) {
-
-                long start_time = System.nanoTime();
-
-                Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
-
-                OsmPrimitive sel = (multipolygon != null ?
-                    multipolygon.finalMultipolygon() : outer_way.finalWay());
-
-                if (m_shift) {
-                    editor.getDataSet().addSelected(sel);
-                } else {
-                    editor.getDataSet().setSelected(sel);
-                }
-                long end_time = System.nanoTime();
-                long time_msecs = (end_time - start_time) / (1000*1000);
-                System.out.println("undoRedo time (ms): " + Long.toString(time_msecs));
-
-            } else {
-                m_postTraceNotifications.add(tr("Nothing changed."));
-            }
-        }
-
-        @Override
-        protected void finish() {
-        }
-
-        @Override
-        protected void cancel() {
-            m_cancelled = true;
-            // #### TODO: break the connection to remote server
+            return multipolygon == null ? outer_way : multipolygon;
         }
 
         private void tagTracedObject (EdObject obj) {
 
             Map <String, String> map = obj.getKeys();
 
-            Map <String, String> new_keys = new HashMap <> (m_record.getKeys());
+            Map <String, String> new_keys = new HashMap <> (record().getKeys());
             for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
                 map.put(new_key.getKey(), new_key.getValue());
             }
@@ -455,9 +276,9 @@ public class RuianLandsModule implements TracerModule {
             }
 
             // Determine type of the objects
-            if (m_record.isBuilding()) {
+            if (record().isBuilding()) {
               reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingBuildingNodeMatch);
-            } else if (m_record.isGarden()) {
+            } else if (record().isGarden()) {
               reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
             } else {
               reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
@@ -467,17 +288,18 @@ public class RuianLandsModule implements TracerModule {
 
             // Prepare outer way nodes
             List<EdNode> outer_nodes = new ArrayList<> ();
+            List<LatLon> outer = record().getOuter();
             LatLon prev_coor = null;
             // m_record.getCoorCount() - 1 - omit last node
-            for (int i = 0; i < m_record.getCoorCount() - 1; i++) {
+            for (int i = 0; i < outer.size() - 1; i++) {
                 EdNode node;
 
                 // Apply corrections to node coordinates
                 if (!pref.isRuianAdjustPositionEnabled()) {
-                  node = editor.newNode(m_record.getCoor(i));
+                  node = editor.newNode(outer.get(i));
                 } else {
-                  node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(m_record.getCoor(i).lat()+dAdjX),
-                                                   LatLon.roundToOsmPrecision(m_record.getCoor(i).lon()+dAdjY)));
+                  node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(outer.get(i).lat()+dAdjX),
+                                                   LatLon.roundToOsmPrecision(outer.get(i).lon()+dAdjY)));
                 }
 
                 if (!editor.insideDataSourceBounds(node)) {
@@ -531,7 +353,7 @@ public class RuianLandsModule implements TracerModule {
             AreaPredicate filter = new AreaPredicate(retraceAreaMatch);
             Set<EdObject> areas = editor.useNonEditedAreasContainingPoint(pos, filter);
 
-            String ruianref = Long.toString(m_record.getLandID());
+            String ruianref = Long.toString(record().getLandID());
 
             // restrict to RUIAN areas only, yet ... #### improve in the future
             boolean multiple_areas = false;

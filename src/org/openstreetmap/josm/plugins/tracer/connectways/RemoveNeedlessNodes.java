@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.openstreetmap.josm.data.Bounds;
+import org.openstreetmap.josm.data.osm.BBox;
 
 public class RemoveNeedlessNodes {
     private final IEdAreaPredicate m_filter;
@@ -36,13 +37,20 @@ public class RemoveNeedlessNodes {
 
     private final GeomDeviation m_XteDeviation;
     private final double m_MinimalVertexAngle;
+    private final BBox m_removeBBox; // can be null
 
-    public RemoveNeedlessNodes (IEdAreaPredicate filter, GeomDeviation xte_deviation, double minimal_vertex_angle) {
+    public RemoveNeedlessNodes (IEdAreaPredicate filter, GeomDeviation xte_deviation, double minimal_vertex_angle, BBox remove_bbox) {
         m_filter = filter;
         m_negatedFilter = new NegatedAreaPredicate(filter);
         m_XteDeviation = xte_deviation;
         m_MinimalVertexAngle = minimal_vertex_angle;
+        m_removeBBox = remove_bbox;
     }
+
+    public RemoveNeedlessNodes (IEdAreaPredicate filter, GeomDeviation xte_deviation, double minimal_vertex_angle) {
+        this (filter, xte_deviation, minimal_vertex_angle, null);
+    }
+
 
     public void removeNeedlessNodes(Set<EdWay> input_ways) {
 
@@ -210,6 +218,12 @@ public class RemoveNeedlessNodes {
             // already required?
             if (m_requiredNodes.contains(cur_node))
                 continue;
+
+            // node outside bbox?
+            if (m_removeBBox != null && !m_removeBBox.bounds(cur_node.getCoor())) {
+                m_requiredNodes.add(cur_node);
+                continue;
+            }
 
             // tagged, first/last node of non-closed way, 
             // or node occurring more than once in the way?

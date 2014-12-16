@@ -24,24 +24,14 @@ import java.util.*;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.JOptionPane;
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
-import org.openstreetmap.josm.command.Command;
-import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.DataSet;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.data.osm.Relation;
-import org.openstreetmap.josm.gui.ExtendedDialog;
+import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
-import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
-import org.openstreetmap.josm.gui.util.GuiHelper;
-import org.openstreetmap.josm.plugins.tracer.PostTraceNotifications;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
-import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
 
 // import org.openstreetmap.josm.plugins.tracer.modules.lpis.LpisRecord;
@@ -49,13 +39,14 @@ import org.openstreetmap.josm.plugins.tracer.connectways.*;
 import static org.openstreetmap.josm.tools.I18n.*;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Pair;
-import org.xml.sax.SAXException;
 
-public class LpisModule implements TracerModule  {
+public final class LpisModule extends TracerModule  {
 
     private boolean moduleEnabled;
 
     private static final double oversizeInDataBoundsMeters = 5.0;
+    private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.30, Math.PI / 3);
+    private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.30, Math.PI / 40);
 
     private static final String source = "lpis";
     private static final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
@@ -114,157 +105,71 @@ public class LpisModule implements TracerModule  {
         return new LpisTracerTask (pos, ctrl, alt, shift);
     }
 
-    class LpisTracerTask extends PleaseWaitRunnable {
+    class ReuseLanduseNearNodes implements IReuseNearNodePredicate {
 
-        private final LatLon m_pos;
-        private final boolean m_ctrl;
-        private final boolean m_alt;
-        private final boolean m_shift;
-        private final boolean m_performClipping;
-        private final boolean m_performWayMerging;
-        private final boolean m_performRetrace;
+        // distance tolerancies are in meters
+        private final double m_reuseNearNodesToleranceDefault = m_connectTolerance.distanceMeters();
+        private final double m_reuseNearNodesToleranceRetracedNodes = 0.40;
 
-        private LpisRecord m_record;
-        private boolean m_cancelled;
+        private final double m_lookupDistanceMeters;
 
-        private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
+        private final Set<EdNode> m_retracedNodes;
 
-        private final GeomDeviation m_connectTolerance = new GeomDeviation(0.2, Math.PI / 3);
-        private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_connectTolerance);
-
-        LpisTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
-            super (tr("Tracing"));
-            this.m_pos = pos;
-            this.m_ctrl = ctrl;
-            this.m_alt = alt;
-            this.m_shift = shift;
-            this.m_record = null;
-            this.m_cancelled = false;
-
-            this.m_performClipping = !m_ctrl;
-            this.m_performWayMerging = !m_ctrl;
-            this.m_performRetrace = !m_ctrl;
+        ReuseLanduseNearNodes (Set<EdNode> retraced_nodes) {
+            m_retracedNodes = retraced_nodes;
+            m_lookupDistanceMeters = Math.max(m_reuseNearNodesToleranceDefault, m_reuseNearNodesToleranceRetracedNodes);
         }
 
         @Override
-        @SuppressWarnings({"CallToPrintStackTrace", "UseSpecificCatch", "BroadCatchBlock", "TooBroadCatch"})
-        protected void realRun() throws SAXException {
+        public ReuseNearNodeMethod reuseNearNode(EdNode node, EdNode near_node, double distance_meters) {
 
-            System.out.println("");
-            System.out.println("-----------------");
-            System.out.println("----- Trace -----");
-            System.out.println("-----------------");
-            System.out.println("");
+            boolean retraced = m_retracedNodes != null && m_retracedNodes.contains(near_node);
 
-            progressMonitor.indeterminateSubTask(tr("Downloading LPIS data..."));
-            try {
-                LpisServer server = new LpisServer();
-                m_record = server.getElementData(m_pos, lpisUrl);
-            }
-            catch (final Exception e) {
-                e.printStackTrace();
-                TracerUtils.showNotification(tr("LPIS download failed.") + "\n(" + m_pos.toDisplayString() + ")", "error");
-                return;
+            // be more tolerant for untagged nodes occurring in retraced ways, feel free to move them
+            if (retraced) {
+                System.out.println("RNN: retraced, dist=" + Double.toString(distance_meters));
+                if (distance_meters <= m_reuseNearNodesToleranceRetracedNodes)
+                    if (!near_node.isTagged())
+                        return ReuseNearNodeMethod.moveAndReuseNode;
             }
 
-            if (m_cancelled)
-                return;
+            // use default tolerance for others, don't move them, just reuse
+            System.out.println("RNN: default, dist=" + Double.toString(distance_meters));
+            if (distance_meters <= m_reuseNearNodesToleranceDefault)
+                return ReuseNearNodeMethod.reuseNode;
 
-            // No data available?
-            if (m_record.getLpisID() == -1) {
-                TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
-                return;
-            }
-
-            // Look for incomplete multipolygons that might participate in landuse clipping
-            List<Relation> incomplete_multipolygons = null;
-            if (m_performClipping)
-                incomplete_multipolygons = getIncompleteMultipolygonsForDownload ();
-
-            // No multipolygons to download, create traced polygon immediately within this task
-            if (incomplete_multipolygons == null || incomplete_multipolygons.isEmpty()) {
-                progressMonitor.subTask(tr("Creating LPIS polygon..."));
-                createTracedPolygon();
-            }
-            else {
-                // Schedule task to download incomplete multipolygons
-                Main.worker.submit(new DownloadRelationTask(incomplete_multipolygons, Main.main.getEditLayer()));
-
-                // Schedule task to create traced polygon
-                Main.worker.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        createTracedPolygon();
-                    }
-                });
-            }
+            return ReuseNearNodeMethod.dontReuseNode;
         }
 
-        /**
-         * Returns list of all existing incomplete multipolygons that might participate in
-         * LPIS polygon clipping. These relations must be downloaded first, clipping
-         * doesn't support incomplete multipolygons.
-         * @return List of incomplete multipolygon relations
-         */
-        private List<Relation> getIncompleteMultipolygonsForDownload() {
-            DataSet ds = Main.main.getCurrentDataSet();
-            ds.getReadLock().lock();
-            try {
-                List<Relation> list = new ArrayList<>();
-                for (Relation rel : ds.searchRelations(m_record.getBBox())) {
-                    if (!MultipolygonMatch.match(rel))
-                        continue;
-                    if (rel.isIncomplete() || rel.hasIncompleteMembers())
-                        list.add(rel);
-                }
-                return list;
-            } finally {
-                ds.getReadLock().unlock();
-            }
+        @Override
+        public double lookupDistanceMeters() {
+            return m_lookupDistanceMeters;
+        }
+    }
+
+    class LpisTracerTask extends AbstractTracerTask {
+
+        private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_connectTolerance);
+
+        LpisTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
+            super (pos, ctrl, alt, shift);
         }
 
-        private void wayIsOutsideDownloadedAreaDialog() {
-            ExtendedDialog ed = new ExtendedDialog(
-                Main.parent, tr("Way is outside downloaded area"),
-                new String[] {tr("Ok")});
-            ed.setButtonIcons(new String[] {"ok"});
-            ed.setIcon(JOptionPane.ERROR_MESSAGE);
-            ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
-            ed.showDialog();
+        private LpisRecord record() {
+            return (LpisRecord) super.getRecord();
         }
 
-        private void createTracedPolygon() {
-            GuiHelper.runInEDT(new Runnable() {
-                @Override
-                @SuppressWarnings("CallToPrintStackTrace")
-                public void run() {
-                    long start_time = System.nanoTime();
-                    DataSet data_set = Main.main.getCurrentDataSet();
-                    data_set.beginUpdate();
-                    try {
-                        createTracedPolygonImpl (data_set);
-                        m_postTraceNotifications.show();
-                    }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                        throw e;
-                    }
-                    finally {
-                        data_set.endUpdate();
-                        long end_time = System.nanoTime();
-                        long time_msecs = (end_time - start_time) / (1000*1000);
-                        System.out.println("Polygon time (ms): " + Long.toString(time_msecs));
-                    }
-                }
-            });
+        @Override
+        protected TracerRecord downloadRecord(LatLon pos) throws Exception {
+            LpisServer server = new LpisServer();
+            return server.getElementData(pos, lpisUrl);
         }
 
-        private void createTracedPolygonImpl(DataSet data_set) {
+        @Override
+        protected EdObject createTracedPolygonImpl(WayEditor editor) {
 
-            System.out.println("  LPIS ID: " + m_record.getLpisID());
-            System.out.println("  LPIS usage: " + m_record.getUsage());
-
-            WayEditor editor = new WayEditor (data_set);
+            System.out.println("  LPIS ID: " + record().getLpisID());
+            System.out.println("  LPIS usage: " + record().getUsage());
 
             // Look for object to retrace
             EdObject retrace_object = null;
@@ -274,33 +179,42 @@ public class LpisModule implements TracerModule  {
                 boolean ambiguous_retrace = repl.b;
 
                 if (ambiguous_retrace) {
-                    m_postTraceNotifications.add(tr("Multiple existing LPIS polygons found, retrace is not possible."));
-                    return;
+                    postTraceNotifications().add(tr("Multiple existing LPIS polygons found, retrace is not possible."));
+                    return null;
                 }
             }
 
             // Create traced object
             Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
             if (trobj == null)
-                return;
+                return null;
             EdWay outer_way = trobj.a;
             EdMultipolygon multipolygon = trobj.b;
-
-            // Retrace simple ways - just use the old way
-            if (retrace_object != null) {
-                if ((multipolygon != null) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
-                    m_postTraceNotifications.add(tr("Multipolygon retrace is not supported yet."));
-                    return;
-                }
-                EdWay retrace_way = (EdWay)retrace_object;
-                retrace_way.setNodes(outer_way.getNodes());
-                outer_way = retrace_way;
-            }
 
             // Everything is inside DataSource bounds?
             if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
                 wayIsOutsideDownloadedAreaDialog();
-                return;
+                return null;
+            }
+
+            // Connect nodes to near landuse nodes
+            // (must be done before retrace updates, we want to use as much old nodes as possible)
+            if (!m_performClipping) {
+                reuseExistingNodes(multipolygon == null ? outer_way : multipolygon);
+            }
+            else {
+                reuseNearNodes(multipolygon == null ? outer_way : multipolygon, retrace_object);
+            }
+
+            // Retrace simple ways - just use the old way
+            if (retrace_object != null) {
+                if ((multipolygon != null) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
+                    postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
+                    return null;
+                }
+                EdWay retrace_way = (EdWay)retrace_object;
+                retrace_way.setNodes(outer_way.getNodes());
+                outer_way = retrace_way;
             }
 
             // Tag object
@@ -313,8 +227,15 @@ public class LpisModule implements TracerModule  {
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipLanduseWayMatch);
-                ClipAreas clip = new ClipAreas(editor, m_clipSettings, m_postTraceNotifications);
+                ClipAreas clip = new ClipAreas(editor, m_clipSettings, postTraceNotifications());
                 clip.clipAreas(outer_way, filter);
+
+                // Remove needless nodes
+                AreaPredicate remove_filter = new AreaPredicate (m_clipLanduseWayMatch);
+                BBox remove_bbox = (multipolygon == null ? outer_way : multipolygon).getBBox();
+                BBoxUtils.extendBBox(remove_bbox, LatLonSize.get(remove_bbox, oversizeInDataBoundsMeters));
+                RemoveNeedlessNodes remover = new RemoveNeedlessNodes(remove_filter, m_removeNeedlesNodesTolerance, (Math.PI*2)/3, remove_bbox);
+                remover.removeNeedlessNodes(editor.getModifiedWays());
             }
 
             // Merge duplicate ways
@@ -326,46 +247,14 @@ public class LpisModule implements TracerModule  {
                 outer_way = merger.mergeWays(editor.getModifiedWays(), true, outer_way);
             }
 
-            List<Command> commands = editor.finalizeEdit();
-
-            if (!commands.isEmpty()) {
-
-                long start_time = System.nanoTime();
-
-                Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
-
-                OsmPrimitive sel = (multipolygon != null ?
-                    multipolygon.finalMultipolygon() : outer_way.finalWay());
-
-                if (m_shift) {
-                    editor.getDataSet().addSelected(sel);
-                } else {
-                    editor.getDataSet().setSelected(sel);
-                }
-                long end_time = System.nanoTime();
-                long time_msecs = (end_time - start_time) / (1000*1000);
-                System.out.println("undoRedo time (ms): " + Long.toString(time_msecs));
-
-            } else {
-                m_postTraceNotifications.add(tr("Nothing changed."));
-            }
-        }
-
-        @Override
-        protected void finish() {
-        }
-
-        @Override
-        protected void cancel() {
-            m_cancelled = true;
-            // #### TODO: break the connection to remote LPIS server
+            return multipolygon == null ? outer_way : multipolygon;
         }
 
         private void tagTracedObject (EdObject obj) {
 
             Map <String, String> map = obj.getKeys();
 
-            Map <String, String> new_keys = new HashMap <> (m_record.getUsageOsm());
+            Map <String, String> new_keys = new HashMap <> (record().getUsageOsm());
             for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
                 map.put(new_key.getKey(), new_key.getValue());
             }
@@ -373,16 +262,14 @@ public class LpisModule implements TracerModule  {
             // #### delete any existing retraced tags??
 
             map.put("source", source);
-            map.put("ref", Long.toString(m_record.getLpisID()));
+            map.put("ref", Long.toString(record().getLpisID()));
             obj.setKeys(map);
         }
 
         private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
 
-            IEdNodePredicate reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
-
             // Prepare outer way nodes
-            List<LatLon> outer_lls = m_record.getOuter();
+            List<LatLon> outer_lls = record().getOuter();
             List<EdNode> outer_nodes = new ArrayList<> (outer_lls.size());
             for (int i = 0; i < outer_lls.size() - 1; i++) {
                 EdNode node = editor.newNode(outer_lls.get(i));
@@ -394,17 +281,16 @@ public class LpisModule implements TracerModule  {
             // Close & create outer way
             outer_nodes.add(outer_nodes.get(0));
             EdWay outer_way = editor.newWay(outer_nodes);
-            outer_way.reuseExistingNodes(reuse_filter);
 
             // Simple way?
-            if (!m_record.hasInners())
+            if (!record().hasInners())
                 return new Pair<>(outer_way, null);
 
             // Create multipolygon
             EdMultipolygon multipolygon = editor.newMultipolygon();
             multipolygon.addOuterWay(outer_way);
 
-            for (List<LatLon> inner_lls: m_record.getInners()) {
+            for (List<LatLon> inner_lls: record().getInners()) {
                 List<EdNode> inner_nodes = new ArrayList<>(inner_lls.size());
                 for (int i = 0; i < inner_lls.size() - 1; i++) {
                     inner_nodes.add(editor.newNode(inner_lls.get(i)));
@@ -415,8 +301,6 @@ public class LpisModule implements TracerModule  {
                     throw new AssertionError(tr("Inner way consists of less than 3 nodes"));
                 inner_nodes.add(inner_nodes.get(0));
                 EdWay way = editor.newWay(inner_nodes);
-                way.reuseExistingNodes(reuse_filter);
-
                 multipolygon.addInnerWay(way);
             }
 
@@ -427,7 +311,7 @@ public class LpisModule implements TracerModule  {
             AreaPredicate filter = new AreaPredicate(m_retraceAreaMatch);
             Set<EdObject> areas = editor.useNonEditedAreasContainingPoint(pos, filter);
 
-            String lpisref = Long.toString(m_record.getLpisID());
+            String lpisref = Long.toString(record().getLpisID());
 
             // restrict to LPIS areas only, yet ... #### improve in the future
             boolean multiple_areas = false;
@@ -470,6 +354,24 @@ public class LpisModule implements TracerModule  {
             IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
 
             obj.connectExistingTouchingNodes(m_connectTolerance, filter);
+        }
+
+        private void reuseExistingNodes(EdObject obj) {
+            obj.reuseExistingNodes (reuseExistingNodesFilter(obj));
+        }
+
+        private void reuseNearNodes(EdObject obj, EdObject retrace_object) {
+            Set<EdNode> retrace_nodes = null;
+            if (retrace_object != null)
+                retrace_nodes = retrace_object.getAllNodes();
+            obj.reuseNearNodes (new ReuseLanduseNearNodes(retrace_nodes), reuseExistingNodesFilter(obj));
+        }
+
+        private IEdNodePredicate reuseExistingNodesFilter(EdObject obj) {
+            // Setup filters - include landuse nodes only, exclude all nodes of the object itself
+            IEdNodePredicate nodes_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
+            IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(obj);
+            return new EdNodeLogicalAndPredicate (exclude_my_nodes, nodes_filter);
         }
 
         private boolean checkInsideDataSourceBounds(EdObject new_object, EdObject retrace_object) {

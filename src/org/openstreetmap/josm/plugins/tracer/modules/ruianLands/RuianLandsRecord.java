@@ -18,34 +18,33 @@
 
 package org.openstreetmap.josm.plugins.tracer.modules.ruianLands;
 
-import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
-import org.openstreetmap.josm.data.osm.BBox;
-import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.tools.Utils;
-
-import javax.json.Json;
-import javax.json.JsonException;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
-import javax.json.JsonString;
-
-import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 
-import java.util.*;
+import java.io.InputStream;
 import java.lang.StringBuilder;
+import java.util.*;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonException;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonString;
+import javax.json.JsonValue;
+import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 
 import org.openstreetmap.josm.plugins.tracer.TracerUtils.*;
+import org.openstreetmap.josm.tools.Utils;
 
 /**
  * The Tracer RUIAN record class
  *
  */
 
-public class RuianLandsRecord {
+public final class RuianLandsRecord extends TracerRecord {
 
     private LatLon   m_coor;
     private String   m_source;
@@ -54,8 +53,6 @@ public class RuianLandsRecord {
     private String   m_zpusob_vyuziti;
     private String   m_plati_od;
     private Map <String, String> m_keys;
-
-    private ArrayList <LatLon> m_geometry;
 
     /**
     * Constructor
@@ -69,7 +66,10 @@ public class RuianLandsRecord {
     * Initialization
     *
     */
-    private void init () {
+    @Override
+    protected void init () {
+
+      super.init();
 
       m_coor = null;
       m_source = "";
@@ -78,7 +78,6 @@ public class RuianLandsRecord {
       m_zpusob_vyuziti = "";
       m_plati_od = "";
       m_keys = new HashMap <String, String>();
-      m_geometry = new ArrayList<LatLon> ();
 
     }
 
@@ -329,7 +328,7 @@ public class RuianLandsRecord {
 // =========================================================================
       try {
         JsonArray arr = obj.getJsonArray("geometry");
-
+        List<LatLon> way = new ArrayList<>(arr.size());
         for(int i = 0; i < arr.size(); i++)
         {
           System.out.println("i="+i);
@@ -341,51 +340,16 @@ public class RuianLandsRecord {
               LatLon.roundToOsmPrecision(node.getJsonNumber(0).doubleValue())
             );
             System.out.println("coor: " + coor.toString());
-            m_geometry.add(coor);
+            way.add(coor);
           } catch (Exception e) {
           }
-
         }
+        super.setOuter(way);
       } catch (Exception e) {
       }
 
 //       mapKeys();
     }
-
-  /**
-   *  Return number of nodes in the building
-   *  @return Count of nodes in building
-   */
-  public int getCoorCount() {
-    if (m_geometry == null)
-      return 0;
-    else
-      return m_geometry.size();
-  }
-
-  /**
-   *  Return coordinates of node
-   *  @return geometry node coordinates
-   */
-  public LatLon getCoor(int i) {
-    return m_geometry.get(i);
-  }
-
-  /**
-   * Returns BBox of RUIAN (multi)polygon
-   * @return BBox of RUIAN (multi)polygon
-   */
-  public BBox getBBox() {
-      LatLon p0 = m_geometry.get(0);
-
-      BBox bbox = new BBox(p0.lon(), p0.lat());
-      for (int i = 1; i < m_geometry.size(); i++) {
-          LatLon p = m_geometry.get(i);
-          bbox.add(p.lon(), p.lat());
-      }
-
-      return bbox;
-  }
 
   /**
    *  Return RUIAN landusage code
@@ -444,6 +408,10 @@ public class RuianLandsRecord {
   public boolean isGarden() {
 
     return m_keys.containsKey("leisure") && m_keys.get("leisure").equals("garden");
+  }
+
+  public boolean hasData() {
+      return super.hasOuter();
   }
 
 }

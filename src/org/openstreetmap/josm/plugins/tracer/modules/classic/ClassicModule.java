@@ -52,7 +52,7 @@ import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.ConnectWays;
 
 
-public class ClassicModule implements TracerModule {
+public class ClassicModule extends TracerModule {
 
     private final long serialVersionUID = 1L;
 
