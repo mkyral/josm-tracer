@@ -202,15 +202,12 @@ public final class LpisModule extends TracerModule  {
                 reuseNearNodes(trobj, retrace_object);
             }
 
-            // Retrace simple ways - just use the old way
+            // Update geometries of retraced object
             if (retrace_object != null) {
-                if (!trobj.isWay() || !retrace_object.isWay() || retrace_object.hasReferrers()) {
-                    postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
+                RetraceUpdater retr = new RetraceUpdater(false, postTraceNotifications());
+                trobj = retr.updateRetracedObjects(trobj, retrace_object);
+                if (trobj == null)
                     return null;
-                }
-                EdWay retrace_way = (EdWay)retrace_object;
-                retrace_way.setNodes(((EdWay)trobj).getNodes());
-                trobj = retrace_way;
             }
 
             // Tag object
