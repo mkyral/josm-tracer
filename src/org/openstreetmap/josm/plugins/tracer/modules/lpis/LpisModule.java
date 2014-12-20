@@ -185,9 +185,7 @@ public final class LpisModule extends TracerModule  {
             }
 
             // Create traced object
-            EdObject trobj = this.createTracedEdObject(editor);
-            if (trobj == null)
-                return null;
+            EdObject trobj = record().createObject(editor);
 
             // Everything is inside DataSource bounds?
             if (!checkInsideDataSourceBounds(trobj, retrace_object)) {
@@ -265,47 +263,6 @@ public final class LpisModule extends TracerModule  {
             map.put("source", source);
             map.put("ref", Long.toString(record().getLpisID()));
             obj.setKeys(map);
-        }
-
-        private EdObject createTracedEdObject (WayEditor editor) {
-
-            // Prepare outer way nodes
-            List<LatLon> outer_lls = record().getOuter();
-            List<EdNode> outer_nodes = new ArrayList<> (outer_lls.size());
-            for (int i = 0; i < outer_lls.size() - 1; i++) {
-                EdNode node = editor.newNode(outer_lls.get(i));
-                outer_nodes.add(node);
-            }
-            if (outer_nodes.size() < 3)
-                throw new AssertionError(tr("Outer way consists of less than 3 nodes"));
-
-            // Close & create outer way
-            outer_nodes.add(outer_nodes.get(0));
-            EdWay outer_way = editor.newWay(outer_nodes);
-
-            // Simple way?
-            if (!record().hasInners())
-                return outer_way;
-
-            // Create multipolygon
-            EdMultipolygon multipolygon = editor.newMultipolygon();
-            multipolygon.addOuterWay(outer_way);
-
-            for (List<LatLon> inner_lls: record().getInners()) {
-                List<EdNode> inner_nodes = new ArrayList<>(inner_lls.size());
-                for (int i = 0; i < inner_lls.size() - 1; i++) {
-                    inner_nodes.add(editor.newNode(inner_lls.get(i)));
-                }
-
-                // Close & create inner way
-                if (inner_nodes.size() < 3)
-                    throw new AssertionError(tr("Inner way consists of less than 3 nodes"));
-                inner_nodes.add(inner_nodes.get(0));
-                EdWay way = editor.newWay(inner_nodes);
-                multipolygon.addInnerWay(way);
-            }
-
-            return multipolygon;
         }
 
         private Pair<EdObject, Boolean> getObjectToRetrace(WayEditor editor, LatLon pos) {

@@ -23,7 +23,13 @@ import java.util.Collections;
 import java.util.List;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
+import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdMultipolygon;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdNode;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdObject;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdWay;
 import org.openstreetmap.josm.plugins.tracer.connectways.GeomUtils;
+import org.openstreetmap.josm.plugins.tracer.connectways.WayEditor;
 
 public abstract class TracerRecord {
 
@@ -128,5 +134,46 @@ public abstract class TracerRecord {
             prev_coor = latlon;
         }
         return list;
+    }
+
+    public EdObject createObject (WayEditor editor) {
+
+        if (m_outer == null)
+            throw new IllegalStateException(tr("No outer geometry available"));
+
+        // Prepare outer way nodes
+        List<EdNode> outer_nodes = new ArrayList<> (m_outer.size());
+        for (int i = 0; i < m_outer.size() - 1; i++) {
+            outer_nodes.add(editor.newNode(m_outer.get(i)));
+        }
+
+        // Close & create outer way
+        if (outer_nodes.size() < 3)
+            throw new AssertionError(tr("Outer way consists of less than 3 nodes"));
+        outer_nodes.add(outer_nodes.get(0));
+        EdWay outer_way = editor.newWay(outer_nodes);
+
+        // Simple way?
+        if (!this.hasInners())
+            return outer_way;
+
+        // Create multipolygon
+        EdMultipolygon multipolygon = editor.newMultipolygon();
+        multipolygon.addOuterWay(outer_way);
+
+        for (List<LatLon> inner_rls: m_inners) {
+            List<EdNode> inner_nodes = new ArrayList<>(inner_rls.size());
+            for (int i = 0; i < inner_rls.size() - 1; i++) {
+                inner_nodes.add(editor.newNode(inner_rls.get(i)));
+            }
+
+            // Close & create inner way
+            if (inner_nodes.size() < 3)
+                throw new AssertionError(tr("Inner way consists of less than 3 nodes"));
+            inner_nodes.add(inner_nodes.get(0));
+            multipolygon.addInnerWay(editor.newWay(inner_nodes));
+        }
+
+        return multipolygon;
     }
 }
