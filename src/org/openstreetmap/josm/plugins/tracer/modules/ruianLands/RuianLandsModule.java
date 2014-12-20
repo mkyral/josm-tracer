@@ -50,7 +50,7 @@ public final class RuianLandsModule extends TracerModule {
         "((landuse=* -landuse=no -landuse=military) | natural=scrub | natural=wood | natural=grassland | leisure=garden)";
 
     private static final String retraceLandsAreaPattern =
-        "(landuse=farmland | landuse=meadow | landuse=orchard | landuse=vineyard | landuse=plant_nursery | (landuse=forest source=\"cuzk:ruian\") | (landuse=forest source=\"cuzk:km\") | natural=scrub | natural=wood | natural=grassland | leisure=garden)";
+        "(landuse=village_garden | landuse=farmland | landuse=meadow | landuse=orchard | landuse=vineyard | landuse=plant_nursery | (landuse=forest source=\"cuzk:ruian\") | (landuse=forest source=\"cuzk:km\") | natural=scrub | natural=wood | natural=grassland | leisure=garden)";
 
     private static final Match m_reuseExistingLanduseNodeMatch;
     private static final Match m_clipLanduseWayMatch;
