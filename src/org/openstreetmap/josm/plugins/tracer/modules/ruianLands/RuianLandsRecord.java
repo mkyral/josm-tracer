@@ -20,24 +20,15 @@ package org.openstreetmap.josm.plugins.tracer.modules.ruianLands;
 
 import java.io.ByteArrayInputStream;
 
-import java.io.InputStream;
-import java.lang.StringBuilder;
 import java.util.*;
 import javax.json.Json;
 import javax.json.JsonArray;
-import javax.json.JsonException;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 import javax.json.JsonString;
-import javax.json.JsonValue;
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.data.osm.BBox;
-import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 
-import org.openstreetmap.josm.plugins.tracer.TracerUtils.*;
-import org.openstreetmap.josm.tools.Utils;
 
 /**
  * The Tracer RUIAN record class
@@ -46,40 +37,23 @@ import org.openstreetmap.josm.tools.Utils;
 
 public final class RuianLandsRecord extends TracerRecord {
 
-    private LatLon   m_coor;
-    private String   m_source;
-    private long     m_ruian_id;
-    private String   m_druh_pozemku;
-    private String   m_zpusob_vyuziti;
-    private String   m_plati_od;
+    private String               m_source;
+    private long                 m_ruian_id;
     private Map <String, String> m_keys;
 
-    /**
-    * Constructor
-    *
-    */
     public RuianLandsRecord (double adjlat, double adjlon) {
         super(adjlat, adjlon);
         init();
     }
 
-    /**
-    * Initialization
-    *
-    */
     @Override
-    protected void init () {
+    protected void init() {
 
-      super.init();
+        super.init();
 
-      m_coor = null;
-      m_source = "";
-      m_ruian_id = 0;
-      m_druh_pozemku = "";
-      m_zpusob_vyuziti = "";
-      m_plati_od = "";
-      m_keys = new HashMap <String, String>();
-
+        m_source = "";
+        m_ruian_id = 0;
+        m_keys = new HashMap<>();
     }
 
     /**
@@ -87,6 +61,7 @@ public final class RuianLandsRecord extends TracerRecord {
     * natural or leisure key
     *
     */
+    /*
     private void mapKeys () {
       if (m_druh_pozemku.equals("orná půda")){
         m_keys.put("landuse", "farmland");
@@ -242,177 +217,111 @@ public final class RuianLandsRecord extends TracerRecord {
         } else {
           System.out.println("Unsuported values combination: " + m_druh_pozemku + "/" + m_zpusob_vyuziti);
         }
-
-
 }
-
-    }
+    }*/
 
     /**
-    * Parse given JSON string and fill variables with RUIAN data
-    *
-    */
-    public void parseJSON (String jsonStr) {
+     * Parse given JSON string and fill variables with RUIAN data
+     *
+     * @param jsonStr JSON string with RUIAN data
+     */
+    public void parseJSON(String jsonStr) {
 
+        init();
 
-    init();
-
-    JsonReader jsonReader = Json.createReader(new ByteArrayInputStream(jsonStr.getBytes()));
-    JsonObject obj = jsonReader.readObject();
-    jsonReader.close();
-
-      try {
-        double lat, lon;
-
-        JsonObject coorObjekt = obj.getJsonObject("coordinates");
-
-        try {
-          lat = Double.parseDouble(coorObjekt.getString("lat"));
-          lon = Double.parseDouble(coorObjekt.getString("lon"));
-          m_coor = new LatLon (lat, lon);
-        } catch (Exception e) {
-          System.out.println("coor: " + e.getMessage());
+        JsonObject obj;
+        try (JsonReader jsonReader = Json.createReader(new ByteArrayInputStream(jsonStr.getBytes()))) {
+            obj = jsonReader.readObject();
         }
 
-        try {
-          m_source = obj.getString("source");
-        } catch (Exception e) {
-          System.out.println("source: " + e.getMessage());
+        m_source = obj.getString("source");
+
+        if (obj.containsKey("keys")) {
+            JsonString keys = obj.getJsonString("keys");
+            String[] kv = keys.toString().replace("\"", "").replace(",{", "").replace("{", "").replace("}}", "}").split("}");
+            System.out.println("keys: " + Arrays.toString(kv));
+            for (int i = 0; i < kv.length; i++) {
+                System.out.println("key[" + i + "]: " + kv[i]);
+                String[] x = kv[i].split(",");
+                m_keys.put(x[0], x[1]);
+            }
         }
 
-      } catch (Exception e) {
-        System.out.println("coordinates: " + e.getMessage());
-      }
-
-      try {
-        String key, val;
-
-        JsonString keys = obj.getJsonString("keys");
-        String[] kv = keys.toString().replace("\"","").replace(",{","").replace("{","").replace("}}","}").split("}");
-
-        System.out.println("keys: " + kv.toString());
-        for (int i = 0; i < kv.length; i++) {
-          System.out.println("key["+i+"]: " + kv[i]);
-          String[] x= kv[i].split(",");
-          m_keys.put(x[0], x[1]);
-        }
-
-      } catch (Exception e) {
-        System.out.println("keys: " + e.getMessage());
-      }
-
-// =========================================================================
-      try {
-        JsonObject parcela = obj.getJsonObject("parcela");
-
-        try {
-          m_druh_pozemku = parcela.getString("druh_pozemku");
-        } catch (Exception e) {
-          System.out.println("parcela.druh_pozemku: " + e.getMessage());
-        }
-
-        try {
-          m_zpusob_vyuziti = parcela.getString("zpusob_vyuziti");
-        } catch (Exception e) {
-          System.out.println("parcela.zpusob_vyuziti: " + e.getMessage());
-        }
-
-        try {
-          m_plati_od = parcela.getString("plati_od");
-        } catch (Exception e) {
-          System.out.println("parcela.plati_od: " + e.getMessage());
-        }
-
-      } catch (Exception e) {
-        System.out.println("parcela: " + e.getMessage());
-      }
-// =========================================================================
-      try {
         JsonArray arr = obj.getJsonArray("geometry");
         List<LatLon> way = new ArrayList<>(arr.size());
-        for(int i = 0; i < arr.size(); i++)
-        {
-          System.out.println("i="+i);
-          JsonArray node = arr.getJsonArray(i);
+        for (int i = 0; i < arr.size(); i++) {
+            System.out.println("i=" + i);
+            JsonArray node = arr.getJsonArray(i);
 
-          try {
             LatLon coor = new LatLon(
-              LatLon.roundToOsmPrecision(node.getJsonNumber(1).doubleValue()),
-              LatLon.roundToOsmPrecision(node.getJsonNumber(0).doubleValue())
+                    node.getJsonNumber(1).doubleValue(),
+                    node.getJsonNumber(0).doubleValue()
             );
             System.out.println("coor: " + coor.toString());
             way.add(coor);
-          } catch (Exception e) {
-          }
         }
         super.setOuter(way);
-      } catch (Exception e) {
-      }
-
-//       mapKeys();
     }
 
-  /**
-   *  Return RUIAN landusage code
-   *  @return RUIAN land usage code
-   */
-  public String getLandUsageCode() {
-    return m_zpusob_vyuziti;
-  }
+    /**
+     * Return keys
+     *
+     * @return Keys
+     */
+    public Map<String, String> getKeys() {
+        return m_keys;
+    }
 
-  /**
-   *  Return keys
-   *  @return Keys
-   */
-   public Map<String, String> getKeys() {
-    return m_keys;
-  }
+    /**
+     * Return Ruian ID of the land
+     *
+     * @return Ruian land ID
+     */
+    public long getLandID() {
+        return m_ruian_id;
+    }
 
-  /**
-   *  Return Ruian ID of the land
-   *  @return Ruian land ID
-   */
-  public long getLandID() {
-    return m_ruian_id;
-  }
+    /**
+     * Return data source
+     *
+     * @return Data source
+     */
+    public String getSource() {
+        return m_source;
+    }
 
-  /**
-   *  Return data source
-   *  @return Data source
-   */
-  public String getSource() {
-    return m_source;
-  }
+    /**
+     * Return whether traced object is building (has building key)
+     *
+     * @return True/False - is building or not
+     */
+    public boolean isBuilding() {
+        return m_keys.containsKey("building");
+    }
 
-  /**
-   *  Return whether traced object is building (has building key)
-   *  @return True/False - is building or not
-   */
-  public boolean isBuilding() {
+    /**
+     * Returns whether traced object is a land (has landuse, natural or leisure
+     * key)
+     *
+     * @return True/False - is land or not
+     */
+    public boolean isLand() {
+        return m_keys.containsKey("landuse")
+                || m_keys.containsKey("natural")
+                || m_keys.containsKey("leisure");
+    }
 
-    return m_keys.containsKey("building");
-  }
+    /**
+     * Returns whether traced object is a garden (has leisure=garden key)
+     *
+     * @return True/False - is garden or not
+     */
+    public boolean isGarden() {
+        return m_keys.containsKey("leisure") && m_keys.get("leisure").equals("garden");
+    }
 
-  /**
-   *  Return whether traced object is land (has landuse, natural or leisure key)
-   *  @return True/False - is land or not
-   */
-  public boolean isLand() {
-
-    return m_keys.containsKey("landuse") || m_keys.containsKey("natural") || m_keys.containsKey("leisure");
-  }
-
-  /**
-   *  Return whether traced object is garden (has leisure=garden key)
-   *  @return True/False - is garden or not
-   */
-  public boolean isGarden() {
-
-    return m_keys.containsKey("leisure") && m_keys.get("leisure").equals("garden");
-  }
-
-  public boolean hasData() {
-      return super.hasOuter();
-  }
-
+    @Override
+    public boolean hasData() {
+        return super.hasOuter() && !m_keys.isEmpty();
+    }
 }
