@@ -185,14 +185,12 @@ public final class LpisModule extends TracerModule  {
             }
 
             // Create traced object
-            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
+            EdObject trobj = this.createTracedEdObject(editor);
             if (trobj == null)
                 return null;
-            EdWay outer_way = trobj.a;
-            EdMultipolygon multipolygon = trobj.b;
 
             // Everything is inside DataSource bounds?
-            if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
+            if (!checkInsideDataSourceBounds(trobj, retrace_object)) {
                 wayIsOutsideDownloadedAreaDialog();
                 return null;
             }
@@ -200,39 +198,39 @@ public final class LpisModule extends TracerModule  {
             // Connect nodes to near landuse nodes
             // (must be done before retrace updates, we want to use as much old nodes as possible)
             if (!m_performClipping) {
-                reuseExistingNodes(multipolygon == null ? outer_way : multipolygon);
+                reuseExistingNodes(trobj);
             }
             else {
-                reuseNearNodes(multipolygon == null ? outer_way : multipolygon, retrace_object);
+                reuseNearNodes(trobj, retrace_object);
             }
 
             // Retrace simple ways - just use the old way
             if (retrace_object != null) {
-                if ((multipolygon != null) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
+                if (!(trobj instanceof EdWay) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
                     postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
                     return null;
                 }
                 EdWay retrace_way = (EdWay)retrace_object;
-                retrace_way.setNodes(outer_way.getNodes());
-                outer_way = retrace_way;
+                retrace_way.setNodes(((EdWay)trobj).getNodes());
+                trobj = retrace_way;
             }
 
             // Tag object
-            tagTracedObject(multipolygon == null ? outer_way : multipolygon);
+            tagTracedObject(trobj);
 
             // Connect to touching nodes of near landuse polygons
-            connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
+            connectExistingTouchingNodes(trobj);
 
             // Clip other areas
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipLanduseWayMatch);
                 ClipAreas clip = new ClipAreas(editor, m_clipSettings, postTraceNotifications());
-                clip.clipAreas(outer_way, filter);
+                clip.clipAreas(getOuterWay(trobj), filter);
 
                 // Remove needless nodes
                 AreaPredicate remove_filter = new AreaPredicate (m_clipLanduseWayMatch);
-                BBox remove_bbox = (multipolygon == null ? outer_way : multipolygon).getBBox();
+                BBox remove_bbox = trobj.getBBox();
                 BBoxUtils.extendBBox(remove_bbox, LatLonSize.get(remove_bbox, oversizeInDataBoundsMeters));
                 RemoveNeedlessNodes remover = new RemoveNeedlessNodes(remove_filter, m_removeNeedlesNodesTolerance, (Math.PI*2)/3, remove_bbox);
                 remover.removeNeedlessNodes(editor.getModifiedWays());
@@ -240,14 +238,17 @@ public final class LpisModule extends TracerModule  {
 
             // Merge duplicate ways
             // (Note that outer way can be merged to another way too, so we must watch it.
-            // Otherwise, outer_way variable would refer to an unused way.)
+            // Otherwise, trobj variable would refer to an unused way.)
             if (m_performWayMerging) {
                 AreaPredicate merge_filter = new AreaPredicate (m_mergeLanduseWayMatch);
                 MergeIdenticalWays merger = new MergeIdenticalWays(editor, merge_filter);
-                outer_way = merger.mergeWays(editor.getModifiedWays(), true, outer_way);
+                EdWay outer_way = merger.mergeWays(editor.getModifiedWays(), true, getOuterWay(trobj));
+                if (trobj instanceof EdWay) {
+                    trobj = outer_way;
+                }
             }
 
-            return multipolygon == null ? outer_way : multipolygon;
+            return trobj;
         }
 
         private void tagTracedObject (EdObject obj) {
@@ -266,7 +267,7 @@ public final class LpisModule extends TracerModule  {
             obj.setKeys(map);
         }
 
-        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
+        private EdObject createTracedEdObject (WayEditor editor) {
 
             // Prepare outer way nodes
             List<LatLon> outer_lls = record().getOuter();
@@ -284,7 +285,7 @@ public final class LpisModule extends TracerModule  {
 
             // Simple way?
             if (!record().hasInners())
-                return new Pair<>(outer_way, null);
+                return outer_way;
 
             // Create multipolygon
             EdMultipolygon multipolygon = editor.newMultipolygon();
@@ -304,7 +305,7 @@ public final class LpisModule extends TracerModule  {
                 multipolygon.addInnerWay(way);
             }
 
-            return new Pair<>(outer_way, multipolygon);
+            return multipolygon;
         }
 
         private Pair<EdObject, Boolean> getObjectToRetrace(WayEditor editor, LatLon pos) {

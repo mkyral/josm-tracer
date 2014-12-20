@@ -236,12 +236,10 @@ public final class RuianModule extends TracerModule {
             }
 
             // Create traced object
-            Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
-            EdWay outer_way = trobj.a;
-            EdMultipolygon multipolygon = trobj.b;
+            EdObject trobj = this.createTracedEdObject(editor);
 
             // Everything is inside DataSource bounds?
-            if (!checkInsideDataSourceBounds(multipolygon == null ? outer_way : multipolygon, retrace_object)) {
+            if (!checkInsideDataSourceBounds(trobj, retrace_object)) {
                 wayIsOutsideDownloadedAreaDialog();
                 return null;
             }
@@ -249,36 +247,34 @@ public final class RuianModule extends TracerModule {
             // Connect to near building polygons
             // (must be done before retrace updates, we want to use as much old nodes as possible)
             if (!m_performNearBuildingsEdit) {
-                reuseExistingNodes(multipolygon == null ? outer_way : multipolygon);
+                reuseExistingNodes(trobj);
             }
             else {
-                reuseNearNodes(multipolygon == null ? outer_way : multipolygon, retrace_object);
+                reuseNearNodes(trobj, retrace_object);
             }
 
             // Update geometries of retraced object
             if (retrace_object != null) {
-                Pair<EdWay, EdMultipolygon> reobj = this.updateRetracedObjects(multipolygon == null ? outer_way : multipolygon, retrace_object);
-                if (reobj == null)
+                trobj = this.updateRetracedObjects(trobj, retrace_object);
+                if (trobj == null)
                     return null;
-                outer_way = reobj.a;
-                multipolygon = reobj.b;
             }
 
             // Connect to touching nodes of near buildings
             // (must be done after retrace updates, we don't want to connect to the old polygon)
             if (m_performNearBuildingsEdit) {
-                connectExistingTouchingNodes(multipolygon == null ? outer_way : multipolygon);
+                connectExistingTouchingNodes(trobj);
             }
 
             // Tag object
-            tagTracedObject(multipolygon == null ? outer_way : multipolygon);
+            tagTracedObject(trobj);
 
             // Clip other areas
             if (m_performClipping) {
                 // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (m_clipBuildingWayMatch);
                 ClipAreas clip = new ClipAreas(editor, m_clipSettings, postTraceNotifications());
-                clip.clipAreas(outer_way, filter);
+                clip.clipAreas(getOuterWay(trobj), filter);
 
                 // Remove needless nodes
                 AreaPredicate remove_filter = new AreaPredicate (m_clipBuildingWayMatch);
@@ -288,14 +284,17 @@ public final class RuianModule extends TracerModule {
 
             // Merge duplicate ways
             // (Note that outer way can be merged to another way too, so we must watch it.
-            // Otherwise, outer_way variable would refer to an unused way.)
+            // Otherwise, trobj variable would refer to an unused way.)
             if (m_performWayMerging) {
                 AreaPredicate merge_filter = new AreaPredicate (m_mergeBuildingWayMatch);
                 MergeIdenticalWays merger = new MergeIdenticalWays(editor, merge_filter);
-                outer_way = merger.mergeWays(editor.getModifiedWays(), true, outer_way);
+                EdWay outer_way = merger.mergeWays(editor.getModifiedWays(), true, getOuterWay(trobj));
+                if (trobj instanceof EdWay) {
+                    trobj = outer_way;
+                }
             }
 
-            return multipolygon == null ? outer_way : multipolygon;
+            return trobj;
         }
 
         private void tagTracedObject (EdObject obj) {
@@ -310,7 +309,7 @@ public final class RuianModule extends TracerModule {
             obj.setKeys(map);
         }
 
-        private Pair<EdWay, EdMultipolygon> createTracedEdObject (WayEditor editor) {
+        private EdObject createTracedEdObject (WayEditor editor) {
 
             // Prepare outer way nodes
             List<LatLon> outer_rls = record().getOuter();
@@ -328,7 +327,7 @@ public final class RuianModule extends TracerModule {
 
             // Simple way?
             if (!record().hasInners())
-                return new Pair<>(outer_way, null);
+                return outer_way;
 
             // Create multipolygon
             EdMultipolygon multipolygon = editor.newMultipolygon();
@@ -348,7 +347,7 @@ public final class RuianModule extends TracerModule {
                 multipolygon.addInnerWay(way);
             }
 
-            return new Pair<>(outer_way, multipolygon);
+            return multipolygon;
         }
 
         private Pair<EdObject, Boolean> getObjectToRetrace(WayEditor editor, LatLon pos, Match retraceAreaMatch) {
@@ -410,7 +409,7 @@ public final class RuianModule extends TracerModule {
         }
 
         @SuppressWarnings("null")
-        private Pair<EdWay, EdMultipolygon> updateRetracedObjects(EdObject new_object, EdObject retrace_object) {
+        private EdObject updateRetracedObjects(EdObject new_object, EdObject retrace_object) {
 
             boolean retrace_is_simple_way = (retrace_object instanceof EdWay) && !retrace_object.hasReferrers();
             boolean new_is_way = (new_object instanceof EdWay);
@@ -422,7 +421,7 @@ public final class RuianModule extends TracerModule {
                 EdWay retrace_way = (EdWay) retrace_object;
                 retrace_way.setNodes(outer_way.getNodes());
                 outer_way = retrace_way;
-                return new Pair<>(outer_way, null);
+                return outer_way;
             }
 
             // Simple way -> Multipolygon
@@ -436,14 +435,14 @@ public final class RuianModule extends TracerModule {
                 retrace_way.setNodes(outer_way.getNodes());
                 outer_way = retrace_way;
                 multipolygon.addOuterWay(outer_way);
-                return new Pair<>(outer_way, multipolygon);
+                return multipolygon;
             }
 
             // Multipolygon -> Multipolygon
             if ((retrace_object instanceof EdMultipolygon) && new_is_multipolygon) {
                 EdMultipolygon retrace_multipolygon = (EdMultipolygon)retrace_object;
                 EdMultipolygon new_multipolygon = (EdMultipolygon)new_object;
-                Pair<EdWay, EdMultipolygon> res = updateRetracedMultipolygons(new_multipolygon, retrace_multipolygon);
+                EdObject res = updateRetracedMultipolygons(new_multipolygon, retrace_multipolygon);
                 if (res != null)
                     return res;
             }
@@ -452,7 +451,7 @@ public final class RuianModule extends TracerModule {
             return null;
         }
 
-        private Pair<EdWay, EdMultipolygon> updateRetracedMultipolygons(EdMultipolygon new_multipolygon, EdMultipolygon retrace_multipolygon) {
+        private EdObject updateRetracedMultipolygons(EdMultipolygon new_multipolygon, EdMultipolygon retrace_multipolygon) {
 
             // don't retrace non-standalone multipolygons
             boolean retrace_is_standalone = !retrace_multipolygon.hasReferrers() && retrace_multipolygon.allWaysHaveSingleReferrer();
@@ -473,7 +472,7 @@ public final class RuianModule extends TracerModule {
                 updateRetracedMultipolygonWaysAgressive(retrace_multipolygon, new_multipolygon, true);
                 updateRetracedMultipolygonWaysAgressive(retrace_multipolygon, new_multipolygon, false);
                 new_multipolygon.deleteShallow();
-                return new Pair<>(retrace_multipolygon.outerWays().get(0), retrace_multipolygon);
+                return retrace_multipolygon;
             }
 
             // other possibilites not supported yet
@@ -487,8 +486,7 @@ public final class RuianModule extends TracerModule {
             List<EdWay> news = out ? new_multipolygon.outerWays() : new_multipolygon.innerWays();
             int ridx = 0;
 
-            for (int i = 0; i < news.size(); i++) {
-                EdWay new_way = news.get(i);
+            for (EdWay new_way : news) {
                 // update geometry of existing way
                 if (ridx < retraces.size()) {
                     EdWay retrace_way = retraces.get(ridx++);
