@@ -97,11 +97,11 @@ public abstract class EdObject {
     }
 
     public final boolean isWay() {
-        return this.isWay();
+        return this instanceof EdWay;
     }
 
     public final boolean isMultipolygon() {
-        return this.isMultipolygon();
+        return this instanceof EdMultipolygon;
     }
 
     public final boolean isNode() {
