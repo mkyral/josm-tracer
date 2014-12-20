@@ -80,6 +80,27 @@ public class EdMultipolygon extends EdObject {
             w.addRef(this);
     }
 
+    public static boolean isUsableRelation(Relation rel) {
+        if (!rel.isUsable() || rel.hasIncompleteMembers())
+            return false;
+        if (rel.getMembersCount() <= 0)
+            return false;
+        for (RelationMember member: rel.getMembers()) {
+            if (!member.isWay())
+                return false;
+            if (!member.hasRole())
+                return false;
+            switch (member.getRole()) {
+                case "outer":
+                case "inner":
+                    break;
+                default:
+                    return false;
+            }
+        }
+        return true;
+    }
+
     public void addOuterWay(EdWay edway) {
         checkEditable();
         if (edway == null)

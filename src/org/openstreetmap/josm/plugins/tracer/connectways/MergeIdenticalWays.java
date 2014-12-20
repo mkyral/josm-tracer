@@ -150,11 +150,14 @@ public class MergeIdenticalWays {
 
         System.out.println("Merging identical ways: " + Long.toString(src.getUniqueId()) + " => " + Long.toString(dst.getUniqueId()));
 
-        // load all external multipolygons
+        // load all external multipolygons, make sure that all are usable
         // (we've already checked that all referrers match the area filter)
         List<Relation> rels = src.getExternalReferrers(Relation.class);
-        for (Relation rel: rels)
+        for (Relation rel: rels) {
+            if (!EdMultipolygon.isUsableRelation(rel))
+                return false;
             m_editor.useMultipolygon(rel);
+        }
 
         // replace all relation memberships of the source EdWay with destination EdWay memberships
         List<EdMultipolygon> mps = src.getEditorReferrers(EdMultipolygon.class);
