@@ -206,7 +206,7 @@ public final class LpisModule extends TracerModule  {
 
             // Retrace simple ways - just use the old way
             if (retrace_object != null) {
-                if (!(trobj instanceof EdWay) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
+                if (!trobj.isWay() || !retrace_object.isWay() || retrace_object.hasReferrers()) {
                     postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
                     return null;
                 }
@@ -243,7 +243,7 @@ public final class LpisModule extends TracerModule  {
                 AreaPredicate merge_filter = new AreaPredicate (m_mergeLanduseWayMatch);
                 MergeIdenticalWays merger = new MergeIdenticalWays(editor, merge_filter);
                 EdWay outer_way = merger.mergeWays(editor.getModifiedWays(), true, getOuterWay(trobj));
-                if (trobj instanceof EdWay) {
+                if (trobj.isWay()) {
                     trobj = outer_way;
                 }
             }
@@ -322,9 +322,9 @@ public final class LpisModule extends TracerModule  {
                 if (source == null || !source.equals("lpis"))
                     continue;
 
-                if (area instanceof EdWay)
+                if (area.isWay())
                     System.out.println("Retrace candidate EdWay: " + Long.toString(area.getUniqueId()));
-                else if (area instanceof EdMultipolygon)
+                else if (area.isMultipolygon())
                     System.out.println("Retrace candidate EdMultipolygon: " + Long.toString(area.getUniqueId()));
 
                 String ref = area.get("ref");

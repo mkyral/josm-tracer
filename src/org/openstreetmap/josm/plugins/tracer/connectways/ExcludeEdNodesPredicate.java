@@ -30,7 +30,7 @@ public final class ExcludeEdNodesPredicate implements IEdNodePredicate {
     private final Set<EdNode> m_nodes;
 
     public ExcludeEdNodesPredicate(EdObject obj) {
-        if (obj instanceof EdMultipolygon) {
+        if (obj.isMultipolygon()) {
             m_nodes = new HashSet<>();
             EdMultipolygon mp = (EdMultipolygon)obj;
             List<EdWay> outer_ways = mp.outerWays();
@@ -46,10 +46,10 @@ public final class ExcludeEdNodesPredicate implements IEdNodePredicate {
                     m_nodes.add(node);
             }
         }
-        else if (obj instanceof EdWay) {
+        else if (obj.isWay()) {
             m_nodes = new HashSet<>(((EdWay)obj).getNodes());
         }
-        else if (obj instanceof EdNode) {
+        else if (obj.isNode()) {
             m_nodes = new HashSet<>();
             m_nodes.add((EdNode)obj);
         }

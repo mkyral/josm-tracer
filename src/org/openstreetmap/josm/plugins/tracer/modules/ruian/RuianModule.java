@@ -289,7 +289,7 @@ public final class RuianModule extends TracerModule {
                 AreaPredicate merge_filter = new AreaPredicate (m_mergeBuildingWayMatch);
                 MergeIdenticalWays merger = new MergeIdenticalWays(editor, merge_filter);
                 EdWay outer_way = merger.mergeWays(editor.getModifiedWays(), true, getOuterWay(trobj));
-                if (trobj instanceof EdWay) {
+                if (trobj.isWay()) {
                     trobj = outer_way;
                 }
             }
@@ -359,9 +359,9 @@ public final class RuianModule extends TracerModule {
             boolean multiple_areas = false;
             EdObject building_area = null;
             for (EdObject area: areas) {
-                if (area instanceof EdWay)
+                if (area.isWay())
                     System.out.println("Retrace candidate EdWay: " + Long.toString(area.getUniqueId()));
-                else if (area instanceof EdMultipolygon)
+                else if (area.isMultipolygon())
                     System.out.println("Retrace candidate EdMultipolygon: " + Long.toString(area.getUniqueId()));
 
                 String ref = area.get("ref:ruian:building");
@@ -411,9 +411,9 @@ public final class RuianModule extends TracerModule {
         @SuppressWarnings("null")
         private EdObject updateRetracedObjects(EdObject new_object, EdObject retrace_object) {
 
-            boolean retrace_is_simple_way = (retrace_object instanceof EdWay) && !retrace_object.hasReferrers();
-            boolean new_is_way = (new_object instanceof EdWay);
-            boolean new_is_multipolygon = (new_object instanceof EdMultipolygon);
+            boolean retrace_is_simple_way = retrace_object.isWay() && !retrace_object.hasReferrers();
+            boolean new_is_way = new_object.isWay();
+            boolean new_is_multipolygon = new_object.isMultipolygon();
 
             // Simple way -> Simple way
             if (retrace_is_simple_way && new_is_way) {
@@ -439,7 +439,7 @@ public final class RuianModule extends TracerModule {
             }
 
             // Multipolygon -> Multipolygon
-            if ((retrace_object instanceof EdMultipolygon) && new_is_multipolygon) {
+            if (retrace_object.isMultipolygon() && new_is_multipolygon) {
                 EdMultipolygon retrace_multipolygon = (EdMultipolygon)retrace_object;
                 EdMultipolygon new_multipolygon = (EdMultipolygon)new_object;
                 EdObject res = updateRetracedMultipolygons(new_multipolygon, retrace_multipolygon);

@@ -225,10 +225,10 @@ public abstract class TracerModule {
         }
 
         protected EdWay getOuterWay(EdObject obj) {
-            if (obj instanceof EdWay) {
+            if (obj.isWay()) {
                 return (EdWay)obj;
             }
-            if (obj instanceof EdMultipolygon) {
+            if (obj.isMultipolygon()) {
                 EdMultipolygon mp = (EdMultipolygon)obj;
                 List<EdWay> ways = mp.outerWays();
                 if (ways.size() == 1) {
@@ -281,10 +281,10 @@ public abstract class TracerModule {
 
                     OsmPrimitive sel = null;
 
-                    if (object instanceof EdMultipolygon) {
+                    if (object.isMultipolygon()) {
                         sel = ((EdMultipolygon)object).finalMultipolygon();
                     }
-                    else if (object instanceof EdWay) {
+                    else if (object.isWay()) {
                         sel = ((EdWay)object).finalWay();
                     }
                     else {

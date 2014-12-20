@@ -355,13 +355,13 @@ public class AngPolygonClipper {
     }
 
     private Paths edObjectToPaths(EdObject obj) {
-        if (obj instanceof EdWay) {
+        if (obj.isWay()) {
             Path p = wayToPath((EdWay)obj);
             Paths pp = new Paths();
             pp.add(p);
             return pp;
         }
-        if (obj instanceof EdMultipolygon)
+        if (obj.isMultipolygon())
             return multipolygonToPaths((EdMultipolygon)obj);
         throw new IllegalArgumentException("EdObject must be either EdWay or EdMultipolygon");
     }

@@ -217,7 +217,7 @@ public final class RuianLandsModule extends TracerModule {
 
             // Retrace simple ways - just use the old way
             if (retrace_object != null) {
-                if ((multipolygon != null) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
+                if ((multipolygon != null) || !retrace_object.isWay() || retrace_object.hasReferrers()) {
                     postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
                     return null;
                 }
@@ -349,9 +349,9 @@ public final class RuianLandsModule extends TracerModule {
 //                 if (source == null || !source.equals("cuzk:ruian"))
 //                     continue;
 
-                if (area instanceof EdWay)
+                if (area.isWay())
                     System.out.println("Retrace candidate EdWay: " + Long.toString(area.getUniqueId()));
-                else if (area instanceof EdMultipolygon)
+                else if (area.isMultipolygon())
                     System.out.println("Retrace candidate EdMultipolygon: " + Long.toString(area.getUniqueId()));
 
                 String ref = area.get("ref:ruian:building");

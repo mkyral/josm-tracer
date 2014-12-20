@@ -96,6 +96,18 @@ public abstract class EdObject {
         return m_modified;
     }
 
+    public final boolean isWay() {
+        return this.isWay();
+    }
+
+    public final boolean isMultipolygon() {
+        return this.isMultipolygon();
+    }
+
+    public final boolean isNode() {
+        return this instanceof EdNode;
+    }
+
     public void addRef(EdObject ref) {
         if (m_refs == null) {
             m_refs = ref;
