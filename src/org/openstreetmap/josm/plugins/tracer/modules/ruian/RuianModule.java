@@ -21,7 +21,6 @@ package org.openstreetmap.josm.plugins.tracer.modules.ruian;
 import java.awt.Cursor;
 import java.util.*;
 
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;

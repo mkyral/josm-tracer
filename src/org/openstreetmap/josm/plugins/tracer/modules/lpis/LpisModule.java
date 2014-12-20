@@ -21,7 +21,6 @@ package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
 import java.awt.Cursor;
 import java.util.*;
-import java.util.List;
 import java.util.Map;
 
 import org.openstreetmap.josm.actions.search.SearchCompiler;
