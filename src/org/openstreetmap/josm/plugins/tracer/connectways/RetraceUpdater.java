@@ -20,6 +20,7 @@
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import java.util.List;
+import java.util.Set;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.plugins.tracer.PostTraceNotifications;
 import static org.openstreetmap.josm.tools.I18n.tr;
@@ -39,6 +40,13 @@ public class RetraceUpdater {
         boolean retrace_is_simple_way = retrace_object.isWay() && !retrace_object.hasReferrers();
         boolean new_is_way = new_object.isWay();
         boolean new_is_multipolygon = new_object.isMultipolygon();
+
+        // Disallow retrace if it disconnects an important single-referrer node and makes it an orphan
+        EdNode dn = findAnyImportantNodeToBeOrphaned (new_object, retrace_object);
+        if (dn != null) {
+            m_postTraceNotifications.add(tr("Retrace would disconnect an important node {0}, this is not supported.", dn.getUniqueId()));
+            return null;
+        }
 
         // Simple way -> Simple way
         if (retrace_is_simple_way && new_is_way) {
@@ -131,5 +139,25 @@ public class RetraceUpdater {
             else
                 retrace_multipolygon.removeInnerWay(retraces.get(i));
         }
+    }
+
+    private EdNode findAnyImportantNodeToBeOrphaned(EdObject new_object, EdObject retrace_object) {
+        Set<EdNode> old_nodes = retrace_object.getAllNodes();
+        Set<EdNode> new_nodes = null;
+        for (EdNode node: old_nodes) {
+            // untagged nodes aren't important
+            if (!node.isTagged())
+                continue;
+            if (new_nodes == null)
+                new_nodes = new_object.getAllNodes();
+            // node is included in new geometry too, fine
+            if (new_nodes.contains(node))
+                continue;
+            // node has more than one referrer, it won't be orphaned
+            if (!node.hasSingleReferrer())
+                continue;
+            return node;
+        }
+        return null;
     }
 }
