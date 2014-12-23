@@ -189,7 +189,7 @@ public abstract class TracerModule {
             }
             catch (final Exception e) {
                 e.printStackTrace();
-                TracerUtils.showNotification(tr("{0} download failed.", getName()) + "\n(" + m_pos.toDisplayString() + ")", "error");
+                TracerUtils.showNotification(tr("{0} download failed ({1}).\nException: {2}", getName(), m_pos.toDisplayString(), e.getLocalizedMessage()), "error");
                 return;
             }
 
