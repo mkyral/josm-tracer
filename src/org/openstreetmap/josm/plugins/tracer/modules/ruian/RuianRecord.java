@@ -36,7 +36,6 @@ import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 
 public final class RuianRecord extends TracerRecord {
 
-    private double   m_coor_lat, m_coor_lon;
     private String   m_source;
     private long     m_ruian_id;
     private int      m_levels;
@@ -49,458 +48,328 @@ public final class RuianRecord extends TracerRecord {
 
     private ArrayList <Address> m_address_places;
 
-    /**
-    * Constructor
-    *
-    */
     public RuianRecord (double adjlat, double adjlon) {
         super (adjlat, adjlon);
         this.init();
     }
 
-    /**
-    * Initialization
-    *
-    */
     @Override
-    protected void init () {
-      super.init();
-      m_coor_lat = 0;
-      m_coor_lon = 0;
-      m_source = "";
-      m_ruian_id = -1;
-      m_levels = 0;
-      m_flats = 0;
-      m_usage_code = "";
-      m_usage_key = "";
-      m_usage_val = "";
-      m_finished = "";
-      m_valid_from = "";
-      m_address_places = new ArrayList<Address> ();
-
+    protected void init() {
+        super.init();
+        m_source = "";
+        m_ruian_id = -1;
+        m_levels = 0;
+        m_flats = 0;
+        m_usage_code = "";
+        m_usage_key = "";
+        m_usage_val = "";
+        m_finished = "";
+        m_valid_from = "";
+        m_address_places = new ArrayList<>();
     }
 
     /**
-    * Parse given JSON string and fill variables with RUIAN data
-    *
-    */
-    public void parseJSON (String jsonStr) {
+     * Parse given JSON string and fill record with RUIAN data
+     *
+     * @param jsonStr JSON string with RUIAN data
+     */
+    public void parseJSON(String jsonStr) {
 
+        init();
 
-    init();
+        long adr_id = 0;
+        String house_number = "";
+        String house_number_typ = "";
+        String street_number = "";
+        String street = "";
+        String place = "";
+        String suburb = "";
+        String city = "";
+        String district = "";
+        String region = "";
+        String postcode = "";
 
-    long     adr_id = 0;
-    String   house_number = "";
-    String   house_number_typ = "";
-    String   street_number = "";
-    String   street = "";
-    String   place = "";
-    String   suburb = "";
-    String   city = "";
-    String   district = "";
-    String   region = "";
-    String   postcode = "";
-
-    JsonReader jsonReader = Json.createReader(new ByteArrayInputStream(jsonStr.getBytes()));
-    JsonObject obj = jsonReader.readObject();
-    jsonReader.close();
-
-      try {
-        JsonObject coorObjekt = obj.getJsonObject("coordinates");
-
-        try {
-          m_coor_lat = Double.parseDouble(coorObjekt.getString("lat"));
-        } catch (Exception e) {
-          System.out.println("coordinates.lat: " + e.getMessage());
+        JsonObject obj;
+        try (JsonReader jsonReader = Json.createReader(new ByteArrayInputStream(jsonStr.getBytes()))) {
+            obj = jsonReader.readObject();
         }
 
-        try {
-          m_coor_lon = Double.parseDouble(coorObjekt.getString("lon"));
-        } catch (Exception e) {
-          System.out.println("coordinates.lon: " + e.getMessage());
-        }
+        // get source
+        m_source = parseJsonString(obj, "source", m_source);
 
-        try {
-          m_source = obj.getString("source");
-        } catch (Exception e) {
-          System.out.println("source: " + e.getMessage());
-        }
-
-      } catch (Exception e) {
-        System.out.println("coordinates: " + e.getMessage());
-      }
-
-// =========================================================================
-
-      try {
-        JsonObject building = obj.getJsonObject("stavebni_objekt");
-
-        try {
-          m_ruian_id = Long.parseLong(building.getString("ruian_id"));
-        } catch (Exception e) {
-          System.out.println("stavebni_objekt.ruian_id: " + e.getMessage());
-        }
-
-        try {
-          house_number = building.getString("cislo_domovni");
-        } catch (Exception e) {
-            System.out.println("stavebni_objekt.cislo_domovni: " + e.getMessage());
-        }
-
-        try {
-          house_number_typ = building.getString("cislo_domovni_typ");
-        } catch (Exception e) {
-            System.out.println("stavebni_objekt.cislo_domovni_typ: " + e.getMessage());
-        }
-
-        try {
-          street_number = building.getString("cislo_orientacni");
-        } catch (Exception e) {
-            System.out.println("stavebni_objekt.cislo_orientacni: " + e.getMessage());
-        }
-
-        try {
-          adr_id = Long.parseLong(building.getString("adresni_misto_kod"));
-        } catch (Exception e) {
-            System.out.println("stavebni_objek.tadresni_misto_kod: " + e.getMessage());
-        }
-
-        try {
-          street = building.getString("ulice");
-        } catch (Exception e) {
-            System.out.println("stavebni_objekt.ulice: " + e.getMessage());
-        }
-
-        try {
-          place = building.getString("cast_obce");
-        } catch (Exception e) {
-            System.out.println("stavebni_objekt.cast_obce: " + e.getMessage());
-        }
-
-        try {
-          suburb = building.getString("mestska_cast");
-        } catch (Exception e) {
-            System.out.println("stavebni_objekt.mestska_cast: " + e.getMessage());
-        }
-
-        try {
-          city = building.getString("obec");
-        } catch (Exception e) {
-            System.out.println("stavebni_objekt.obec: " + e.getMessage());
-        }
-
-        try {
-          district = building.getString("okres");
-        } catch (Exception e) {
-            System.out.println("stavebni_objekt.okres: " + e.getMessage());
-        }
-
-        try {
-          region = building.getString("kraj");
-        } catch (Exception e) {
-            System.out.println("stavebni_objekt.kraj: " + e.getMessage());
-        }
-
-        try {
-          postcode = building.getString("psc");
-        } catch (Exception e) {
-            System.out.println("stavebni_objekt.psc: " + e.getMessage());
-        }
-
-        try {
-          m_levels = Integer.parseInt(building.getString("pocet_podlazi"));
-        } catch (Exception e) {
-          System.out.println("stavebni_objekt.pocet_podlazi: " + e.getMessage());
-        }
-
-        try {
-          m_flats = Integer.parseInt(building.getString("pocet_bytu"));
-        } catch (Exception e) {
-          System.out.println("stavebni_objekt.pocet_bytu: " + e.getMessage());
-        }
-
-        try {
-          m_usage_code = building.getString("zpusob_vyuziti_kod");
-        } catch (Exception e) {
-          System.out.println("stavebni_objekt.m_objekt_zpusob_vyuziti_kod: " + e.getMessage());
-        }
-
-        try {
-          m_usage_key = building.getString("zpusob_vyuziti_key");
-        } catch (Exception e) {
-          System.out.println("stavebni_objekt.zpusob_vyuziti_key: " + e.getMessage());
-        }
-
-        try {
-          m_usage_val = building.getString("zpusob_vyuziti_val");
-        } catch (Exception e) {
-          System.out.println("stavebni_objekt.m_objekt_zpusob_vyuziti_val: " + e.getMessage());
-        }
-
-        try {
-          m_valid_from = building.getString("plati_od");
-        } catch (Exception e) {
-          System.out.println("stavebni_objekt.plati_od: " + e.getMessage());
-        }
-
-        try {
-          m_finished = building.getString("dokonceni");
-        } catch (Exception e) {
-          System.out.println("stavebni_objekt.dokonceni: " + e.getMessage());
-        }
-
-      } catch (Exception e) {
-        System.out.println("stavebni_objekt: " + e.getMessage());
-      }
-
-// =========================================================================
+        // get geometry data
         JsonObject geomObj = obj.getJsonObject("geometry");
 
-        // Outer
+        // outer geometry
         JsonArray outerArr = geomObj.getJsonArray("outer");
         List<LatLon> way = new ArrayList<>(outerArr.size());
         for (int i = 0; i < outerArr.size(); i++) {
             JsonArray node = outerArr.getJsonArray(i);
-
-            try {
-                LatLon coor = new LatLon(
-                        LatLon.roundToOsmPrecision(node.getJsonNumber(1).doubleValue()),
-                        LatLon.roundToOsmPrecision(node.getJsonNumber(0).doubleValue())
-                );
-                System.out.println("outer[" + i + "]:coor: " + coor.toString());
-                way.add(coor);
-            } catch (Exception e) {
-            }
+            LatLon coor = new LatLon(
+                    LatLon.roundToOsmPrecision(node.getJsonNumber(1).doubleValue()),
+                    LatLon.roundToOsmPrecision(node.getJsonNumber(0).doubleValue())
+            );
+            System.out.println("outer[" + i + "]:coor: " + coor.toString());
+            way.add(coor);
         }
         super.setOuter(way);
 
-        // Inners
-        JsonArray innersArr = geomObj.getJsonArray("inners");
-        for (int i = 0; i < innersArr.size(); i++) {
-            JsonArray innerArr = innersArr.getJsonArray(i);
-            ArrayList<LatLon> inner = new ArrayList<>();
+        // inner geometries
+        if (geomObj.containsKey("inners")) {
+            JsonArray innersArr = geomObj.getJsonArray("inners");
+            for (int i = 0; i < innersArr.size(); i++) {
+                JsonArray innerArr = innersArr.getJsonArray(i);
+                ArrayList<LatLon> inner = new ArrayList<>();
 
-            System.out.println("");
-            for (int j = 0; j < innerArr.size(); j++) {
-                JsonArray node = innerArr.getJsonArray(j);
-
-                try {
+                System.out.println("");
+                for (int j = 0; j < innerArr.size(); j++) {
+                    JsonArray node = innerArr.getJsonArray(j);
                     LatLon coor = new LatLon(
                             LatLon.roundToOsmPrecision(node.getJsonNumber(1).doubleValue()),
                             LatLon.roundToOsmPrecision(node.getJsonNumber(0).doubleValue())
                     );
                     System.out.println("inner[" + i + "][" + j + "]:coor: " + coor.toString());
                     inner.add(coor);
-                } catch (Exception e) {
                 }
+                super.addInner(inner);
             }
-            super.addInner(inner);
         }
 
-      // =========================================================================
-      try {
-        JsonArray arr = obj.getJsonArray("adresni_mista");
+        // SO data
+        if (obj.containsKey("stavebni_objekt")) {
+            JsonObject building = obj.getJsonObject("stavebni_objekt");
 
-        for(int i = 0; i < arr.size(); i++)
-        {
-          JsonObject addrPlace = arr.getJsonObject(i);
-          Address addr = new Address();
-
-          try {
-            adr_id = Long.parseLong(addrPlace.getString("ruian_id"));
-          } catch (Exception e) {
-            System.out.println("adresni_mista.ruian_id: " + e.getMessage());
-          }
-
-          try {
-            house_number = addrPlace.getString("cislo_domovni");
-          } catch (Exception e) {
-            System.out.println("adresni_mista.cislo_domovni: " + e.getMessage());
-          }
-
-          try {
-            street_number = addrPlace.getString("cislo_orientacni");
-          } catch (Exception e) {
-            System.out.println("adresni_mista.cislo_orientacni: " + e.getMessage());
-          }
-
-          try {
-            street = addrPlace.getString("ulice");
-          } catch (Exception e) {
-            System.out.println("adresni_mista.ulice: " + e.getMessage());
-          }
-
-          addr.setRuianID(adr_id);
-
-          if (house_number_typ.equals("číslo popisné"))
-            addr.setConscriptionNumber(house_number);
-          else if (house_number_typ.equals("číslo evidenční"))
-            addr.setProvisionalNumber(house_number);
-
-          addr.setStreetNumber(street_number);
-          addr.setStreet(street);
-          addr.setPlace(place);
-          addr.setSuburb(suburb);
-          addr.setCity(city);
-          addr.setDistrict(district);
-          addr.setRegion(region);
-          addr.setCountryCode("CZ");
-          addr.setPostCode(postcode);
-
-          m_address_places.add(addr);
-        }
-      } catch (Exception e) {
-      }
-
-      if (m_address_places.isEmpty() &&
-            house_number.length() > 0) {
-
-        Address addr = new Address();
-        addr.setRuianID(adr_id);
-
-        switch (house_number_typ) {
-            case "číslo popisné":
-                addr.setConscriptionNumber(house_number);
-                break;
-            case "číslo evidenční":
-                addr.setProvisionalNumber(house_number);
-                break;
+            m_ruian_id = parseJsonLong(building, "ruian_id", m_ruian_id);
+            house_number = parseJsonString(building, "cislo_domovni", house_number);
+            house_number_typ = parseJsonString(building, "cislo_domovni_typ", house_number_typ);
+            street_number = parseJsonString(building, "cislo_orientacni", street_number);
+            adr_id = parseJsonLong(building, "adresni_misto_kod", adr_id);
+            street = parseJsonString(building, "ulice", street);
+            place = parseJsonString(building, "cast_obce", place);
+            suburb = parseJsonString(building, "mestska_cast", suburb);
+            city = parseJsonString(building, "obec", city);
+            district = parseJsonString(building, "okres", district);
+            region = parseJsonString(building, "kraj", region);
+            postcode = parseJsonString(building, "psc", postcode);
+            m_levels = parseJsonInt(building, "pocet_podlazi", m_levels);
+            m_flats = parseJsonInt(building, "pocet_bytu", m_flats);
+            m_usage_code = parseJsonString(building, "zpusob_vyuziti_kod", m_usage_code);
+            m_usage_key = parseJsonString(building, "zpusob_vyuziti_key", m_usage_key);
+            m_usage_val = parseJsonString(building, "zpusob_vyuziti_val", m_usage_val);
+            m_valid_from = parseJsonString(building, "plati_od", m_valid_from);
+            m_finished = parseJsonString(building, "dokonceni", m_finished);
         }
 
-        addr.setStreetNumber(street_number);
-        addr.setStreet(street);
-        addr.setPlace(place);
-        addr.setSuburb(suburb);
-        addr.setCity(city);
-        addr.setDistrict(district);
-        addr.setRegion(region);
-        addr.setCountryCode("CZ");
-        addr.setPostCode(postcode);
+        // address places
+        if (obj.containsKey("adresni_mista")) {
+            JsonArray arr = obj.getJsonArray("adresni_mista");
+            for (int i = 0; i < arr.size(); i++) {
+                JsonObject addrPlace = arr.getJsonObject(i);
+                Address addr = new Address();
 
-        m_address_places.add(addr);
-      }
-    }
+                adr_id = parseJsonLong(addrPlace, "ruian_id", adr_id);
+                house_number = parseJsonString(addrPlace, "cislo_domovni", house_number);
+                street_number = parseJsonString(addrPlace, "cislo_orientacni", street_number);
+                street = parseJsonString(addrPlace, "ulice", street);
 
-  /**
-   *  Return number of levels in the building
-   *  @return Number of levels
-   */
-  public String getBuildingLevels() {
-    if (m_levels > 0)
-      return Integer.toString(m_levels);
-    else
-      return "";
-  }
+                addr.setRuianID(adr_id);
 
-  /**
-   *  Return number of flats in the building
-   *  @return Number of flats
-   */
-  public String getBuildingFlats() {
-    if (m_flats > 0)
-      return Integer.toString(m_flats);
-    else
-      return "";
-  }
+                switch (house_number_typ) {
+                    case "číslo popisné":
+                        addr.setConscriptionNumber(house_number);
+                        break;
+                    case "číslo evidenční":
+                        addr.setProvisionalNumber(house_number);
+                        break;
+                }
 
-  /**
-   *  Return date of finish of building
-   *  @return Date of finish
-   */
-  public String getBuildingFinished() {
-    return TracerUtils.convertDate(m_finished);
-  }
+                addr.setStreetNumber(street_number);
+                addr.setStreet(street);
+                addr.setPlace(place);
+                addr.setSuburb(suburb);
+                addr.setCity(city);
+                addr.setDistrict(district);
+                addr.setRegion(region);
+                addr.setCountryCode("CZ");
+                addr.setPostCode(postcode);
 
-  /**
-   *  Return RUIAN building usage code
-   *  @return RUIAN building usage code
-   */
-  public String getBuildingUsageCode() {
-    return m_usage_code;
-  }
-
-  /**
-   *  Return key of building type
-   *  @return Key of building type
-   */
-  public String getBuildingTagKey() {
-    return m_usage_key;
-  }
-
-  /**
-   *  Return type of building
-   *  @return Type of building
-   */
-  public String getBuildingTagValue() {
-    return m_usage_val;
-  }
-
-  /**
-   *  Return Ruian ID of the building
-   *  @return Building Ruian ID
-   */
-  public long getBuildingID() {
-    return m_ruian_id;
-  }
-
-  /**
-   *  Return data source
-   *  @return Data source
-   */
-  public String getSource() {
-    return m_source;
-  }
-
-
-  public Map<String, String> getKeys() {
-    return getKeys(false);
-  }
-
-  public Map<String, String> getKeys(boolean m_alt) {
-
-    Map<String, String> tags = new HashMap <String, String>();
-
-    if(!m_alt) {
-        if (getBuildingTagKey().equals("building") &&
-            getBuildingTagValue().length() > 0) {
-            tags.put("building", getBuildingTagValue());
+                m_address_places.add(addr);
+            }
         }
-        else {
-            tags.put("building", "yes");
+
+        // create address from SO data?
+        if (m_address_places.isEmpty() && house_number.length() > 0) {
+            Address addr = new Address();
+            addr.setRuianID(adr_id);
+
+            switch (house_number_typ) {
+                case "číslo popisné":
+                    addr.setConscriptionNumber(house_number);
+                    break;
+                case "číslo evidenční":
+                    addr.setProvisionalNumber(house_number);
+                    break;
+            }
+
+            addr.setStreetNumber(street_number);
+            addr.setStreet(street);
+            addr.setPlace(place);
+            addr.setSuburb(suburb);
+            addr.setCity(city);
+            addr.setDistrict(district);
+            addr.setRegion(region);
+            addr.setCountryCode("CZ");
+            addr.setPostCode(postcode);
+
+            m_address_places.add(addr);
         }
     }
 
-    if (getBuildingID() > 0 ) {
-        tags.put("ref:ruian:building", Long.toString(getBuildingID()));
+    /**
+     * Returns the number of levels in the building
+     *
+     * @return Number of levels
+     */
+    public String getBuildingLevels() {
+        if (m_levels > 0) {
+            return Integer.toString(m_levels);
+        } else {
+            return "";
+        }
     }
 
-    if (getBuildingUsageCode().length() > 0) {
-        tags.put("building:ruian:type", getBuildingUsageCode());
+    /**
+     * Returns the number of flats in the building
+     *
+     * @return Number of flats
+     */
+    public String getBuildingFlats() {
+        if (m_flats > 0) {
+            return Integer.toString(m_flats);
+        } else {
+            return "";
+        }
     }
 
-    if (getBuildingLevels().length() > 0) {
-        tags.put("building:levels", getBuildingLevels());
+    /**
+     * Returns building's date of finish
+     *
+     * @return Date of finish
+     */
+    public String getBuildingFinished() {
+        return TracerUtils.convertDate(m_finished);
     }
 
-    if (getBuildingFlats().length() > 0) {
-        tags.put("building:flats", getBuildingFlats());
+    /**
+     * Returns RUIAN building usage code
+     *
+     * @return RUIAN building usage code
+     */
+    public String getBuildingUsageCode() {
+        return m_usage_code;
     }
 
-    if (getBuildingFinished().length() > 0) {
-        tags.put("start_date", getBuildingFinished());
+    /**
+     * Returns key of building type
+     *
+     * @return Key of building type
+     */
+    public String getBuildingTagKey() {
+        return m_usage_key;
     }
 
-    if (getSource().length() > 0) {
-        tags.put("source", getSource());
+    /**
+     * Returns type of building
+     *
+     * @return Type of building
+     */
+    public String getBuildingTagValue() {
+        return m_usage_val;
     }
-    else {
-        tags.put("source", "cuzk:ruian");
+
+    /**
+     * Returns Ruian ID of the building
+     *
+     * @return Building Ruian ID
+     */
+    public long getBuildingID() {
+        return m_ruian_id;
     }
-    return tags;
-  }
+
+    /**
+     * Returns data source
+     *
+     * @return Data source
+     */
+    public String getSource() {
+        return m_source;
+    }
+
+
+    public Map<String, String> getKeys() {
+        return getKeys(false);
+    }
+
+    public Map<String, String> getKeys(boolean m_alt) {
+
+        Map<String, String> tags = new HashMap<>();
+
+        if (!m_alt) {
+            if (getBuildingTagKey().equals("building")
+                    && getBuildingTagValue().length() > 0) {
+                tags.put("building", getBuildingTagValue());
+            } else {
+                tags.put("building", "yes");
+            }
+        }
+
+        if (getBuildingID() > 0) {
+            tags.put("ref:ruian:building", Long.toString(getBuildingID()));
+        }
+
+        if (getBuildingUsageCode().length() > 0) {
+            tags.put("building:ruian:type", getBuildingUsageCode());
+        }
+
+        if (getBuildingLevels().length() > 0) {
+            tags.put("building:levels", getBuildingLevels());
+        }
+
+        if (getBuildingFlats().length() > 0) {
+            tags.put("building:flats", getBuildingFlats());
+        }
+
+        if (getBuildingFinished().length() > 0) {
+            tags.put("start_date", getBuildingFinished());
+        }
+
+        if (getSource().length() > 0) {
+            tags.put("source", getSource());
+        } else {
+            tags.put("source", "cuzk:ruian");
+        }
+
+        return tags;
+    }
 
     @Override
     public boolean hasData() {
         return this.getBuildingID() > 0 && super.hasOuter();
+    }
+
+    private static long parseJsonLong(JsonObject obj, String key, long dflt) {
+        if (!obj.containsKey(key))
+            return dflt;
+        return Long.parseLong(obj.getString(key));
+    }
+
+    private static int parseJsonInt(JsonObject obj, String key, int dflt) {
+        if (!obj.containsKey(key))
+            return dflt;
+        return Integer.parseInt(obj.getString(key));
+    }
+
+    private static String parseJsonString(JsonObject obj, String key, String dflt) {
+        return obj.getString (key, dflt);
     }
 }
