@@ -43,18 +43,16 @@ public class LpisServer {
      * @return Result text.
      */
     private String callServer(String urlString) throws MalformedURLException, UnsupportedEncodingException, IOException {
-        URL url = new URL(urlString);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
-
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            if (sb.length() == 0)
-              sb.append(line);
-            else
-              sb.append(" ").append(line);
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(urlString).openStream(), "UTF-8"))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (sb.length() > 0)
+                    sb.append(" ");
+                sb.append(line);
+            }
+            return sb.toString();
         }
-        return sb.toString();
     }
 
     /**
