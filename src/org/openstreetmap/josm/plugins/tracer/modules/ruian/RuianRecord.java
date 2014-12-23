@@ -24,6 +24,8 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
+import javax.json.JsonString;
+import javax.json.JsonValue;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
@@ -97,8 +99,10 @@ public final class RuianRecord extends TracerRecord {
         // get source
         m_source = parseJsonString(obj, "source", m_source);
 
-        // get geometry data
-        JsonObject geomObj = obj.getJsonObject("geometry");
+        // no geometry? leave record without data
+        JsonObject geomObj = retrieveJsonObject(obj, "geometry");
+        if (geomObj == null)
+            return;
 
         // outer geometry
         JsonArray outerArr = geomObj.getJsonArray("outer");
@@ -115,8 +119,8 @@ public final class RuianRecord extends TracerRecord {
         super.setOuter(way);
 
         // inner geometries
-        if (geomObj.containsKey("inners")) {
-            JsonArray innersArr = geomObj.getJsonArray("inners");
+        JsonArray innersArr = retrieveJsonArray(geomObj, "inners");
+        if (innersArr != null) {
             for (int i = 0; i < innersArr.size(); i++) {
                 JsonArray innerArr = innersArr.getJsonArray(i);
                 ArrayList<LatLon> inner = new ArrayList<>();
@@ -136,9 +140,8 @@ public final class RuianRecord extends TracerRecord {
         }
 
         // SO data
-        if (obj.containsKey("stavebni_objekt")) {
-            JsonObject building = obj.getJsonObject("stavebni_objekt");
-
+        JsonObject building = retrieveJsonObject(obj, "stavebni_objekt");
+        if (building != null) {
             m_ruian_id = parseJsonLong(building, "ruian_id", m_ruian_id);
             house_number = parseJsonString(building, "cislo_domovni", house_number);
             house_number_typ = parseJsonString(building, "cislo_domovni_typ", house_number_typ);
@@ -161,10 +164,10 @@ public final class RuianRecord extends TracerRecord {
         }
 
         // address places
-        if (obj.containsKey("adresni_mista")) {
-            JsonArray arr = obj.getJsonArray("adresni_mista");
-            for (int i = 0; i < arr.size(); i++) {
-                JsonObject addrPlace = arr.getJsonObject(i);
+        JsonArray addrArr = retrieveJsonArray(obj, "adresni_mista");
+        if (addrArr != null) {
+            for (int i = 0; i < addrArr.size(); i++) {
+                JsonObject addrPlace = addrArr.getJsonObject(i);
                 Address addr = new Address();
 
                 adr_id = parseJsonLong(addrPlace, "ruian_id", adr_id);
@@ -358,18 +361,48 @@ public final class RuianRecord extends TracerRecord {
     }
 
     private static long parseJsonLong(JsonObject obj, String key, long dflt) {
-        if (!obj.containsKey(key))
+        String val = retrieveJsonString (obj, key);
+        if (val == null)
             return dflt;
-        return Long.parseLong(obj.getString(key));
+        return Long.parseLong(val);
     }
 
     private static int parseJsonInt(JsonObject obj, String key, int dflt) {
-        if (!obj.containsKey(key))
+        String val = retrieveJsonString (obj, key);
+        if (val == null)
             return dflt;
-        return Integer.parseInt(obj.getString(key));
+        return Integer.parseInt(val);
     }
 
     private static String parseJsonString(JsonObject obj, String key, String dflt) {
-        return obj.getString (key, dflt);
+        String val = retrieveJsonString (obj, key);
+        return (val != null) ? val : dflt;
+    }
+
+    private static JsonObject retrieveJsonObject(JsonObject obj, String key) {
+        JsonValue v = obj.get(key);
+        if (v == null)
+            return null;
+        if (v.getValueType() != JsonValue.ValueType.OBJECT)
+            return null;
+        return (JsonObject)v;
+    }
+
+    private static JsonArray retrieveJsonArray(JsonObject obj, String key) {
+        JsonValue v = obj.get(key);
+        if (v == null)
+            return null;
+        if (v.getValueType() != JsonValue.ValueType.ARRAY)
+            return null;
+        return (JsonArray)v;
+    }
+
+    private static String retrieveJsonString(JsonObject obj, String key) {
+        JsonValue v = obj.get(key);
+        if (v == null)
+            return null;
+        if (v.getValueType() != JsonValue.ValueType.STRING)
+            return null;
+        return ((JsonString)v).getString();
     }
 }
