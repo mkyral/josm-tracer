@@ -20,15 +20,14 @@
 package org.openstreetmap.josm.plugins.tracer.modules.ruianLands;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import org.openstreetmap.josm.data.coor.LatLon;
 
-// import org.openstreetmap.josm.plugins.tracer.RuianRecord;
 
 public class RuianLandsServer {
-
 
     public RuianLandsServer() {
 
@@ -39,40 +38,25 @@ public class RuianLandsServer {
      * @param urlString Input parameters.
      * @return Result text.
      */
-    private String callServer(String urlString) {
-        try {
-            URL url = new URL(urlString);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-
+    private String callServer(String urlString) throws MalformedURLException, IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(urlString).openStream()))) {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
-                if (sb.length() == 0)
-                  sb.append(line);
-                else
-                  sb.append(" "+line);
+                if (sb.length() > 0)
+                    sb.append(" ");
+                sb.append(line);
             }
             return sb.toString();
-        } catch (Exception e) {
-            return "";
         }
     }
 
-    /**
-     * Trace building on position.
-     * @param pos Position of building.
-     * @return Building border.
-     */
-    public RuianLandsRecord trace(LatLon pos, String url, double adjlat, double adjlon) {
-        try {
-            System.out.println("Request: "+ url + "/ruian-lands/beta/?lat=" + pos.lat() + "&lon=" + pos.lon());
-            String content = callServer(url + "/ruian-lands/beta/?lat=" + pos.lat() + "&lon=" + pos.lon());
-            System.out.println("Reply: " + content);
-            RuianLandsRecord ruian = new RuianLandsRecord(adjlat, adjlon);
-            ruian.parseJSON(content);
-            return ruian;
-        } catch (Exception e) {
-            return new RuianLandsRecord(adjlat, adjlon);
-        }
+    public RuianLandsRecord trace(LatLon pos, String url, double adjlat, double adjlon) throws IOException {
+        System.out.println("Request: "+ url + "/ruian-lands/beta/?lat=" + pos.lat() + "&lon=" + pos.lon());
+        String content = callServer(url + "/ruian-lands/beta/?lat=" + pos.lat() + "&lon=" + pos.lon());
+        System.out.println("Reply: " + content);
+        RuianLandsRecord ruian = new RuianLandsRecord(adjlat, adjlon);
+        ruian.parseJSON(content);
+        return ruian;
     }
 }
