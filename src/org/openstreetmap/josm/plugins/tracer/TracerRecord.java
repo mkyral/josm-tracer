@@ -56,7 +56,7 @@ public abstract class TracerRecord {
      *  @return Outer polygon nodes
      */
     public final List <LatLon> getOuter() {
-        if (m_outer == null)
+        if (!hasOuter())
             throw new IllegalStateException("No outer geometry available");
         return Collections.unmodifiableList(m_outer);
     }
@@ -113,6 +113,10 @@ public abstract class TracerRecord {
     public abstract boolean hasData();
 
     private List<LatLon> adjustWay(List<LatLon> way) {
+
+        if (way == null)
+            throw new IllegalArgumentException("Null way");
+
         List<LatLon> list = new ArrayList<>(way.size());
         boolean adj = m_adjustLat != 0.0 && m_adjustLon != 0;
         final double precision = GeomUtils.duplicateNodesPrecision();
@@ -133,12 +137,16 @@ public abstract class TracerRecord {
             list.add(latlon);
             prev_coor = latlon;
         }
+
+        if (list.size() <= 3) // we assume closed way here
+            throw new IllegalStateException("Way consists of less than 3 nodes");
+
         return list;
     }
 
     public EdObject createObject (WayEditor editor) {
 
-        if (m_outer == null)
+        if (!hasOuter())
             throw new IllegalStateException(tr("No outer geometry available"));
 
         // Prepare outer way nodes
@@ -148,8 +156,6 @@ public abstract class TracerRecord {
         }
 
         // Close & create outer way
-        if (outer_nodes.size() < 3)
-            throw new AssertionError(tr("Outer way consists of less than 3 nodes"));
         outer_nodes.add(outer_nodes.get(0));
         EdWay outer_way = editor.newWay(outer_nodes);
 
@@ -168,8 +174,6 @@ public abstract class TracerRecord {
             }
 
             // Close & create inner way
-            if (inner_nodes.size() < 3)
-                throw new AssertionError(tr("Inner way consists of less than 3 nodes"));
             inner_nodes.add(inner_nodes.get(0));
             multipolygon.addInnerWay(editor.newWay(inner_nodes));
         }
