@@ -21,10 +21,9 @@ package org.openstreetmap.josm.plugins.tracer.modules.ruianLands;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
-import java.net.URL;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 
 
 public class RuianLandsServer {
@@ -39,7 +38,7 @@ public class RuianLandsServer {
      * @return Result text.
      */
     private String callServer(String urlString) throws MalformedURLException, IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(urlString).openStream()))) {
+        try (BufferedReader reader = TracerUtils.openUrlStream (urlString)) {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {

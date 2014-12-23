@@ -21,13 +21,12 @@ package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.xml.sax.SAXException;
 
 public class LpisServer {
@@ -43,7 +42,7 @@ public class LpisServer {
      * @return Result text.
      */
     private String callServer(String urlString) throws MalformedURLException, UnsupportedEncodingException, IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new URL(urlString).openStream(), "UTF-8"))) {
+        try (BufferedReader reader = TracerUtils.openUrlStream (urlString, "UTF-8")) {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
