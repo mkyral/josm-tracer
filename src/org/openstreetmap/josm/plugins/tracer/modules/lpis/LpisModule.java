@@ -44,7 +44,7 @@ public final class LpisModule extends TracerModule  {
     private boolean moduleEnabled;
 
     private static final double oversizeInDataBoundsMeters = 5.0;
-    private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.25, Math.PI / 30);
+    private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.25, Math.PI / 15);
     private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.25, Math.PI / 40);
 
     private static final String source = "lpis";
