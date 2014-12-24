@@ -236,9 +236,9 @@ public final class RuianLandsRecord extends TracerRecord {
 
         m_source = obj.getString("source");
 
-        if (obj.containsKey("keys")) {
-            JsonString keys = obj.getJsonString("keys");
-            String[] kv = keys.toString().replace("\"", "").replace(",{", "").replace("{", "").replace("}}", "}").split("}");
+        String keys = retrieveJsonString(obj, "keys");
+        if (keys != null) {
+            String[] kv = keys.replace("\"", "").replace(",{", "").replace("{", "").replace("}}", "}").split("}");
             System.out.println("keys: " + Arrays.toString(kv));
             for (int i = 0; i < kv.length; i++) {
                 System.out.println("key[" + i + "]: " + kv[i]);
@@ -247,20 +247,22 @@ public final class RuianLandsRecord extends TracerRecord {
             }
         }
 
-        JsonArray arr = obj.getJsonArray("geometry");
-        List<LatLon> way = new ArrayList<>(arr.size());
-        for (int i = 0; i < arr.size(); i++) {
-            System.out.println("i=" + i);
-            JsonArray node = arr.getJsonArray(i);
+        JsonArray arr = retrieveJsonArray(obj, "geometry");
+        if (arr != null && arr.size() > 0) {
+            List<LatLon> way = new ArrayList<>(arr.size());
+            for (int i = 0; i < arr.size(); i++) {
+                System.out.println("i=" + i);
+                JsonArray node = arr.getJsonArray(i);
 
-            LatLon coor = new LatLon(
-                    node.getJsonNumber(1).doubleValue(),
-                    node.getJsonNumber(0).doubleValue()
-            );
-            System.out.println("coor: " + coor.toString());
-            way.add(coor);
+                LatLon coor = new LatLon(
+                        node.getJsonNumber(1).doubleValue(),
+                        node.getJsonNumber(0).doubleValue()
+                );
+                System.out.println("coor: " + coor.toString());
+                way.add(coor);
+            }
+            super.setOuter(way);
         }
-        super.setOuter(way);
     }
 
     /**
