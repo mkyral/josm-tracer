@@ -21,6 +21,10 @@ package org.openstreetmap.josm.plugins.tracer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonString;
+import javax.json.JsonValue;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
 import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
@@ -179,5 +183,51 @@ public abstract class TracerRecord {
         }
 
         return multipolygon;
+    }
+
+    protected static long parseJsonLong(JsonObject obj, String key, long dflt) {
+        String val = retrieveJsonString (obj, key);
+        if (val == null)
+            return dflt;
+        return Long.parseLong(val);
+    }
+
+    protected static int parseJsonInt(JsonObject obj, String key, int dflt) {
+        String val = retrieveJsonString (obj, key);
+        if (val == null)
+            return dflt;
+        return Integer.parseInt(val);
+    }
+
+    protected static String parseJsonString(JsonObject obj, String key, String dflt) {
+        String val = retrieveJsonString (obj, key);
+        return (val != null) ? val : dflt;
+    }
+
+    protected static JsonObject retrieveJsonObject(JsonObject obj, String key) {
+        JsonValue v = obj.get(key);
+        if (v == null)
+            return null;
+        if (v.getValueType() != JsonValue.ValueType.OBJECT)
+            return null;
+        return (JsonObject)v;
+    }
+
+    protected static JsonArray retrieveJsonArray(JsonObject obj, String key) {
+        JsonValue v = obj.get(key);
+        if (v == null)
+            return null;
+        if (v.getValueType() != JsonValue.ValueType.ARRAY)
+            return null;
+        return (JsonArray)v;
+    }
+
+    protected static String retrieveJsonString(JsonObject obj, String key) {
+        JsonValue v = obj.get(key);
+        if (v == null)
+            return null;
+        if (v.getValueType() != JsonValue.ValueType.STRING)
+            return null;
+        return ((JsonString)v).getString();
     }
 }
