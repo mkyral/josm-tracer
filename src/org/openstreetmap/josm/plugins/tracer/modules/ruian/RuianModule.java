@@ -29,6 +29,7 @@ import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
+import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
 
 import static org.openstreetmap.josm.tools.I18n.*;
@@ -300,12 +301,15 @@ public final class RuianModule extends TracerModule {
         private void tagTracedObject (EdObject obj) {
 
             Map <String, String> map = obj.getKeys();
-
             Map <String, String> new_keys = new HashMap <> (record().getKeys());
+
+            // never replace building=church/chapel tag with yes/civic
+            if (TracerUtils.containsAnyTag(map, "building", "church", "chapel") && TracerUtils.containsAnyTag(new_keys, "building", "yes", "civic"))
+                new_keys.remove("building");
+
             for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
                 map.put(new_key.getKey(), new_key.getValue());
             }
-            // #### delete any existing retraced tags??
             obj.setKeys(map);
         }
 

@@ -29,6 +29,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.Map;
 import javax.swing.JOptionPane;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
@@ -149,6 +150,15 @@ public abstract class TracerUtils {
                 }
             }
         }
+    }
+
+    public static boolean containsAnyTag(Map<String,String> keys, String key, String value1, String value2) {
+        if (keys == null || key == null)
+            return false;
+        String val = keys.get(key);
+        if (val == null)
+            return value1 == null || value2 == null;
+        return val.equals(value1) || val.equals(value2);
     }
 
  }
