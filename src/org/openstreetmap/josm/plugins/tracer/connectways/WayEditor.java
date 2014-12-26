@@ -539,7 +539,9 @@ public class WayEditor {
 
         // look for non-edited multipolygons
         for (Relation rel: getDataSet().searchRelations(bbox)) {
-            if (!rel.isUsable() || rel.hasIncompleteMembers() || isEdited(rel))
+            if (isEdited(rel))
+                continue;
+            if (!EdMultipolygon.isUsableRelation(rel))
                 continue;
             if (!filter.evaluate(rel))
                 continue;
@@ -568,7 +570,9 @@ public class WayEditor {
 
         // look for non-edited multipolygons
         for (Relation rel: getDataSet().searchRelations(bbox)) {
-            if (!rel.isUsable() || rel.hasIncompleteMembers() || isEdited(rel))
+            if (isEdited(rel))
+                continue;
+            if (!EdMultipolygon.isUsableRelation(rel))
                 continue;
             if (filter.evaluate(rel))
                 areas.add(this.useMultipolygon(rel));

@@ -52,7 +52,8 @@ public final class LpisRecord extends TracerRecord {
     * Constructor
     *
     */
-    public void LpisRecord () {
+    public LpisRecord (double adjlat, double adjlon) {
+        super (adjlat, adjlon);
         init();
     }
 

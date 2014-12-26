@@ -47,7 +47,7 @@ public class ClipAreas {
 
         Set<EdObject> areas = m_editor.useAllAreasInBBox(clip_way.getBBox(), filter);
         for (EdObject obj : areas) {
-            if (obj instanceof EdMultipolygon) {
+            if (obj.isMultipolygon()) {
                 EdMultipolygon subject_mp = (EdMultipolygon) obj;
                 if (subject_mp.containsWay(clip_way)) {
                     continue;
@@ -55,7 +55,7 @@ public class ClipAreas {
 
                 clipSimpleMulti(clip_way, subject_mp);
 
-            } else if (obj instanceof EdWay) {
+            } else if (obj.isWay()) {
                 EdWay subject_way = (EdWay) obj;
                 if (subject_way == clip_way) {
                     continue;

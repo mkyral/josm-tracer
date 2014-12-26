@@ -21,17 +21,33 @@ package org.openstreetmap.josm.plugins.tracer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonString;
+import javax.json.JsonValue;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
+import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdMultipolygon;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdNode;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdObject;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdWay;
+import org.openstreetmap.josm.plugins.tracer.connectways.GeomUtils;
+import org.openstreetmap.josm.plugins.tracer.connectways.WayEditor;
 
 public abstract class TracerRecord {
 
     private List<LatLon> m_outer;
     private List<List<LatLon>> m_inners;
 
-    public TracerRecord () {
+    private final double m_adjustLat;
+    private final double m_adjustLon;
+
+    public TracerRecord (double adjlat, double adjlon) {
         m_outer = null;
         m_inners = new ArrayList<>();
+        m_adjustLat = adjlat;
+        m_adjustLon = adjlon;
     }
 
     protected void init() {
@@ -44,7 +60,7 @@ public abstract class TracerRecord {
      *  @return Outer polygon nodes
      */
     public final List <LatLon> getOuter() {
-        if (m_outer == null)
+        if (!hasOuter())
             throw new IllegalStateException("No outer geometry available");
         return Collections.unmodifiableList(m_outer);
     }
@@ -91,12 +107,127 @@ public abstract class TracerRecord {
     }
 
     protected final void setOuter(List<LatLon> outer) {
-        m_outer = outer;
+        m_outer = adjustWay (outer);
     }
 
     protected final void addInner(List<LatLon> inner) {
-        m_inners.add(inner);
+        m_inners.add(adjustWay (inner));
     }
 
     public abstract boolean hasData();
+
+    private List<LatLon> adjustWay(List<LatLon> way) {
+
+        if (way == null)
+            throw new IllegalArgumentException("Null way");
+
+        List<LatLon> list = new ArrayList<>(way.size());
+        boolean adj = m_adjustLat != 0.0 && m_adjustLon != 0;
+        final double precision = GeomUtils.duplicateNodesPrecision();
+        LatLon prev_coor = null;
+
+        for (LatLon ll: way) {
+            // apply coordinate corrections
+            LatLon latlon = (!adj) ?
+                ll.getRoundedToOsmPrecision() :
+                new LatLon(
+                    LatLon.roundToOsmPrecision(ll.lat() + m_adjustLat),
+                    LatLon.roundToOsmPrecision(ll.lon() + m_adjustLon));
+
+            // avoid duplicate nodes
+            if (GeomUtils.duplicateNodes(latlon, prev_coor, precision))
+                continue;
+
+            list.add(latlon);
+            prev_coor = latlon;
+        }
+
+        if (list.size() <= 3) // we assume closed way here
+            throw new IllegalStateException("Way consists of less than 3 nodes");
+
+        return list;
+    }
+
+    public EdObject createObject (WayEditor editor) {
+
+        if (!hasOuter())
+            throw new IllegalStateException(tr("No outer geometry available"));
+
+        // Prepare outer way nodes
+        List<EdNode> outer_nodes = new ArrayList<> (m_outer.size());
+        for (int i = 0; i < m_outer.size() - 1; i++) {
+            outer_nodes.add(editor.newNode(m_outer.get(i)));
+        }
+
+        // Close & create outer way
+        outer_nodes.add(outer_nodes.get(0));
+        EdWay outer_way = editor.newWay(outer_nodes);
+
+        // Simple way?
+        if (!this.hasInners())
+            return outer_way;
+
+        // Create multipolygon
+        EdMultipolygon multipolygon = editor.newMultipolygon();
+        multipolygon.addOuterWay(outer_way);
+
+        for (List<LatLon> inner_rls: m_inners) {
+            List<EdNode> inner_nodes = new ArrayList<>(inner_rls.size());
+            for (int i = 0; i < inner_rls.size() - 1; i++) {
+                inner_nodes.add(editor.newNode(inner_rls.get(i)));
+            }
+
+            // Close & create inner way
+            inner_nodes.add(inner_nodes.get(0));
+            multipolygon.addInnerWay(editor.newWay(inner_nodes));
+        }
+
+        return multipolygon;
+    }
+
+    protected static long parseJsonLong(JsonObject obj, String key, long dflt) {
+        String val = retrieveJsonString (obj, key);
+        if (val == null)
+            return dflt;
+        return Long.parseLong(val);
+    }
+
+    protected static int parseJsonInt(JsonObject obj, String key, int dflt) {
+        String val = retrieveJsonString (obj, key);
+        if (val == null)
+            return dflt;
+        return Integer.parseInt(val);
+    }
+
+    protected static String parseJsonString(JsonObject obj, String key, String dflt) {
+        String val = retrieveJsonString (obj, key);
+        return (val != null) ? val : dflt;
+    }
+
+    protected static JsonObject retrieveJsonObject(JsonObject obj, String key) {
+        JsonValue v = obj.get(key);
+        if (v == null)
+            return null;
+        if (v.getValueType() != JsonValue.ValueType.OBJECT)
+            return null;
+        return (JsonObject)v;
+    }
+
+    protected static JsonArray retrieveJsonArray(JsonObject obj, String key) {
+        JsonValue v = obj.get(key);
+        if (v == null)
+            return null;
+        if (v.getValueType() != JsonValue.ValueType.ARRAY)
+            return null;
+        return (JsonArray)v;
+    }
+
+    protected static String retrieveJsonString(JsonObject obj, String key) {
+        JsonValue v = obj.get(key);
+        if (v == null)
+            return null;
+        if (v.getValueType() != JsonValue.ValueType.STRING)
+            return null;
+        return ((JsonString)v).getString();
+    }
 }

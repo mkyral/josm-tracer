@@ -19,14 +19,18 @@
 
 package org.openstreetmap.josm.plugins.tracer;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import javax.swing.JOptionPane;
-
-import org.openstreetmap.josm.gui.Notification;
-import org.openstreetmap.josm.data.coor.LatLon;
 
 import com.vividsolutions.jts.geom.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.Map;
+import javax.swing.JOptionPane;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
@@ -34,6 +38,8 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import org.opengis.referencing.operation.TransformException;
+import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 
 
@@ -112,6 +118,47 @@ public abstract class TracerUtils {
       }
 
       return r;
+    }
+
+
+    public static BufferedReader openUrlStream (String url) throws IOException {
+        return openUrlStream (url, null);
+    }
+
+    public static BufferedReader openUrlStream (String url, String charset) throws MalformedURLException, IOException {
+        URLConnection conn = null;
+        boolean succeeded = false;
+        try {
+             conn = new URL(url).openConnection();
+
+             // set hardcoded 10 sec timeouts
+             conn.setConnectTimeout(10000);
+             conn.setReadTimeout(10000);
+
+             InputStreamReader isr = charset != null ?
+                     new InputStreamReader(conn.getInputStream(), charset) : new InputStreamReader(conn.getInputStream());
+             BufferedReader reader = new BufferedReader(isr);
+             succeeded = true;
+             return reader;
+        }
+        finally {
+            if (!succeeded && conn != null) {
+                try {
+                    conn.getInputStream().close();
+                }
+                catch (IOException e) {
+                }
+            }
+        }
+    }
+
+    public static boolean containsAnyTag(Map<String,String> keys, String key, String value1, String value2) {
+        if (keys == null || key == null)
+            return false;
+        String val = keys.get(key);
+        if (val == null)
+            return value1 == null || value2 == null;
+        return val.equals(value1) || val.equals(value2);
     }
 
  }

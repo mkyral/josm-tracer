@@ -19,9 +19,7 @@
 
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
-import java.util.List;
 import java.util.Set;
-import java.util.HashSet;
 
 import org.openstreetmap.josm.data.osm.Node;
 
@@ -30,32 +28,7 @@ public final class ExcludeEdNodesPredicate implements IEdNodePredicate {
     private final Set<EdNode> m_nodes;
 
     public ExcludeEdNodesPredicate(EdObject obj) {
-        if (obj instanceof EdMultipolygon) {
-            m_nodes = new HashSet<>();
-            EdMultipolygon mp = (EdMultipolygon)obj;
-            List<EdWay> outer_ways = mp.outerWays();
-            for (EdWay way: outer_ways) {
-                List<EdNode> nodes = way.getNodes();
-                for (EdNode node: nodes)
-                    m_nodes.add(node);
-            }
-            List<EdWay> inner_ways = mp.innerWays();
-            for (EdWay way: inner_ways) {
-                List<EdNode> nodes = way.getNodes();
-                for (EdNode node: nodes)
-                    m_nodes.add(node);
-            }
-        }
-        else if (obj instanceof EdWay) {
-            m_nodes = new HashSet<>(((EdWay)obj).getNodes());
-        }
-        else if (obj instanceof EdNode) {
-            m_nodes = new HashSet<>();
-            m_nodes.add((EdNode)obj);
-        }
-        else {
-            throw new AssertionError("Unknown EdObject instance");
-        }
+        m_nodes = obj.getAllNodes();
     }
 
     @Override

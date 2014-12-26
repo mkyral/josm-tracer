@@ -50,7 +50,7 @@ public final class RuianLandsModule extends TracerModule {
         "((landuse=* -landuse=no -landuse=military) | natural=scrub | natural=wood | natural=grassland | leisure=garden)";
 
     private static final String retraceLandsAreaPattern =
-        "(landuse=farmland | landuse=meadow | landuse=orchard | landuse=vineyard | landuse=plant_nursery | (landuse=forest source=\"cuzk:ruian\") | (landuse=forest source=\"cuzk:km\") | natural=scrub | natural=wood | natural=grassland | leisure=garden)";
+        "(landuse=village_garden | landuse=farmland | landuse=meadow | landuse=orchard | landuse=vineyard | landuse=plant_nursery | (landuse=forest source=\"cuzk:ruian\") | (landuse=forest source=\"cuzk:km\") | natural=scrub | natural=wood | natural=grassland | leisure=garden)";
 
     private static final Match m_reuseExistingLanduseNodeMatch;
     private static final Match m_clipLanduseWayMatch;
@@ -159,8 +159,16 @@ public final class RuianLandsModule extends TracerModule {
             String sUrl = RuianLandsUrl;
             if (pref.isCustomRuainUrlEnabled())
               sUrl = pref.getCustomRuainUrl();
+
+            // Get coordinate corrections
+            double adjlat = 0, adjlon = 0;
+            if (pref.isRuianAdjustPositionEnabled()) {
+              adjlat = pref.getRuianAdjustPositionLat();
+              adjlon = pref.getRuianAdjustPositionLon();
+            }
+
             RuianLandsServer server = new RuianLandsServer();
-            return server.trace(m_pos, sUrl);
+            return server.trace(m_pos, sUrl, adjlat, adjlon);
         }
 
         @Override
@@ -209,7 +217,7 @@ public final class RuianLandsModule extends TracerModule {
 
             // Retrace simple ways - just use the old way
             if (retrace_object != null) {
-                if ((multipolygon != null) || !(retrace_object instanceof EdWay) || retrace_object.hasReferrers()) {
+                if ((multipolygon != null) || !retrace_object.isWay() || retrace_object.hasReferrers()) {
                     postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
                     return null;
                 }
@@ -266,15 +274,6 @@ public final class RuianLandsModule extends TracerModule {
 
             IEdNodePredicate reuse_filter;
 
-            TracerPreferences pref = TracerPreferences.getInstance();
-
-            double dAdjX = 0, dAdjY = 0;
-
-            if (pref.isRuianAdjustPositionEnabled()) {
-              dAdjX = pref.getRuianAdjustPositionLat();
-              dAdjY = pref.getRuianAdjustPositionLon();
-            }
-
             // Determine type of the objects
             if (record().isBuilding()) {
               reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingBuildingNodeMatch);
@@ -284,33 +283,19 @@ public final class RuianLandsModule extends TracerModule {
               reuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
             }
 
-            final double precision = GeomUtils.duplicateNodesPrecision();
-
             // Prepare outer way nodes
             List<EdNode> outer_nodes = new ArrayList<> ();
             List<LatLon> outer = record().getOuter();
-            LatLon prev_coor = null;
             // m_record.getCoorCount() - 1 - omit last node
             for (int i = 0; i < outer.size() - 1; i++) {
-                EdNode node;
-
-                // Apply corrections to node coordinates
-                if (!pref.isRuianAdjustPositionEnabled()) {
-                  node = editor.newNode(outer.get(i));
-                } else {
-                  node = editor.newNode(new LatLon(LatLon.roundToOsmPrecision(outer.get(i).lat()+dAdjX),
-                                                   LatLon.roundToOsmPrecision(outer.get(i).lon()+dAdjY)));
-                }
+                EdNode node = editor.newNode(outer.get(i));
 
                 if (!editor.insideDataSourceBounds(node)) {
                     wayIsOutsideDownloadedAreaDialog();
                     return null;
                 }
 
-                if (!GeomUtils.duplicateNodes(node.getCoor(), prev_coor, precision)) {
-                    outer_nodes.add(node);
-                    prev_coor = node.getCoor();
-                }
+                outer_nodes.add(node);
             }
             if (outer_nodes.size() < 3)
                 throw new AssertionError(tr("Outer way consists of less than 3 nodes"));
@@ -364,9 +349,9 @@ public final class RuianLandsModule extends TracerModule {
 //                 if (source == null || !source.equals("cuzk:ruian"))
 //                     continue;
 
-                if (area instanceof EdWay)
+                if (area.isWay())
                     System.out.println("Retrace candidate EdWay: " + Long.toString(area.getUniqueId()));
-                else if (area instanceof EdMultipolygon)
+                else if (area.isMultipolygon())
                     System.out.println("Retrace candidate EdMultipolygon: " + Long.toString(area.getUniqueId()));
 
                 String ref = area.get("ref:ruian:building");

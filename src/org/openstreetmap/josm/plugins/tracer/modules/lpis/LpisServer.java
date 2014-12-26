@@ -21,13 +21,12 @@ package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.xml.sax.SAXException;
 
 public class LpisServer {
@@ -43,18 +42,16 @@ public class LpisServer {
      * @return Result text.
      */
     private String callServer(String urlString) throws MalformedURLException, UnsupportedEncodingException, IOException {
-        URL url = new URL(urlString);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(), "UTF-8"));
-
-        StringBuilder sb = new StringBuilder();
-        String line;
-        while ((line = reader.readLine()) != null) {
-            if (sb.length() == 0)
-              sb.append(line);
-            else
-              sb.append(" ").append(line);
+        try (BufferedReader reader = TracerUtils.openUrlStream (urlString, "UTF-8")) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (sb.length() > 0)
+                    sb.append(" ");
+                sb.append(line);
+            }
+            return sb.toString();
         }
-        return sb.toString();
     }
 
     /**
@@ -67,7 +64,7 @@ public class LpisServer {
      * @throws org.xml.sax.SAXException
      * @throws javax.xml.xpath.XPathExpressionException
      */
-    public LpisRecord getElementData(LatLon pos, String url) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+    public LpisRecord getElementData(LatLon pos, String url, double adjlat, double adjlon) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
         krovak k = new krovak();
         xyCoor xy = k.LatLon2krovak(pos);
 
@@ -79,7 +76,7 @@ public class LpisServer {
         System.out.println("Request: " + request);
         String content = callServer(request);
         System.out.println("Reply: " + content);
-        LpisRecord lpis = new LpisRecord();
+        LpisRecord lpis = new LpisRecord(adjlat, adjlon);
         lpis.parseXML("basic", content);
 
         // get additional information for given ID

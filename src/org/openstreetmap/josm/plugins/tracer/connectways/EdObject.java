@@ -96,6 +96,18 @@ public abstract class EdObject {
         return m_modified;
     }
 
+    public final boolean isWay() {
+        return this instanceof EdWay;
+    }
+
+    public final boolean isMultipolygon() {
+        return this instanceof EdMultipolygon;
+    }
+
+    public final boolean isNode() {
+        return this instanceof EdNode;
+    }
+
     public void addRef(EdObject ref) {
         if (m_refs == null) {
             m_refs = ref;
@@ -260,6 +272,23 @@ public abstract class EdObject {
         if (this.hasExternalReferrers())
             return false;
         return true;
+    }
+
+    public boolean hasSingleReferrer() {
+        if (m_refs instanceof EdObject[])
+            return false;
+        int count = (m_refs == null) ? 0 : 1;
+        if (hasOriginal()) {
+            List<OsmPrimitive> parents = m_original.getReferrers();
+            for (OsmPrimitive parent: parents) {
+                if (getEditor().isEdited(parent))
+                    continue;
+                count++;
+                if (count > 1)
+                    return false;
+            }
+        }
+        return count == 1;
     }
 
     public <T extends EdObject> List<T> getEditorReferrers(Class<T> type) {
