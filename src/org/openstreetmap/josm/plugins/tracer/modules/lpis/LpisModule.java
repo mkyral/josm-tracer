@@ -302,12 +302,7 @@ public final class LpisModule extends TracerModule  {
         }
 
         private void connectExistingTouchingNodes(EdObject obj) {
-            // Setup filters - include landuse nodes only, exclude all nodes of the object itself
-            IEdNodePredicate landuse_filter = new AreaBoundaryWayNodePredicate(m_reuseExistingLanduseNodeMatch);
-            IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(obj);
-            IEdNodePredicate filter = new EdNodeLogicalAndPredicate (exclude_my_nodes, landuse_filter);
-
-            obj.connectExistingTouchingNodes(m_connectTolerance, filter);
+            obj.connectExistingTouchingNodes(m_connectTolerance, reuseExistingNodesFilter(obj));
         }
 
         private void reuseExistingNodes(EdObject obj) {
