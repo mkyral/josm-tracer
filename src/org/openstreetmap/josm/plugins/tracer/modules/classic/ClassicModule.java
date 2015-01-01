@@ -80,6 +80,7 @@ public final class ClassicModule extends BuildingTracerModule {
                 m_performClipping = false;
                 m_performRetrace = false;
                 m_performWayMerging = false;
+                m_performNearBuildingsEdit = false;
             }
         }
 

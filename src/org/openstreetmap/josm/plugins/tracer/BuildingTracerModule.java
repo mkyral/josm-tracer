@@ -161,7 +161,7 @@ public abstract class BuildingTracerModule extends TracerModule {
 
     protected abstract class BuildingTracerTask extends AbstractTracerTask {
 
-        private final boolean m_performNearBuildingsEdit;
+        protected boolean m_performNearBuildingsEdit;
 
         public BuildingTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (pos, ctrl, alt ,shift);
