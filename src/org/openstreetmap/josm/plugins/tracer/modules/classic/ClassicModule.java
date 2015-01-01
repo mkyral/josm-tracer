@@ -20,7 +20,6 @@ package org.openstreetmap.josm.plugins.tracer.modules.classic;
 
 import static org.openstreetmap.josm.tools.I18n.*;
 import java.awt.Cursor;
-import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -30,7 +29,6 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.actions.mapmode.MapMode;
 import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
@@ -40,11 +38,9 @@ import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
-import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.tools.ImageProvider;
-import org.openstreetmap.josm.tools.Shortcut;
 import org.xml.sax.SAXException;
 
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
@@ -54,15 +50,11 @@ import org.openstreetmap.josm.plugins.tracer.connectways.ConnectWays;
 
 public class ClassicModule extends TracerModule {
 
-    private final long serialVersionUID = 1L;
-
     protected boolean cancel;
-    private boolean ctrl;
     private boolean alt;
-    private boolean shift;
     private boolean moduleEnabled;
-    private String source = "cuzk:km";
-    private ConnectWays connectWays = new ConnectWays();
+    private final String source = "cuzk:km";
+    private final ConnectWays connectWays = new ConnectWays();
     protected ClassicServer server = new ClassicServer();
 
 
@@ -71,22 +63,27 @@ public class ClassicModule extends TracerModule {
     }
 
 
+    @Override
     public void init() {
 
     }
 
+    @Override
     public Cursor getCursor() {
         return ImageProvider.getCursor("crosshair", "tracer-sml");
     }
 
+    @Override
     public String getName() {
         return tr("Classic");
     }
 
+    @Override
     public boolean moduleIsEnabled() {
       return moduleEnabled;
     };
 
+    @Override
     public void setModuleIsEnabled(boolean enabled){
       moduleEnabled = enabled;
     };
@@ -96,17 +93,21 @@ public class ClassicModule extends TracerModule {
         way.put("source", source);
     }
 
+    @Override
     public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift)
     {
         return new PleaseWaitRunnable(tr("Tracing")) {
+            @Override
             protected void realRun() throws SAXException {
                 ClassicModule.this.traceImpl(pos, ctrl, alt, shift,
                     progressMonitor.createSubTaskMonitor(ProgressMonitor.ALL_TICKS, false));
             }
 
+            @Override
             protected void finish() {
             }
 
+            @Override
             protected void cancel() {
                 // #### FIXME - resolve cancellation
             }
@@ -114,7 +115,7 @@ public class ClassicModule extends TracerModule {
     }
 
     private void traceImpl(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor) {
-        final Collection<Command> commands = new LinkedList<Command>();
+        final Collection<Command> commands = new LinkedList<>();
         TracerPreferences pref = TracerPreferences.getInstance();
 
         String sUrl = "http://localhost:5050/";
@@ -132,7 +133,7 @@ public class ClassicModule extends TracerModule {
         try {
               ArrayList<LatLon> coordList = server.trace(pos, sUrl, dAdjX, dAdjY);
 
-            if (coordList.size() == 0) {
+            if (coordList.isEmpty()) {
                 return;
             }
 
@@ -180,6 +181,7 @@ public class ClassicModule extends TracerModule {
                 strCommand = trn("Tracer: modify way to {0} point", "Tracer: modify way to {0} points", coordList.size(), coordList.size());
               }
               SwingUtilities.invokeLater(new Runnable() {
+                @Override
                 public void run() {
                   Main.main.undoRedo.add(new SequenceCommand(strCommand, commands));
                 }
@@ -202,4 +204,5 @@ public class ClassicModule extends TracerModule {
         }
     }
 }
+
 
