@@ -21,8 +21,10 @@ package org.openstreetmap.josm.plugins.tracer.modules.classic;
 import java.awt.Cursor;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import org.openstreetmap.josm.Main;
@@ -38,8 +40,10 @@ import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
+import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.ConnectWays;
+import org.openstreetmap.josm.plugins.tracer.connectways.EdObject;
 import static org.openstreetmap.josm.tools.I18n.*;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.xml.sax.SAXException;
@@ -48,12 +52,11 @@ import org.xml.sax.SAXException;
 public class ClassicModule extends TracerModule {
 
     protected boolean cancel;
-    private boolean alt;
     private boolean moduleEnabled;
-    private final String source = "cuzk:km";
     private final ConnectWays connectWays = new ConnectWays();
     protected ClassicServer server = new ClassicServer();
 
+    private final String source = "cuzk:km";
 
     public ClassicModule(boolean enabled) {
       moduleEnabled = enabled;
@@ -85,11 +88,6 @@ public class ClassicModule extends TracerModule {
       moduleEnabled = enabled;
     };
 
-    private void tagBuilding(Way way) {
-        if(!alt) way.put("building", "yes");
-        way.put("source", source);
-    }
-
     @Override
     public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift)
     {
@@ -109,6 +107,17 @@ public class ClassicModule extends TracerModule {
                 // #### FIXME - resolve cancellation
             }
         };
+    }
+
+    private void tagTracedObject (TracerRecord record, Way obj) {
+
+        Map <String, String> map = obj.getKeys();
+        Map <String, String> new_keys = new HashMap <> (record.getKeys());
+
+        for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
+            map.put(new_key.getKey(), new_key.getValue());
+        }
+        obj.setKeys(map);
     }
 
     private void traceImpl(LatLon pos, boolean ctrl, boolean alt, boolean shift, ProgressMonitor progressMonitor) {
@@ -167,7 +176,7 @@ public class ClassicModule extends TracerModule {
             }
             way.addNode(firstNode);
 
-            tagBuilding(way);
+            tagTracedObject(record, way);
 
             // connect to other buildings or modify existing building
             commands.add(connectWays.connect(way, pos, ctrl, alt, source));

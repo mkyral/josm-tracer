@@ -208,7 +208,8 @@ public final class LpisRecord extends TracerRecord {
      *  Return usage
      *  @return usage in Key/Value Map
      */
-    public Map<String, String> getUsageOsm() {
+    @Override
+    public Map<String, String> getKeys(boolean alt) {
         return m_usageOsm;
     }
 

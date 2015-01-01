@@ -20,10 +20,14 @@
 package org.openstreetmap.josm.plugins.tracer.modules.classic;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 
 public final class ClassicRecord extends TracerRecord {
+
+    private final String m_source = "cuzk:km";
 
     public ClassicRecord(double adjlat, double adjlon) {
         super(adjlat, adjlon);
@@ -47,5 +51,15 @@ public final class ClassicRecord extends TracerRecord {
     @Override
     public boolean hasData() {
         return super.hasOuter();
+    }
+
+    @Override
+    public Map<String, String> getKeys(boolean alt) {
+        Map<String, String> keys = new HashMap<>();
+        if (!alt) {
+            keys.put("building", "yes");
+        }
+        keys.put("source", m_source);
+        return keys;
     }
 }

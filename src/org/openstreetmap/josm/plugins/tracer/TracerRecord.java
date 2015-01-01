@@ -21,6 +21,7 @@ package org.openstreetmap.josm.plugins.tracer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonString;
@@ -230,4 +231,11 @@ public abstract class TracerRecord {
             return null;
         return ((JsonString)v).getString();
     }
+
+    public abstract Map<String, String> getKeys(boolean alt);
+
+    public final Map<String, String> getKeys() {
+        return getKeys(false);
+    }
+
 }

@@ -249,12 +249,10 @@ public final class LpisModule extends TracerModule  {
 
             Map <String, String> map = obj.getKeys();
 
-            Map <String, String> new_keys = new HashMap <> (record().getUsageOsm());
+            Map <String, String> new_keys = new HashMap <> (record().getKeys());
             for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
                 map.put(new_key.getKey(), new_key.getValue());
             }
-
-            // #### delete any existing retraced tags??
 
             map.put("source", source);
             map.put("ref", Long.toString(record().getLpisID()));

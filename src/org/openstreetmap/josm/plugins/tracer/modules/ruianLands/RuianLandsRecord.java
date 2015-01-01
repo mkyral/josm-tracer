@@ -25,7 +25,6 @@ import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
-import javax.json.JsonString;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 
@@ -272,7 +271,8 @@ public final class RuianLandsRecord extends TracerRecord {
      *
      * @return Keys
      */
-    public Map<String, String> getKeys() {
+    @Override
+    public Map<String, String> getKeys(boolean alt) {
         return m_keys;
     }
 
