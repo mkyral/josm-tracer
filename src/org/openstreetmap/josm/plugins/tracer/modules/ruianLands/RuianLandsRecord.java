@@ -235,6 +235,8 @@ public final class RuianLandsRecord extends TracerRecord {
         }
 
         m_source = obj.getString("source");
+        if (m_source.length() == 0)
+            m_source = "cuzk:ruian";
 
         String keys = retrieveJsonString(obj, "keys");
         if (keys != null) {
