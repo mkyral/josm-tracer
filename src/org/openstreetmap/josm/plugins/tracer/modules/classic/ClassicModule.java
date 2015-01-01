@@ -18,16 +18,13 @@
  */
 package org.openstreetmap.josm.plugins.tracer.modules.classic;
 
-import static org.openstreetmap.josm.tools.I18n.*;
 import java.awt.Cursor;
-import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.command.AddCommand;
 import org.openstreetmap.josm.command.Command;
@@ -36,16 +33,16 @@ import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
-import org.openstreetmap.josm.gui.ExtendedDialog;
-import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
-import org.openstreetmap.josm.tools.ImageProvider;
-import org.xml.sax.SAXException;
-
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
+import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.ConnectWays;
+import static org.openstreetmap.josm.tools.I18n.*;
+import org.openstreetmap.josm.tools.ImageProvider;
+import org.xml.sax.SAXException;
 
 
 public class ClassicModule extends TracerModule {
@@ -119,21 +116,21 @@ public class ClassicModule extends TracerModule {
         TracerPreferences pref = TracerPreferences.getInstance();
 
         String sUrl = "http://localhost:5050/";
-        double dAdjX = 0, dAdjY = 0;
+        double adjlat = 0, adjlon = 0;
 
         if (pref.isCustomTracerUrlEnabled())
           sUrl = pref.getCustomTracerUrl();
 
         if (pref.isTracerAdjustPositionEnabled()) {
-          dAdjX = pref.getTracerAdjustPositionLat();
-          dAdjY = pref.getTracerAdjustPositionLon();
+          adjlat = pref.getTracerAdjustPositionLat();
+          adjlon = pref.getTracerAdjustPositionLon();
         }
 
         progressMonitor.beginTask(null, 3);
         try {
-              ArrayList<LatLon> coordList = server.trace(pos, sUrl, dAdjX, dAdjY);
+            ClassicRecord record = server.trace(pos, sUrl, adjlat, adjlon);
 
-            if (coordList.isEmpty()) {
+            if (!record.hasData()) {
                 return;
             }
 
@@ -141,7 +138,9 @@ public class ClassicModule extends TracerModule {
             List<Bounds> dsBounds = Main.main.getCurrentDataSet().getDataSourceBounds();
             Way way = new Way();
             Node firstNode = null;
-            for (LatLon coord : coordList) {
+            List<LatLon> outer = record.getOuter();
+            for (int i = 0; i < outer.size() - 1; i++) {
+                LatLon coord = outer.get(i);
                 Node node = new Node(coord);
                 if (firstNode == null) {
                     firstNode = node;
@@ -176,9 +175,9 @@ public class ClassicModule extends TracerModule {
             if (!commands.isEmpty()) {
               final String strCommand;
               if (connectWays.isNewWay()) {
-                strCommand = trn("Tracer: add a way with {0} point", "Tracer: add a way with {0} points", coordList.size(), coordList.size());
+                strCommand = trn("Tracer: add a way with {0} point", "Tracer: add a way with {0} points", outer.size(), outer.size());
               } else {
-                strCommand = trn("Tracer: modify way to {0} point", "Tracer: modify way to {0} points", coordList.size(), coordList.size());
+                strCommand = trn("Tracer: modify way to {0} point", "Tracer: modify way to {0} points", outer.size(), outer.size());
               }
               SwingUtilities.invokeLater(new Runnable() {
                 @Override
@@ -199,7 +198,11 @@ public class ClassicModule extends TracerModule {
                 System.out.println("Failed");
             }
 
-        } finally {
+        }
+        catch (IOException e) {
+            return;
+        }
+        finally {
             progressMonitor.finishTask();
         }
     }

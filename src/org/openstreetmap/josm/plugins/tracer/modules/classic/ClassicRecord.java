@@ -19,31 +19,33 @@
 
 package org.openstreetmap.josm.plugins.tracer.modules.classic;
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.util.ArrayList;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 
-public final class ClassicServer {
+public final class ClassicRecord extends TracerRecord {
 
-    public ClassicServer() {
+    public ClassicRecord(double adjlat, double adjlon) {
+        super(adjlat, adjlon);
     }
 
-    private String callServer(String urlString) throws IOException {
-        try (BufferedReader reader = TracerUtils.openUrlStream (urlString)) {
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                sb.append(line);
-            }
-            return sb.toString();
+    void parseOutput (String content) {
+        ArrayList<LatLon> nodelist = new ArrayList<>();
+        String[] lines = content.split("\\|");
+        for (String line : lines) {
+            String[] items = line.split(";");
+            double x = Double.parseDouble(items[0]);
+            double y = Double.parseDouble(items[1]);
+            nodelist.add(new LatLon(x, y));
+        }
+        if (nodelist.size() > 0) {
+            nodelist.add(nodelist.get(0));
+            super.setOuter(nodelist);
         }
     }
 
-    public ClassicRecord trace(LatLon pos, String url, double adjlat, double adjlon) throws IOException {
-        String content = callServer(url + "/trace/simple/" + pos.lat() + ";" + pos.lon());
-        ClassicRecord record = new ClassicRecord(adjlat, adjlon);
-        record.parseOutput(content);
-        return record;
+    @Override
+    public boolean hasData() {
+        return super.hasOuter();
     }
 }
