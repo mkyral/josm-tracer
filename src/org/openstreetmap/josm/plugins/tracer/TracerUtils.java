@@ -20,25 +20,14 @@
 package org.openstreetmap.josm.plugins.tracer;
 
 
-import com.vividsolutions.jts.geom.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.Map;
 import javax.swing.JOptionPane;
-import org.geotools.geometry.jts.JTS;
-import org.geotools.referencing.CRS;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.TransformException;
-import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 
@@ -83,41 +72,20 @@ public abstract class TracerUtils {
     }
 
     /**
-     * Return text representation of coordinates.
-     # @param  lat Lat coordinate
-     # @param  lon Lon coordinate
-     * @return String coordinatesText
-     */
-    public static String formatCoordinates (double lat, double lon) {
-
-      String r = "";
-      DecimalFormatSymbols symbols = new DecimalFormatSymbols();
-      symbols.setDecimalSeparator('.');
-      symbols.setGroupingSeparator(' ');
-      DecimalFormat df = new DecimalFormat("#.00000", symbols);
-
-      r = "(" + df.format(lat) + ", " +
-                df.format(lon) + ")";
-      return r;
-    }
-
-    /**
      * Convert date from Czech to OSM format
      * @param ruianDate Date in RUIAN (Czech) format DD.MM.YYYY
      * @return String with date converted to OSM data format YYYY-MM-DD
      */
     public static String convertDate (String ruianDate) {
-      String r = new String();
-      String[] parts = ruianDate.split("\\.");
-      try {
-        int day =   Integer.parseInt(parts[0]);
-        int month = Integer.parseInt(parts[1]);
-        int year =  Integer.parseInt(parts[2]);
-        r = new Integer(year).toString() + "-" + String.format("%02d", month) + "-" + String.format("%02d", day);
-      } catch (Exception e) {
-      }
-
-      return r;
+        try {
+            String[] parts = ruianDate.split("\\.");
+            int day =   Integer.parseInt(parts[0]);
+            int month = Integer.parseInt(parts[1]);
+            int year =  Integer.parseInt(parts[2]);
+            return Integer.toString(year) + "-" + String.format("%02d", month) + "-" + String.format("%02d", day);
+        } catch (NumberFormatException e) {
+            return "";
+        }
     }
 
 
