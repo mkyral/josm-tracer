@@ -54,6 +54,7 @@ public abstract class BuildingTracerModule extends TracerModule {
     private static final GeomDeviation m_connectTolerance = new GeomDeviation (0.15, Math.PI / 50);
     private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.10, Math.PI / 50);
     private static final double m_discardCutoffsPercent = 15.0;
+    private static final double m_discardCutoffsPercentMaxSum = 30.0;
     private final ClipAreasSettings m_clipSettings =
         new ClipAreasSettings (m_connectTolerance, m_discardCutoffsPercent, new BuildingTracerModule.DiscardableBuildingCutoff());
 
@@ -90,7 +91,7 @@ public abstract class BuildingTracerModule extends TracerModule {
         @Override
         public boolean canSilentlyDiscard(EdWay way, double cutoffs_percent) {
 
-            if (cutoffs_percent > 30.0)
+            if (cutoffs_percent > m_discardCutoffsPercentMaxSum)
                 return false;
 
             // can silently discard given building as a result of clipping/cutoff removal?
