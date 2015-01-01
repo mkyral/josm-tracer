@@ -90,9 +90,9 @@ public abstract class TracerModule {
         protected final boolean m_alt;
         protected final boolean m_shift;
 
-        protected final boolean m_performRetrace;
-        protected final boolean m_performClipping;
-        protected final boolean m_performWayMerging;
+        protected boolean m_performRetrace;
+        protected boolean m_performClipping;
+        protected boolean m_performWayMerging;
 
         private TracerRecord m_record;
         private boolean m_cancelled;

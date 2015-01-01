@@ -71,7 +71,16 @@ public final class ClassicModule extends BuildingTracerModule {
     class ClassicTracerTask extends BuildingTracerTask {
 
         ClassicTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
-            super (pos, ctrl, alt ,shift);
+            super (pos, ctrl, alt, shift);
+
+            // Alt modifier in classic tracer disables tagging, which means that
+            // a non-building geometry might be traced. Disable all object-specific
+            // operations to avoid building damages.
+            if (alt) {
+                m_performClipping = false;
+                m_performRetrace = false;
+                m_performWayMerging = false;
+            }
         }
 
         @Override
