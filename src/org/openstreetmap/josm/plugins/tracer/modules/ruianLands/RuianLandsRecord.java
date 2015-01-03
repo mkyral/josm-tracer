@@ -246,6 +246,7 @@ public final class RuianLandsRecord extends TracerRecord {
                 String[] x = kv[i].split(",");
                 m_keys.put(x[0], x[1]);
             }
+            m_keys.put("source", m_source);
         }
 
         JsonArray arr = retrieveJsonArray(obj, "geometry");
