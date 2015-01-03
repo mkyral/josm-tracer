@@ -304,7 +304,7 @@ public final class RuianModule extends TracerModule {
             Map <String, String> new_keys = new HashMap <> (record().getKeys());
 
             // replace only buildings with key building=yes
-            if (! TracerUtils.containsAnyTag(map, "building", "yes", ""))
+            if (! TracerUtils.containsAnyTag(map, "building", "yes", null))
                 new_keys.remove("building");
 
             // do not update building:levels key value
