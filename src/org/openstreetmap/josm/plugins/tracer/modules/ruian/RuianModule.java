@@ -303,12 +303,16 @@ public final class RuianModule extends TracerModule {
             Map <String, String> map = obj.getKeys();
             Map <String, String> new_keys = new HashMap <> (record().getKeys());
 
-            // never replace building=church/chapel tag with yes/civic
-            if (TracerUtils.containsAnyTag(map, "building", "church", "chapel") && TracerUtils.containsAnyTag(new_keys, "building", "yes", "civic"))
+            // replace only buildings with key building=yes
+            if (! TracerUtils.containsAnyTag(map, "building", "yes", ""))
                 new_keys.remove("building");
 
+            // do not update building:levels key value
+            if (map.containsKey("building:levels"))
+                new_keys.remove("building:levels");
+
             for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
-                map.put(new_key.getKey(), new_key.getValue());
+            map.put(new_key.getKey(), new_key.getValue());
             }
             obj.setKeys(map);
         }
