@@ -312,7 +312,7 @@ public final class RuianModule extends TracerModule {
                 new_keys.remove("building:levels");
 
             for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
-            map.put(new_key.getKey(), new_key.getValue());
+                map.put(new_key.getKey(), new_key.getValue());
             }
             obj.setKeys(map);
         }
