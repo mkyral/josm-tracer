@@ -255,9 +255,14 @@ public abstract class BuildingTracerModule extends TracerModule {
             Map <String, String> map = obj.getKeys();
             Map <String, String> new_keys = new HashMap <> (getRecord().getKeys(m_alt));
 
-            // never replace building=church/chapel tag with yes/civic
-            if (TracerUtils.containsAnyTag(map, "building", "church", "chapel") && TracerUtils.containsAnyTag(new_keys, "building", "yes", "civic"))
+            // don't replace other building keys than building=yes
+            if (map.containsKey("building") && !"yes".equals(map.get("building")))
                 new_keys.remove("building");
+
+            // don't update building:levels key, RUIAN sometimes contains wrong values
+            // (reported by Michal Pustejovsky on talk-cz)
+            if (map.containsKey("building:levels"))
+                new_keys.remove("building:levels");
 
             for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
                 map.put(new_key.getKey(), new_key.getValue());

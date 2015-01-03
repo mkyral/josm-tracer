@@ -119,14 +119,4 @@ public abstract class TracerUtils {
             }
         }
     }
-
-    public static boolean containsAnyTag(Map<String,String> keys, String key, String value1, String value2) {
-        if (keys == null || key == null)
-            return false;
-        String val = keys.get(key);
-        if (val == null)
-            return value1 == null || value2 == null;
-        return val.equals(value1) || val.equals(value2);
-    }
-
  }
