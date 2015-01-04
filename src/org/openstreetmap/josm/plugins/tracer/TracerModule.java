@@ -106,6 +106,7 @@ public abstract class TracerModule {
         private boolean m_cancelled;
 
         private static final double resurrectNodesDistanceMeters = 10.0;
+        private static final double automaticOsmDownloadMeters = 200.0;
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
@@ -211,7 +212,7 @@ public abstract class TracerModule {
             }
 
             // Schedule all required tasks
-            LatLonSize downloadsize = LatLonSize.get (m_pos, 200.0);
+            LatLonSize downloadsize = LatLonSize.get (m_pos, automaticOsmDownloadMeters);
             LatLonSize extrasize = this.getMissingAreaCheckExtraSize(m_pos);
             Bounds area = getMissingAreaToDownload(m_record.getAllCoors(), extrasize, downloadsize);
             if (area != null) {
@@ -221,6 +222,15 @@ public abstract class TracerModule {
                 final Future<?> future = task.download(false, area, null);
                 // Note: we don't start PostDownloadHandler after download because we're
                 // not interested in download errors.
+
+                // Note: be careful, this download don't guarantee that the required area will be available.
+                // First, the download can fail at any time. Second, getMissingAreaToDownload() doesn't
+                // consider object retracing. That is, if the retraced object is significantly different
+                // from the traced one, it still can be outside of downloaded bounds. Because retrace object
+                // is selected inside WayEditor transaction, there's no easy way to get it now. Also, retraced
+                // object might be an incomplete multipolygon that is not downloaded yet. So, we ignore these
+                // corner cases here and all modules still must must carefully check if data bounds requirements
+                // are satisfied.
 
                 Main.worker.submit(new Runnable() {
                     @Override
