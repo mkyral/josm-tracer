@@ -220,7 +220,8 @@ public abstract class BuildingTracerModule extends TracerModule {
             }
 
             // Tag object
-            tagTracedObject(trobj);
+            if (!tagTracedObject(trobj))
+                return null;
 
             // Clip other areas
             if (m_performClipping) {
@@ -250,24 +251,46 @@ public abstract class BuildingTracerModule extends TracerModule {
             return trobj;
         }
 
-        private void tagTracedObject (EdObject obj) {
+        private boolean tagTracedObject (EdObject obj) {
 
-            Map <String, String> map = obj.getKeys();
+            Map <String, String> old_keys = obj.getKeys();
             Map <String, String> new_keys = new HashMap <> (getRecord().getKeys(m_alt));
 
-            // don't replace other building keys than building=yes
-            if (map.containsKey("building") && !"yes".equals(map.get("building")))
-                new_keys.remove("building");
+            String old_building_tag = old_keys.get("building");
+            String new_building_tag = new_keys.get("building");
 
-            // don't update building:levels key, RUIAN sometimes contains wrong values
-            // (reported by Michal Pustejovsky on talk-cz)
-            if (map.containsKey("building:levels"))
-                new_keys.remove("building:levels");
+            // always silently replace building=yes with the new building tag
+            if (new_building_tag != null && "yes".equals(old_building_tag))
+                old_keys.put("building", new_building_tag);
+            // always keep old building tag if the new tag is building=yes
+            else if (old_building_tag != null && "yes".equals(new_building_tag))
+                new_keys.put("building", old_building_tag);
+            // keep church/chapel tag if the new one is civic
+            else if ("civic".equals(new_building_tag) && ("church".equals(old_building_tag) || "chapel".equals(old_building_tag)))
+                new_keys.put("building", old_building_tag);
+            // ... add other known conflicting building tags that should be resolved automatically
 
-            for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
-                map.put(new_key.getKey(), new_key.getValue());
+            // silently discard old source=cuzk:km tag
+            if (new_keys.containsKey("source") && "cuzk:km".equals(old_keys.get("source")))
+                old_keys.put("source", new_keys.get("source"));
+
+            // merge missing keys to avoid resolution dialog when there're no collisions
+            for (Map.Entry<String, String> tag: old_keys.entrySet()) {
+                if (!new_keys.containsKey(tag.getKey()))
+                    new_keys.put(tag.getKey(), tag.getValue());
             }
-            obj.setKeys(map);
+            for (Map.Entry<String, String> tag: new_keys.entrySet()) {
+                if (!old_keys.containsKey(tag.getKey()))
+                    old_keys.put(tag.getKey(), tag.getValue());
+            }
+
+            // combine and resolve conflicting keys 
+            Map<String, String> result = CombineTagsResolver.launchIfNecessary(old_keys, new_keys);
+            if (result == null)
+                return false;
+
+            obj.setKeys(result);
+            return true;
         }
 
         private Pair<EdObject, Boolean> getObjectToRetrace(WayEditor editor, LatLon pos, SearchCompiler.Match retraceAreaMatch) {
