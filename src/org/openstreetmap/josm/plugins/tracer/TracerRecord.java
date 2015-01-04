@@ -20,8 +20,10 @@ package org.openstreetmap.josm.plugins.tracer;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonString;
@@ -236,6 +238,16 @@ public abstract class TracerRecord {
 
     public final Map<String, String> getKeys() {
         return getKeys(false);
+    }
+
+    public Set<LatLon> getAllCoors() {
+        Set<LatLon> result = new HashSet<>();
+        if (hasOuter())
+            result.addAll(m_outer);
+        for (List<LatLon> inner: m_inners) {
+            result.addAll(inner);
+        }
+        return result;
     }
 
 }

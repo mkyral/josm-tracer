@@ -21,10 +21,15 @@ package org.openstreetmap.josm.plugins.tracer;
 import java.awt.Cursor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.Future;
 import javax.swing.JOptionPane;
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.actions.downloadtasks.DownloadOsmTask;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
+import org.openstreetmap.josm.data.Bounds;
+import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
@@ -39,8 +44,10 @@ import org.openstreetmap.josm.plugins.tracer.connectways.EdMultipolygon;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdNode;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdObject;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdWay;
+import org.openstreetmap.josm.plugins.tracer.connectways.LatLonSize;
 import org.openstreetmap.josm.plugins.tracer.connectways.MultipolygonMatch;
 import org.openstreetmap.josm.plugins.tracer.connectways.WayEditor;
+import static org.openstreetmap.josm.tools.I18n.tr;
 
 /**
  * Base class for Tracer modules
@@ -117,17 +124,17 @@ public abstract class TracerModule {
 
         /**
          * Returns list of all existing incomplete multipolygons that might participate in
-         * traced polygon clipping. These relations must be downloaded before clipping,
-         * clipping doesn't support incomplete multipolygons.
-         * @param box BBox of the traced geometry
+         * building polygon clipping. These relations must be downloaded first, clipping
+         * doesn't support incomplete multipolygons.
          * @return List of incomplete multipolygon relations
          */
-        protected List<Relation> getIncompleteMultipolygonsForDownload(BBox box) {
+        private List<Relation> getIncompleteMultipolygonsForDownload() {
             DataSet ds = Main.main.getCurrentDataSet();
             ds.getReadLock().lock();
+            BBox bbox = m_record.getBBox();
             try {
                 List<Relation> list = new ArrayList<>();
-                for (Relation rel : ds.searchRelations(box)) {
+                for (Relation rel : ds.searchRelations(bbox)) {
                     if (!MultipolygonMatch.match(rel))
                         continue;
                     if (rel.isIncomplete() || rel.hasIncompleteMembers())
@@ -202,19 +209,32 @@ public abstract class TracerModule {
                 return;
             }
 
-            // Look for incomplete multipolygons that might participate in clipping
-            List<Relation> incomplete_multipolygons = getIncompleteMultipolygonsForDownload (m_record.getBBox());
+            // Schedule all required tasks
+            LatLonSize oversize = LatLonSize.get (m_pos, 200.0);
+            Bounds area = getMissingAreaToDownload(m_record.getAllCoors(), oversize);
+            if (area != null) {
+                DownloadOsmTask task = new DownloadOsmTask();
+                final EastNorth center = Main.map.mapView.getCenter();
+                final double scale =  Main.map.mapView.getScale();
+                final Future<?> future = task.download(false, area, null);
+                // Note: we don't start PostDownloadHandler after download because we're
+                // not interested in download errors.
 
-            // No multipolygons to download, create traced polygon immediately within this task
-            if (incomplete_multipolygons == null || incomplete_multipolygons.isEmpty()) {
-                progressMonitor.subTask(tr("Creating {0} polygon...", getName()));
-                createTracedPolygon();
-            }
-            else {
-                // Schedule task to download incomplete multipolygons
-                Main.worker.submit(new DownloadRelationTask(incomplete_multipolygons, Main.main.getEditLayer()));
-
-                // Schedule task to create traced polygon
+                Main.worker.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        try { future.get(); } catch (Exception e) {}
+                        // Restore zoom and scale. This is really ugly but DownloadOsmTask() has no option
+                        // to disable automatic resize to downloaded area. Candidate for JOSM patch?
+                        Main.map.mapView.zoomTo(center, scale);
+                    }
+                });
+                Main.worker.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        downloadIncompleteMultipolygonsTask();
+                    }
+                });
                 Main.worker.submit(new Runnable() {
                     @Override
                     public void run() {
@@ -222,6 +242,60 @@ public abstract class TracerModule {
                     }
                 });
             }
+            else if (downloadIncompleteMultipolygonsTask()) {
+                Main.worker.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        createTracedPolygon();
+                    }
+                });
+            }
+            else {
+                progressMonitor.subTask(tr("Creating {0} polygon...", getName()));
+                createTracedPolygon();
+            }
+        }
+
+        private boolean downloadIncompleteMultipolygonsTask() {
+
+            // Look for incomplete multipolygons that might participate in clipping
+            List<Relation> incomplete_multipolygons = null;
+            if (m_performClipping)
+                incomplete_multipolygons = getIncompleteMultipolygonsForDownload ();
+
+            if (incomplete_multipolygons == null || incomplete_multipolygons.isEmpty())
+                return false;
+
+            // Schedule task to download incomplete multipolygons
+            Main.worker.submit(new DownloadRelationTask(incomplete_multipolygons, Main.main.getEditLayer()));
+            return true;
+        }
+
+        private Bounds getMissingAreaToDownload(Set<LatLon> points, LatLonSize extrasize) {
+            DataSet ds = Main.main.getCurrentDataSet();
+            List<Bounds> bounds = ds.getDataSourceBounds();
+            Bounds result = null;
+            for (LatLon point: points) {
+                if (isPointInsideBounds (point, bounds))
+                    continue;
+                Bounds bb = new Bounds (point.lat() - extrasize.latSize(), point.lon() - extrasize.lonSize(),
+                        point.lat() + extrasize.latSize(), point.lon() + extrasize.lonSize());
+
+                if (result == null) {
+                    result = bb;
+                    bounds.add(bb);
+                } else {
+                    result.extend(bb);
+                }
+            }
+            return result;
+        }
+
+        private boolean isPointInsideBounds(LatLon pt, List<Bounds> bounds) {
+            for (Bounds b: bounds)
+                if (b.contains(pt))
+                    return true;
+            return false;
         }
 
         protected EdWay getOuterWay(EdObject obj) {
