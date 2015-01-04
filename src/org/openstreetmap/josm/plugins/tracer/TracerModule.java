@@ -126,7 +126,7 @@ public abstract class TracerModule {
 
         /**
          * Returns list of all existing incomplete multipolygons that might participate in
-         * building polygon clipping. These relations must be downloaded first, clipping
+         * traced polygon clipping. These relations must be downloaded first, clipping
          * doesn't support incomplete multipolygons.
          * @return List of incomplete multipolygon relations
          */
