@@ -26,7 +26,7 @@ public abstract class CombineTagsResolver {
         // because (a) it requires primitives occurring in DataSet, (b) it tries to resolve relation
         // memberships, (c) it builds a list of DataSet Commands instead of the resolved set of tags.
 
-        // Node 2: this method relies on deprecated function CombinePrimitiveResolverDialog.getInstance().
+        // Note 2: this method relies on deprecated function CombinePrimitiveResolverDialog.getInstance().
         // The function was deprecated by introduction of CombinePrimitiveResolverDialog.launchIfNecessary()
         // but it's still available for public use.
 

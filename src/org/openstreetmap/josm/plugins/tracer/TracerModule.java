@@ -223,7 +223,7 @@ public abstract class TracerModule {
                 // Note: we don't start PostDownloadHandler after download because we're
                 // not interested in download errors.
 
-                // Note: be careful, this download don't guarantee that the required area will be available.
+                // Note: be careful, this download doesn't guarantee that the required area will be available.
                 // First, the download can fail at any time. Second, getMissingAreaToDownload() doesn't
                 // consider object retracing. That is, if the retraced object is significantly different
                 // from the traced one, it still can be outside of downloaded bounds. Because retrace object
