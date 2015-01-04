@@ -29,8 +29,10 @@ public final class ClassicServer {
     public ClassicServer() {
     }
 
+    private final static int classicServerTimeout = 60000;
+
     private String callServer(String urlString) throws IOException {
-        try (BufferedReader reader = TracerUtils.openUrlStream (urlString)) {
+        try (BufferedReader reader = TracerUtils.openUrlStream (urlString, classicServerTimeout)) {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {

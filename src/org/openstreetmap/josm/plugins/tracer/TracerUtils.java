@@ -88,20 +88,29 @@ public abstract class TracerUtils {
         }
     }
 
+    private final static int defaultStreamTimeout = 10000;
 
-    public static BufferedReader openUrlStream (String url) throws IOException {
-        return openUrlStream (url, null);
+    public static BufferedReader openUrlStream (String url, int timeout) throws IOException {
+        return openUrlStream (url, timeout, null);
     }
 
-    public static BufferedReader openUrlStream (String url, String charset) throws MalformedURLException, IOException {
+    public static BufferedReader openUrlStream (String url) throws IOException {
+        return openUrlStream (url, defaultStreamTimeout, null);
+    }
+
+    public static BufferedReader openUrlStream (String url, String charset) throws IOException {
+        return openUrlStream (url, defaultStreamTimeout, charset);
+    }
+
+    public static BufferedReader openUrlStream (String url, int timeout, String charset) throws MalformedURLException, IOException {
         URLConnection conn = null;
         boolean succeeded = false;
         try {
              conn = new URL(url).openConnection();
 
-             // set hardcoded 10 sec timeouts
-             conn.setConnectTimeout(10000);
-             conn.setReadTimeout(10000);
+             // set timeouts
+             conn.setConnectTimeout(timeout);
+             conn.setReadTimeout(timeout);
 
              InputStreamReader isr = charset != null ?
                      new InputStreamReader(conn.getInputStream(), charset) : new InputStreamReader(conn.getInputStream());
