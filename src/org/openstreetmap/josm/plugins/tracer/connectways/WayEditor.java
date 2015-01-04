@@ -347,17 +347,28 @@ public class WayEditor {
                 mp.updateModifiedFlag();
     }
 
-    public List<Command> finalizeEdit () {
-        return finalizeEdit(0.0);
-    }
-
-
-    public List<Command> finalizeEdit (double resurrect_dist) {
+    public List<Command> finalizeEdit (EdObject required_object, double resurrect_dist) {
 
         System.out.println("WayEditor.finalizeEdit(): ");
 
         // reset modified flags, if possible
         updateModifiedFlags();
+
+        // remember required object components
+        Set<EdWay> required_object_ways = null;
+        EdNode required_object_node = null;
+        if (required_object != null && !required_object.isDeleted()) {
+            if (required_object.isNode())
+                required_object_node = (EdNode)required_object;
+            else {
+                required_object_ways = new HashSet<>();
+                if (required_object.isWay())
+                    required_object_ways.add((EdWay)required_object);
+                else if (required_object.isMultipolygon()) {
+                    required_object_ways.addAll(((EdMultipolygon)required_object).allWays());
+                }
+            }
+        }
 
         // get ways and nodes required in the resulting DataSet
         Set<EdWay> required_ways = new HashSet<> ();
@@ -365,7 +376,7 @@ public class WayEditor {
         for (EdWay w: m_ways) {
             if (w.isDeleted())
                 continue;
-            if (w.hasEditorReferrers() || w.isTagged() || w.hasExternalReferrers()) {
+            if (w.hasEditorReferrers() || w.isTagged() || w.hasExternalReferrers() || (required_object_ways != null && required_object_ways.contains(w))) {
                 required_ways.add(w);
                 for (int i = 0; i < w.getNodesCount(); i++)
                     required_nodes.add(w.getNode(i));
@@ -376,7 +387,7 @@ public class WayEditor {
                 continue;
             if (required_nodes.contains(n))
                 continue;
-            if (n.isTagged() || n.hasExternalReferrers())
+            if (n.isTagged() || n.hasExternalReferrers() || required_object_node == n)
                 required_nodes.add(n);
         }
 

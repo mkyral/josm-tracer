@@ -353,7 +353,7 @@ public abstract class TracerModule {
 
                 private void finalizeEdit(WayEditor editor, EdObject object) {
 
-                    List<Command> commands = editor.finalizeEdit(getResurrectNodesDistanceMeters());
+                    List<Command> commands = editor.finalizeEdit(object, getResurrectNodesDistanceMeters());
 
                     if (commands.isEmpty()) {
                         postTraceNotifications().add(tr("Nothing changed."));
