@@ -40,6 +40,7 @@ import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
 import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
 import org.openstreetmap.josm.gui.util.GuiHelper;
+import org.openstreetmap.josm.plugins.tracer.connectways.BBoxUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdMultipolygon;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdNode;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdObject;
@@ -210,8 +211,9 @@ public abstract class TracerModule {
             }
 
             // Schedule all required tasks
-            LatLonSize oversize = LatLonSize.get (m_pos, 200.0);
-            Bounds area = getMissingAreaToDownload(m_record.getAllCoors(), oversize);
+            LatLonSize downloadsize = LatLonSize.get (m_pos, 200.0);
+            LatLonSize extrasize = this.getMissingAreaCheckExtraSize(m_pos);
+            Bounds area = getMissingAreaToDownload(m_record.getAllCoors(), extrasize, downloadsize);
             if (area != null) {
                 DownloadOsmTask task = new DownloadOsmTask();
                 final EastNorth center = Main.map.mapView.getCenter();
@@ -271,15 +273,19 @@ public abstract class TracerModule {
             return true;
         }
 
-        private Bounds getMissingAreaToDownload(Set<LatLon> points, LatLonSize extrasize) {
+        private Bounds getMissingAreaToDownload(Set<LatLon> points, LatLonSize extrasize, LatLonSize downloadsize) {
+            if (points == null || points.isEmpty())
+                return null;
+
             DataSet ds = Main.main.getCurrentDataSet();
             List<Bounds> bounds = ds.getDataSourceBounds();
             Bounds result = null;
+
             for (LatLon point: points) {
-                if (isPointInsideBounds (point, bounds))
+                if (BBoxUtils.isInsideBounds(point, bounds, extrasize))
                     continue;
-                Bounds bb = new Bounds (point.lat() - extrasize.latSize(), point.lon() - extrasize.lonSize(),
-                        point.lat() + extrasize.latSize(), point.lon() + extrasize.lonSize());
+                Bounds bb = new Bounds (point.lat() - downloadsize.latSize(), point.lon() - downloadsize.lonSize(),
+                        point.lat() + downloadsize.latSize(), point.lon() + downloadsize.lonSize());
 
                 if (result == null) {
                     result = bb;
@@ -291,12 +297,7 @@ public abstract class TracerModule {
             return result;
         }
 
-        private boolean isPointInsideBounds(LatLon pt, List<Bounds> bounds) {
-            for (Bounds b: bounds)
-                if (b.contains(pt))
-                    return true;
-            return false;
-        }
+        protected abstract LatLonSize getMissingAreaCheckExtraSize(LatLon pos);
 
         protected EdWay getOuterWay(EdObject obj) {
             if (obj.isWay()) {
