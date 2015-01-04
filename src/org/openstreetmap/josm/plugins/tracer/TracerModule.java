@@ -216,9 +216,7 @@ public abstract class TracerModule {
             LatLonSize extrasize = this.getMissingAreaCheckExtraSize(m_pos);
             Bounds area = getMissingAreaToDownload(m_record.getAllCoors(), extrasize, downloadsize);
             if (area != null) {
-                DownloadOsmTask task = new DownloadOsmTask();
-                final EastNorth center = Main.map.mapView.getCenter();
-                final double scale =  Main.map.mapView.getScale();
+                DownloadOsmTask task = new DownloadOsmMissingAreaTask();
                 final Future<?> future = task.download(false, area, null);
                 // Note: we don't start PostDownloadHandler after download because we're
                 // not interested in download errors.
@@ -236,14 +234,6 @@ public abstract class TracerModule {
                     @Override
                     public void run() {
                         try { future.get(); } catch (Exception e) {}
-                        // Restore zoom and scale. This is really ugly but DownloadOsmTask() has no option
-                        // to disable automatic resize to downloaded area. Candidate for JOSM patch?
-                        Main.map.mapView.zoomTo(center, scale);
-                    }
-                });
-                Main.worker.submit(new Runnable() {
-                    @Override
-                    public void run() {
                         downloadIncompleteMultipolygonsTask();
                     }
                 });
