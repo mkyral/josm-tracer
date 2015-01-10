@@ -306,11 +306,7 @@ public final class RuianRecord extends TracerRecord {
         return m_source;
     }
 
-
-    public Map<String, String> getKeys() {
-        return getKeys(false);
-    }
-
+    @Override
     public Map<String, String> getKeys(boolean m_alt) {
 
         Map<String, String> tags = new HashMap<>();

@@ -44,6 +44,7 @@ public final class LpisModule extends TracerModule  {
     private boolean moduleEnabled;
 
     private static final double oversizeInDataBoundsMeters = 5.0;
+    private static final double automaticOsmDownloadMeters = 900.0;
     private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.25, Math.PI / 15);
     private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.25, Math.PI / 40);
 
@@ -249,12 +250,10 @@ public final class LpisModule extends TracerModule  {
 
             Map <String, String> map = obj.getKeys();
 
-            Map <String, String> new_keys = new HashMap <> (record().getUsageOsm());
+            Map <String, String> new_keys = new HashMap <> (record().getKeys());
             for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
                 map.put(new_key.getKey(), new_key.getValue());
             }
-
-            // #### delete any existing retraced tags??
 
             map.put("source", source);
             map.put("ref", Long.toString(record().getLpisID()));
@@ -328,6 +327,16 @@ public final class LpisModule extends TracerModule  {
             if (retrace_object != null && !retrace_object.isInsideDataSourceBounds(bounds_oversize))
                 return false;
             return new_object.isInsideDataSourceBounds(bounds_oversize);
+        }
+
+        @Override
+        protected LatLonSize getMissingAreaCheckExtraSize(LatLon pos) {
+            return LatLonSize.get(pos, 3 * oversizeInDataBoundsMeters);
+        }
+
+        @Override
+        protected double getAutomaticOsmDownloadMeters () {
+            return automaticOsmDownloadMeters;
         }
     }
 }

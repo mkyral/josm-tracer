@@ -20,71 +20,32 @@
 package org.openstreetmap.josm.plugins.tracer.modules.classic;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.ArrayList;
+import java.io.IOException;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 
-public class ClassicServer {
+public final class ClassicServer {
 
     public ClassicServer() {
-
     }
 
-    /**
-     * Call Trace server.
-     * @param urlString Input parameters.
-     * @return Result text.
-     */
-    private String callServer(String urlString) {
-        try {
-            URL url = new URL(urlString);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
+    private final static int classicServerTimeout = 60000;
 
+    private String callServer(String urlString) throws IOException {
+        try (BufferedReader reader = TracerUtils.openUrlStream (urlString, classicServerTimeout)) {
             StringBuilder sb = new StringBuilder();
             String line;
             while ((line = reader.readLine()) != null) {
                 sb.append(line);
             }
             return sb.toString();
-        } catch (Exception e) {
-            return "";
         }
     }
 
-    /**
-     * Trace building on position.
-     * @param pos Position of building.
-     * @return Building border.
-     */
-    public ArrayList<LatLon> trace(LatLon pos, String url, double adjX, double adjY) {
-        try {
-            String content = callServer(url + "/trace/simple/" + pos.lat() + ";" + pos.lon());
-            ArrayList<LatLon> nodelist = new ArrayList<LatLon>();
-            String[] lines = content.split("\\|");
-            for (String line : lines) {
-                String[] items = line.split(";");
-                double x = Double.parseDouble(items[0]);
-                double y = Double.parseDouble(items[1]);
-                // Adjust point possition
-                if (adjX != 0 || adjY != 0) {
-                  x += adjX;
-                  y += adjY;
-                }
-                nodelist.add(new LatLon(x, y));
-            }
-            return nodelist;
-        } catch (Exception e) {
-            return new ArrayList<LatLon>();
-        }
+    public ClassicRecord trace(LatLon pos, String url, double adjlat, double adjlon) throws IOException {
+        String content = callServer(url + "/trace/simple/" + pos.lat() + ";" + pos.lon());
+        ClassicRecord record = new ClassicRecord(adjlat, adjlon);
+        record.parseOutput(content);
+        return record;
     }
-
-    /**
-     * Log message to server.
-     * @param message Message to log.
-     */
-    public void log(String message) {
-        callServer("log/" + message);
-    }
-
 }

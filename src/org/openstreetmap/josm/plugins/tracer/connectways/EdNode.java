@@ -199,28 +199,9 @@ public class EdNode extends EdObject {
     }
 
     @Override
-    public boolean isInsideBounds(List<Bounds> bounds, LatLonSize oversize) {
+    public boolean isInsideBounds(List<Bounds> bounds, LatLonSize extrasize) {
         checkNotDeleted();
-        LatLon p = m_node.getCoor();
-        if (oversize.isZero()) {
-            return isInsideBounds(bounds, p);
-        }
-
-        LatLon p1 = new LatLon(p.lat() - oversize.latSize(), p.lon() - oversize.lonSize());
-        LatLon p2 = new LatLon(p.lat() - oversize.latSize(), p.lon() + oversize.lonSize());
-        LatLon p3 = new LatLon(p.lat() + oversize.latSize(), p.lon() - oversize.lonSize());
-        LatLon p4 = new LatLon(p.lat() + oversize.latSize(), p.lon() + oversize.lonSize());
-        return isInsideBounds(bounds, p) && isInsideBounds(bounds, p1) &&
-                isInsideBounds(bounds, p2) && isInsideBounds(bounds, p3) &&
-                isInsideBounds(bounds, p4);
-    }
-
-    private boolean isInsideBounds(List<Bounds> bounds, LatLon p) {
-        for (Bounds b: bounds) {
-            if (b.contains(p))
-                return true;
-        }
-        return false;
+        return BBoxUtils.isInsideBounds(m_node.getCoor(), bounds, extrasize);
     }
 }
 

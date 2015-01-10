@@ -390,5 +390,10 @@ public final class RuianLandsModule extends TracerModule {
                 return false;
             return new_object.isInsideDataSourceBounds(bounds_oversize);
         }
+
+        @Override
+        protected LatLonSize getMissingAreaCheckExtraSize(LatLon pos) {
+            return LatLonSize.get(pos, 3 * oversizeInDataBoundsMeters);
+        }
     }
 }

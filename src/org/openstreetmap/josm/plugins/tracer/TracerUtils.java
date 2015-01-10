@@ -20,25 +20,14 @@
 package org.openstreetmap.josm.plugins.tracer;
 
 
-import com.vividsolutions.jts.geom.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.Map;
 import javax.swing.JOptionPane;
-import org.geotools.geometry.jts.JTS;
-import org.geotools.referencing.CRS;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.TransformException;
-import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.gui.util.GuiHelper;
 
@@ -83,57 +72,45 @@ public abstract class TracerUtils {
     }
 
     /**
-     * Return text representation of coordinates.
-     # @param  lat Lat coordinate
-     # @param  lon Lon coordinate
-     * @return String coordinatesText
-     */
-    public static String formatCoordinates (double lat, double lon) {
-
-      String r = "";
-      DecimalFormatSymbols symbols = new DecimalFormatSymbols();
-      symbols.setDecimalSeparator('.');
-      symbols.setGroupingSeparator(' ');
-      DecimalFormat df = new DecimalFormat("#.00000", symbols);
-
-      r = "(" + df.format(lat) + ", " +
-                df.format(lon) + ")";
-      return r;
-    }
-
-    /**
      * Convert date from Czech to OSM format
      * @param ruianDate Date in RUIAN (Czech) format DD.MM.YYYY
      * @return String with date converted to OSM data format YYYY-MM-DD
      */
     public static String convertDate (String ruianDate) {
-      String r = new String();
-      String[] parts = ruianDate.split("\\.");
-      try {
-        int day =   Integer.parseInt(parts[0]);
-        int month = Integer.parseInt(parts[1]);
-        int year =  Integer.parseInt(parts[2]);
-        r = new Integer(year).toString() + "-" + String.format("%02d", month) + "-" + String.format("%02d", day);
-      } catch (Exception e) {
-      }
-
-      return r;
+        try {
+            String[] parts = ruianDate.split("\\.");
+            int day =   Integer.parseInt(parts[0]);
+            int month = Integer.parseInt(parts[1]);
+            int year =  Integer.parseInt(parts[2]);
+            return Integer.toString(year) + "-" + String.format("%02d", month) + "-" + String.format("%02d", day);
+        } catch (NumberFormatException e) {
+            return "";
+        }
     }
 
+    private final static int defaultStreamTimeout = 10000;
+
+    public static BufferedReader openUrlStream (String url, int timeout) throws IOException {
+        return openUrlStream (url, timeout, null);
+    }
 
     public static BufferedReader openUrlStream (String url) throws IOException {
-        return openUrlStream (url, null);
+        return openUrlStream (url, defaultStreamTimeout, null);
     }
 
-    public static BufferedReader openUrlStream (String url, String charset) throws MalformedURLException, IOException {
+    public static BufferedReader openUrlStream (String url, String charset) throws IOException {
+        return openUrlStream (url, defaultStreamTimeout, charset);
+    }
+
+    public static BufferedReader openUrlStream (String url, int timeout, String charset) throws MalformedURLException, IOException {
         URLConnection conn = null;
         boolean succeeded = false;
         try {
              conn = new URL(url).openConnection();
 
-             // set hardcoded 10 sec timeouts
-             conn.setConnectTimeout(10000);
-             conn.setReadTimeout(10000);
+             // set timeouts
+             conn.setConnectTimeout(timeout);
+             conn.setReadTimeout(timeout);
 
              InputStreamReader isr = charset != null ?
                      new InputStreamReader(conn.getInputStream(), charset) : new InputStreamReader(conn.getInputStream());
@@ -151,14 +128,4 @@ public abstract class TracerUtils {
             }
         }
     }
-
-    public static boolean containsAnyTag(Map<String,String> keys, String key, String value1, String value2) {
-        if (keys == null || key == null)
-            return false;
-        String val = keys.get(key);
-        if (val == null)
-            return value1 == null || value2 == null;
-        return val.equals(value1) || val.equals(value2);
-    }
-
  }
