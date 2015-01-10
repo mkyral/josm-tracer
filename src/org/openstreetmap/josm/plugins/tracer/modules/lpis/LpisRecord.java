@@ -70,31 +70,62 @@ public final class LpisRecord extends TracerRecord {
     }
 
     private void mapToOsm () {
-      switch (m_usage) {
-        case "orná půda": m_usageOsm.put("landuse", "farmland"); break;
-        case "chmelnice": m_usageOsm.put("landuse", "farmland");
-                          m_usageOsm.put("crop", "hop"); break;
-        case "vinice": m_usageOsm.put("landuse", "vineyard"); break;
-        case "ovocný sad": m_usageOsm.put("landuse", "orchard"); break;
-        case "travní porost": m_usageOsm.put("landuse", "meadow");
-                              m_usageOsm.put("meadow", "agricultural"); break;
-        case "porost RRD": m_usageOsm.put("landuse", "forest");
-                           m_usageOsm.put("crop", "fast_growing_wood"); break;
-        case "RRD": m_usageOsm.put("landuse", "forest");
-                    m_usageOsm.put("crop", "fast_growing_wood"); break;
-        case "zalesněná půda": m_usageOsm.put("landuse", "forest"); break;
-        case "rybník": m_usageOsm.put("natural", "water");
-                       m_usageOsm.put("water", "pond"); break;
-        case "jiná kultura": m_usageOsm.put("landuse", "farmland"); break;
-        case "jiná kultura (školka)": m_usageOsm.put("landuse", "plant_nursery"); break;
-        case "školka": m_usageOsm.put("landuse", "plant_nursery"); break;
-        case "jiná kultura (zelinářská zahrada)": m_usageOsm.put("landuse", "farmland");
-                                                  m_usageOsm.put("crop", "vegetables"); break;
-        case "zelinářská zahrada": m_usageOsm.put("landuse", "farmland");
-                                   m_usageOsm.put("crop", "vegetables"); break;
-        default: System.out.println("  Warning: unknown value: " + m_usage);
-                 TracerUtils.showNotification(tr("Tracer: Not mapped value found: ")+ m_usage + ".\n " + tr("Please report it to @talk-cz"), "error", 5000);
-      }
+        switch (m_usage) {
+            case "orná půda":
+                m_usageOsm.put("landuse", "farmland");
+                break;
+            case "chmelnice":
+                m_usageOsm.put("landuse", "farmland");
+                m_usageOsm.put("crop", "hop");
+                break;
+            case "vinice":
+                m_usageOsm.put("landuse", "vineyard");
+                break;
+            case "ovocný sad":
+                m_usageOsm.put("landuse", "orchard");
+                break;
+            case "travní porost":
+                m_usageOsm.put("landuse", "meadow");
+                m_usageOsm.put("meadow", "agricultural");
+                break;
+            case "porost RRD":
+            case "RRD":
+                m_usageOsm.put("landuse", "forest");
+                m_usageOsm.put("crop", "fast_growing_wood");
+                break;
+            case "zalesněná půda":
+                m_usageOsm.put("landuse", "forest");
+                break;
+            case "rybník":
+                m_usageOsm.put("natural", "water");
+                m_usageOsm.put("water", "pond");
+                break;
+            case "jiná kultura":
+            case "jiná kultura neoprávněná pro dotace":
+                m_usageOsm.put("landuse", "farmland");
+                break;
+            case "jiná kultura (školka)":
+                m_usageOsm.put("landuse", "plant_nursery");
+                break;
+            case "školka":
+                m_usageOsm.put("landuse", "plant_nursery");
+                break;
+            case "jiná kultura (zelinářská zahrada)":
+                m_usageOsm.put("landuse", "farmland");
+                m_usageOsm.put("crop", "vegetables");
+                break;
+            case "zelinářská zahrada":
+                m_usageOsm.put("landuse", "farmland");
+                m_usageOsm.put("crop", "vegetables");
+                break;
+            case "tráva na orné":
+                m_usageOsm.put("landuse", "farmland");
+                m_usageOsm.put("crop", "grass");
+                break;
+            default:
+                System.out.println("  Warning: unknown value: " + m_usage);
+                TracerUtils.showNotification(tr("Tracer: Not mapped value found: ") + m_usage + ".\n " + tr("Please report it to @talk-cz"), "error", 5000);
+        }
     }
 
     private ArrayList<LatLon> parseGeometry (String geometry) {
