@@ -21,7 +21,6 @@ package org.openstreetmap.josm.plugins.tracer;
 import java.awt.Cursor;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.Future;
 import javax.swing.JOptionPane;
 import org.openstreetmap.josm.Main;
@@ -29,7 +28,6 @@ import org.openstreetmap.josm.actions.downloadtasks.DownloadOsmTask;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.Bounds;
-import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
@@ -40,7 +38,6 @@ import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
 import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
 import org.openstreetmap.josm.gui.util.GuiHelper;
-import org.openstreetmap.josm.plugins.tracer.connectways.BBoxUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdMultipolygon;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdNode;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdObject;
@@ -48,7 +45,6 @@ import org.openstreetmap.josm.plugins.tracer.connectways.EdWay;
 import org.openstreetmap.josm.plugins.tracer.connectways.LatLonSize;
 import org.openstreetmap.josm.plugins.tracer.connectways.MultipolygonMatch;
 import org.openstreetmap.josm.plugins.tracer.connectways.WayEditor;
-import static org.openstreetmap.josm.tools.I18n.tr;
 
 /**
  * Base class for Tracer modules
@@ -106,7 +102,7 @@ public abstract class TracerModule {
         private boolean m_cancelled;
 
         private static final double resurrectNodesDistanceMeters = 10.0;
-        private static final double automaticOsmDownloadMeters = 200.0;
+        private static final double defaultAutomaticOsmDownloadMeters = 600.0;
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
@@ -212,9 +208,9 @@ public abstract class TracerModule {
             }
 
             // Schedule all required tasks
-            LatLonSize downloadsize = LatLonSize.get (m_pos, automaticOsmDownloadMeters);
+            LatLonSize downloadsize = LatLonSize.get (m_pos, this.getAutomaticOsmDownloadMeters ());
             LatLonSize extrasize = this.getMissingAreaCheckExtraSize(m_pos);
-            Bounds area = getMissingAreaToDownload(m_record.getAllCoors(), extrasize, downloadsize);
+            Bounds area = m_record.getMissingAreaToDownload(Main.main.getCurrentDataSet(), extrasize, downloadsize);
             if (area != null) {
                 DownloadOsmTask task = new DownloadOsmMissingAreaTask();
                 final Future<?> future = task.download(false, area, null);
@@ -273,31 +269,11 @@ public abstract class TracerModule {
             return true;
         }
 
-        private Bounds getMissingAreaToDownload(Set<LatLon> points, LatLonSize extrasize, LatLonSize downloadsize) {
-            if (points == null || points.isEmpty())
-                return null;
-
-            DataSet ds = Main.main.getCurrentDataSet();
-            List<Bounds> bounds = ds.getDataSourceBounds();
-            Bounds result = null;
-
-            for (LatLon point: points) {
-                if (BBoxUtils.isInsideBounds(point, bounds, extrasize))
-                    continue;
-                Bounds bb = new Bounds (point.lat() - downloadsize.latSize(), point.lon() - downloadsize.lonSize(),
-                        point.lat() + downloadsize.latSize(), point.lon() + downloadsize.lonSize());
-
-                if (result == null) {
-                    result = bb;
-                    bounds.add(bb);
-                } else {
-                    result.extend(bb);
-                }
-            }
-            return result;
-        }
-
         protected abstract LatLonSize getMissingAreaCheckExtraSize(LatLon pos);
+
+        protected double getAutomaticOsmDownloadMeters () {
+            return defaultAutomaticOsmDownloadMeters;
+        }
 
         protected EdWay getOuterWay(EdObject obj) {
             if (obj.isWay()) {

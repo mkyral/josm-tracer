@@ -28,14 +28,18 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.data.osm.DataSet;
 import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
+import org.openstreetmap.josm.plugins.tracer.connectways.BBoxUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdMultipolygon;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdNode;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdObject;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdWay;
 import org.openstreetmap.josm.plugins.tracer.connectways.GeomUtils;
+import org.openstreetmap.josm.plugins.tracer.connectways.LatLonSize;
 import org.openstreetmap.josm.plugins.tracer.connectways.WayEditor;
 
 public abstract class TracerRecord {
@@ -250,4 +254,52 @@ public abstract class TracerRecord {
         return result;
     }
 
+    public Bounds getMissingAreaToDownload(DataSet ds, LatLonSize extrasize, LatLonSize downloadsize) {
+
+        List<Bounds> bounds = ds.getDataSourceBounds();
+        Bounds result = null;
+
+        if (hasOuter ())
+            result = includeMissingAreaToDownload (m_outer, bounds, result, extrasize, downloadsize);
+
+        for (List<LatLon> inner: m_inners)
+            result = includeMissingAreaToDownload (inner, bounds, result, extrasize, downloadsize);
+
+        return result;
+    }
+
+    private Bounds includeMissingAreaToDownload (List<LatLon> way, List<Bounds> bounds, Bounds result, LatLonSize extrasize, LatLonSize downloadsize) {
+
+        if (way.size () < 2)
+            return result;
+
+        LatLon p0;
+        boolean p0in;
+        LatLon p1 = way.get(0);
+        boolean p1in = BBoxUtils.isInsideBounds(p1, bounds, extrasize);
+
+        for (int i = 1; i < way.size (); i++) {
+            p0 = p1;
+            p0in = p1in;
+            p1 = way.get(i);
+            p1in = BBoxUtils.isInsideBounds(p1, bounds, extrasize);
+
+            if (p0in && p1in)
+                continue;
+
+            Bounds bb = new Bounds (
+                    Math.min(p0.lat(), p1.lat()) - downloadsize.latSize(),
+                    Math.min(p0.lon(), p1.lon()) - downloadsize.lonSize(),
+                    Math.max(p0.lat(), p1.lat()) + downloadsize.latSize(),
+                    Math.max(p0.lon(), p1.lon()) + downloadsize.lonSize());
+
+            if (result == null) {
+                result = bb;
+            } else {
+                result.extend(bb);
+            }
+        }
+
+        return result;
+    }
 }

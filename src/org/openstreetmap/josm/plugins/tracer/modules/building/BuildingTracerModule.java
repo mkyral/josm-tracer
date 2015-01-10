@@ -52,6 +52,7 @@ import org.openstreetmap.josm.tools.Pair;
 public abstract class BuildingTracerModule extends TracerModule {
 
     private static final double oversizeInDataBoundsMeters = 2.0;
+    private static final double automaticOsmDownloadMeters = 400.0;
 
     private static final GeomDeviation m_connectTolerance = new GeomDeviation (0.15, Math.PI / 50);
     private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.10, Math.PI / 50);
@@ -368,5 +369,11 @@ public abstract class BuildingTracerModule extends TracerModule {
         protected LatLonSize getMissingAreaCheckExtraSize(LatLon pos) {
             return LatLonSize.get(pos, 3 * oversizeInDataBoundsMeters);
         }
+
+        @Override
+        protected double getAutomaticOsmDownloadMeters () {
+            return automaticOsmDownloadMeters;
+        }
+
     }
 }
