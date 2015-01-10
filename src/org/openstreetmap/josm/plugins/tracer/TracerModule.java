@@ -102,7 +102,7 @@ public abstract class TracerModule {
         private boolean m_cancelled;
 
         private static final double resurrectNodesDistanceMeters = 10.0;
-        private static final double defaultAutomaticOsmDownloadMeters = 600.0;
+        private static final double defaultAutomaticOsmDownloadMeters = 500.0;
 
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
