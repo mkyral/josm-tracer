@@ -21,7 +21,7 @@ package org.openstreetmap.josm.plugins.tracer.modules.ruian;
 import java.awt.Cursor;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
-import org.openstreetmap.josm.plugins.tracer.BuildingTracerModule;
+import org.openstreetmap.josm.plugins.tracer.modules.building.BuildingTracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 
