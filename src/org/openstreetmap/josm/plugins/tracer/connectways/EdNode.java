@@ -177,6 +177,11 @@ public class EdNode extends EdObject {
     }
 
     @Override
+    public boolean connectNonIncludedTouchingNodes(GeomDeviation tolerance, EdObject obj) {
+        throw new UnsupportedOperationException("This operation is not supported for nodes.");
+    }
+
+    @Override
     public double getEastNorthArea() {
         return 0.0;
     }
@@ -196,6 +201,11 @@ public class EdNode extends EdObject {
         Set<EdNode> s = new HashSet<>();
         s.add(this);
         return s;
+    }
+
+    @Override
+    public Set<EdWay> getAllWays () {
+        return new HashSet<> ();
     }
 
     @Override

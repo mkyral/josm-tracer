@@ -280,6 +280,17 @@ public class EdMultipolygon extends EdObject {
         return list;
     }
 
+    @Override
+    public Set<EdWay> getAllWays() {
+        checkEditable();
+        Set<EdWay> result = new HashSet<> ();
+        for (EdWay w: m_outerWays)
+            result.add(w);
+        for (EdWay w: m_innerWays)
+            result.add(w);
+        return result;
+    }
+
     public boolean replaceWay(EdWay src, EdWay dst) {
         checkEditable();
 
@@ -549,5 +560,22 @@ public class EdMultipolygon extends EdObject {
                 return false;
 
         return true;
+    }
+
+    @Override
+    public boolean connectNonIncludedTouchingNodes(GeomDeviation tolerance, EdObject obj) {
+        if (this == obj)
+            return false;
+        checkEditable();
+        boolean result = false;
+
+        for (EdWay way: m_outerWays)
+            if (way.connectNonIncludedTouchingNodes(tolerance, obj))
+                result = true;
+        for (EdWay way: m_innerWays)
+            if (way.connectNonIncludedTouchingNodes(tolerance, obj))
+                result = true;
+
+        return result;
     }
 }

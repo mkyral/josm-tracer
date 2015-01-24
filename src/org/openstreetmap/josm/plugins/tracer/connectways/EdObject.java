@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -389,8 +390,9 @@ public abstract class EdObject {
     public abstract boolean reuseExistingNodes(IEdNodePredicate filter);
     public abstract boolean reuseNearNodes(IReuseNearNodePredicate reuse, IEdNodePredicate filter);
     public abstract boolean connectExistingTouchingNodes(GeomDeviation tolerance, IEdNodePredicate filter);
+    public abstract boolean connectNonIncludedTouchingNodes(GeomDeviation tolerance, EdObject obj);
     public abstract double getEastNorthArea();
     public abstract boolean isInsideBounds(List<Bounds> bounds, LatLonSize oversize);
-
+    public abstract Set<EdWay> getAllWays ();
 }
 

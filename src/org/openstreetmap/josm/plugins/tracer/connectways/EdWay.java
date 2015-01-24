@@ -524,14 +524,30 @@ public class EdWay extends EdObject {
     }
 
     /**
-     * Add all nodes occurring in "other" EdWay that touch this way and
+     * Add all nodes occurring in EdWays of "other" that touch this way and
      * aren't members of this way yet.
      * Nodes are added to the right positions into way segments.
      *
+     * @param tolerance maximal deviation tolerances of touching nodes
+     * @param other EdObject whose ways' nodes will be tested and added
+     * @return true if any touching nodes were added; false if no nodes
+     * were added.
      */
-    public boolean connectNonIncludedTouchingNodes(GeomDeviation tolerance, EdWay other) {
+    @Override
+    public boolean connectNonIncludedTouchingNodes(GeomDeviation tolerance, EdObject other) {
+        if (other == this)
+            return false;
+        Set<EdWay> other_ways = other.getAllWays();
+        if (other_ways.isEmpty())
+            return false;
         IEdNodePredicate exclude_my_nodes = new ExcludeEdNodesPredicate(this);
-        return connectTouchingNodes(tolerance, other, exclude_my_nodes);
+        boolean result = false;
+        for (EdWay other_way: other_ways) {
+            if (this != other_way)
+                if (connectTouchingNodes(tolerance, other_way, exclude_my_nodes))
+                    result = true;
+        }
+        return result;
     }
 
     public boolean isMemberOfAnyMultipolygon() {
@@ -631,6 +647,14 @@ public class EdWay extends EdObject {
 
         return false;
     }
+
+    @Override
+    public Set<EdWay> getAllWays () {
+        Set<EdWay> result = new HashSet<> ();
+        result.add (this);
+        return result;
+    }
+
 }
 
 
