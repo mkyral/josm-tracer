@@ -87,7 +87,7 @@ public class AngPolygonClipper {
     }
 
     @SuppressWarnings("CallToPrintStackTrace")
-    public void polygonDifference (EdWay clip_way, EdObject subj) {
+    public void polygonDifference (EdObject clip, EdObject subj) {
 
         // initialize collections
         m_outers = new ArrayList<>();
@@ -106,7 +106,7 @@ public class AngPolygonClipper {
             // non-intersecting touching nodes of the subject from other polygons!
 
             Clipper clipper = new Clipper(Clipper.ioStrictlySimple + Clipper.ioPreserveCollinear);
-            clipper.addPath(wayToPath(clip_way), PolyType.ptClip, true);
+            clipper.addPaths(edObjectToPaths(clip), PolyType.ptClip, true);
             clipper.addPaths(edObjectToPaths(subj), PolyType.ptSubject, true);
 
             PolyTree ptree = new PolyTree();
