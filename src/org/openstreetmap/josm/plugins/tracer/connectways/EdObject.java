@@ -314,11 +314,6 @@ public abstract class EdObject {
         return result;
     }
 
-    public <T extends EdObject> boolean hasEditorReferrers(Class<T> type) {
-        List<T> objs = getEditorReferrers(type);
-        return objs.isEmpty();
-    }
-
     public <T extends OsmPrimitive> List<T> getExternalReferrers(Class<T> type) {
 
         if (!hasOriginal())
