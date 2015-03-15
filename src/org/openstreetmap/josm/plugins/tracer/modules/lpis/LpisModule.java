@@ -48,7 +48,7 @@ public final class LpisModule extends TracerModule  {
     private static final ExecutorService m_downloadExecutor;
 
     static {
-        int threads = Main.pref.getInteger("tracer.lpis.downloadThreads", 4);
+        int threads = Main.pref.getInteger("tracer.lpis.download_threads", 4);
         if (threads > 0) {
             if (threads > 20) // avoid stupid values
                 threads = 20;
