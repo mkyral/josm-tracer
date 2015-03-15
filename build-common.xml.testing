@@ -10,17 +10,34 @@
 ** Paths are relative to the build.xml that imports this template.
 **
 -->
-<project name="plugin_common" basedir=".">
+<project name="plugin_common" basedir="." xmlns:jacoco="antlib:org.jacoco.ant">
 
     <property name="josm"                   location="../../core/dist/josm-custom.jar"/>
-    <property name="plugin.build.dir"       value="build"/>
-    <property name="plugin.src.dir"         value="src"/>
-    <property name="plugin.lib.dir"         value="lib"/>
+    <property name="josm.test.build.dir"    location="../../core/test/build"/>
+    <property name="groovy.jar"             location="../00_core_tools/groovy-all-2.4.0.jar"/>
+    <property name="plugin.build.dir"       location="build"/>
+    <property name="plugin.test.dir"        location="test"/>
+    <property name="plugin.src.dir"         location="src"/>
+    <property name="plugin.lib.dir"         location="lib"/>
     <!-- this is the directory where the plugin jar is copied to -->
-    <property name="plugin.dist.dir"        value="../../dist"/>
+    <property name="plugin.dist.dir"        location="../../dist"/>
     <property name="ant.build.javac.target" value="1.7"/>
     <property name="ant.build.javac.source" value="1.7"/>
-    <property name="plugin.jar"             value="${plugin.dist.dir}/${ant.project.name}.jar"/>
+    <property name="plugin.jar"             location="${plugin.dist.dir}/${ant.project.name}.jar"/>
+
+    <!-- For Windows-specific stuff -->
+    <condition property="isWindows">
+        <os family="Windows"/>
+    </condition>
+    <target name="-jaxb_win" if="isWindows">
+        <property name="xjc" value="${java.home}\..\bin\xjc.exe" />
+    </target>
+    <target name="-jaxb_nix" unless="isWindows">
+        <property name="xjc" value="${java.home}/../bin/xjc" />
+    </target>
+
+    <!-- To be overriden in plugin build file before inclusion if other plugins are required -->
+    <fileset id="plugin.requires.jars" dir="${plugin.dist.dir}" includes="nothing"/>
 
     <!--
     **********************************************************
@@ -44,7 +61,10 @@
                 <pathelement location="${josm}"/>
                 <fileset dir="${plugin.lib.dir}" erroronmissingdir="no">
                     <include name="**/*.jar"/>
+                    <exclude name="**/*-sources.jar"/>
+                    <exclude name="**/*-javadoc.jar"/>
                 </fileset>
+                <fileset refid="plugin.requires.jars"/>
             </classpath>
         </javac>
     </target>
@@ -93,32 +113,37 @@
         </manifest>
         <antcall target="add-manifest-attribute">
             <param name="manifest.attribute" value="Plugin-Link"/>
-            <param name="propery.name" value="plugin.link"/>
-            <param name="propery.value" value="${plugin.link}"/>
+            <param name="property.name" value="plugin.link"/>
+            <param name="property.value" value="${plugin.link}"/>
         </antcall>
         <antcall target="add-manifest-attribute">
             <param name="manifest.attribute" value="Plugin-Icon"/>
-            <param name="propery.name" value="plugin.icon"/>
-            <param name="propery.value" value="${plugin.icon}"/>
+            <param name="property.name" value="plugin.icon"/>
+            <param name="property.value" value="${plugin.icon}"/>
         </antcall>
         <antcall target="add-manifest-attribute">
             <param name="manifest.attribute" value="Plugin-Early"/>
-            <param name="propery.name" value="plugin.early"/>
-            <param name="propery.value" value="${plugin.early}"/>
+            <param name="property.name" value="plugin.early"/>
+            <param name="property.value" value="${plugin.early}"/>
         </antcall>
         <antcall target="add-manifest-attribute">
             <param name="manifest.attribute" value="Plugin-Requires"/>
-            <param name="propery.name" value="plugin.requires"/>
-            <param name="propery.value" value="${plugin.requires}"/>
+            <param name="property.name" value="plugin.requires"/>
+            <param name="property.value" value="${plugin.requires}"/>
         </antcall>
         <antcall target="add-manifest-attribute">
             <param name="manifest.attribute" value="Plugin-Stage"/>
-            <param name="propery.name" value="plugin.stage"/>
-            <param name="propery.value" value="${plugin.stage}"/>
+            <param name="property.name" value="plugin.stage"/>
+            <param name="property.value" value="${plugin.stage}"/>
+        </antcall>
+        <antcall target="add-manifest-attribute">
+            <param name="manifest.attribute" value="Plugin-Canloadatruntime"/>
+            <param name="property.name" value="plugin.canloadatruntime"/>
+            <param name="property.value" value="${plugin.canloadatruntime}"/>
         </antcall>
         <antcall target="additional-manifest" />
         <jar destfile="${plugin.jar}" basedir="${plugin.build.dir}" manifest="MANIFEST">
-            <zipgroupfileset dir="${plugin.lib.dir}" includes="*.jar" erroronmissingdir="no"/>
+            <zipgroupfileset dir="${plugin.lib.dir}" includes="*.jar" excludes="*-sources.jar, *-javadoc.jar" erroronmissingdir="no"/>
         </jar>
         <delete file="MANIFEST" failonerror="no"/>
         <antcall target="post-dist" />
@@ -126,23 +151,23 @@
     <target name="post-dist">
     	<!-- to be overidden by plugins that need to perform additional tasks on resulting jar -->
     </target>
-    <target name="add-manifest-attribute" depends="check-manifest-attribute" if="have-${propery.name}">
+    <target name="add-manifest-attribute" depends="check-manifest-attribute" if="have-${property.name}">
         <manifest file="MANIFEST" mode="update">
-            <attribute name="${manifest.attribute}" value="${propery.value}" />
+            <attribute name="${manifest.attribute}" value="${property.value}" />
         </manifest>
     </target>
     <!-- target to add additional entries, empty in commons -->
     <target name="additional-manifest">
     </target>
     <target name="check-manifest-attribute">
-        <condition property="have-${propery.name}">
+        <condition property="have-${property.name}">
             <and>
-                <isset property="${propery.name}"/>
+                <isset property="${property.name}"/>
                 <not>
-                    <equals arg1="${propery.value}" arg2=""/>
+                    <equals arg1="${property.value}" arg2=""/>
                 </not>
                 <not>
-                    <equals arg1="${propery.value}" arg2="..."/>
+                    <equals arg1="${property.value}" arg2="..."/>
                 </not>
             </and>
         </condition>
@@ -196,7 +221,7 @@
                </and>
            </not>
        </condition>
-   </target>
+    </target>
     <!--
       ** Initializes the REVISION.XML file from git (w/o svn) information.
          Uses Unix date as revision number.
@@ -226,7 +251,7 @@
         </tstamp>
         <echo file="REVISION.XML"><![CDATA[<info><entry><commit revision="UNKNOWN"><date>${current.time}</date></commit></entry></info>]]></echo>
     </target>
-    <target name="revision" depends="init-git-revision-xml, init-revision-fallback">
+    <target name="revision" depends="init-svn-revision-xml, init-git-svn-revision-xml, init-git-revision-xml, init-revision-fallback">
       <xmlproperty file="REVISION.XML" prefix="version" keepRoot="false" collapseAttributes="true"/>
       <delete file="REVISION.XML"/>
     </target>
@@ -246,9 +271,20 @@
     -->
     <target name="install" depends="dist">
         <property environment="env"/>
-        <condition property="josm.plugins.dir" value="${env.APPDATA}/JOSM/plugins" else="${user.home}/.josm/plugins">
+        <condition property="josm.plugins.dir" value="${env.APPDATA}/JOSM/plugins">
             <and>
                 <os family="windows"/>
+            </and>
+        </condition>
+        <condition property="josm.plugins.dir" value="${user.home}/Library/JOSM/plugins">
+            <and>
+                <os family="mac"/>
+            </and>
+        </condition>
+        <condition property="josm.plugins.dir" value="${user.home}/.josm/plugins">
+            <and>
+                <not><os family="windows"/></not>
+                <not><os family="mac"/></not>
             </and>
         </condition>
         <copy file="${plugin.jar}" todir="${josm.plugins.dir}"/>
@@ -350,6 +386,87 @@
     <target name="publish" depends="ensure-svn-present,core-info,commit-current,update-current,clean,dist,commit-dist">
     </target>
 
+    <path id="test.classpath">
+        <fileset dir="../00_core_test_lib">
+            <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="${plugin.test.dir}/lib" erroronmissingdir="no">
+            <include name="**/*.jar"/>
+            <exclude name="**/*-sources.jar"/>
+            <exclude name="**/*-javadoc.jar"/>
+        </fileset>
+        <fileset dir="lib" erroronmissingdir="no">
+            <include name="**/*.jar"/>
+            <exclude name="**/*-sources.jar"/>
+            <exclude name="**/*-javadoc.jar"/>
+        </fileset>
+        <pathelement path="${josm.test.build.dir}/unit"/>
+        <pathelement path="${josm}"/>
+        <pathelement path="${plugin.jar}"/>
+        <pathelement path="${groovy.jar}"/>
+    </path>
+    <macrodef name="init-test-preferences">
+        <sequential>
+            <copy file="${plugin.test.dir}/config/preferences.template.xml" tofile="${plugin.test.dir}/config/unit-josm.home/preferences.xml"/>
+            <replace file="${plugin.test.dir}/config/unit-josm.home/preferences.xml" encoding="UTF-8" token="@OSM_USERNAME@" value="${osm.username}"/>
+            <replace file="${plugin.test.dir}/config/unit-josm.home/preferences.xml" encoding="UTF-8" token="@OSM_PASSWORD@" value="${osm.password}"/>
+        </sequential>
+    </macrodef>
+    <target name="test-init">
+        <mkdir dir="${plugin.test.dir}/build"/>
+        <mkdir dir="${plugin.test.dir}/build/unit"/>
+        <mkdir dir="${plugin.test.dir}/report"/>
+        <init-test-preferences/>
+    </target>
+    <target name="test-clean">
+        <delete dir="${plugin.test.dir}/build"/>
+        <delete dir="${plugin.test.dir}/report"/>
+        <delete file="${plugin.test.dir}/jacoco.exec" />
+        <delete file="${plugin.test.dir}/config/unit-josm.home/preferences.xml" />
+        <delete dir="${plugin.test.dir}/config/unit-josm.home/cache" failonerror="false"/>
+    </target>
+    <target name="test-compile" depends="test-init,dist">
+        <taskdef name="groovyc" classname="org.codehaus.groovy.ant.Groovyc" classpath="${groovy.jar}"/>
+        <sequential>
+            <groovyc srcdir="${plugin.test.dir}/unit" destdir="${plugin.test.dir}/build/unit" encoding="UTF-8">
+                <classpath>
+                    <fileset refid="plugin.requires.jars"/>
+                    <path refid="test.classpath"/>
+                </classpath>
+                <javac target="1.7" source="1.7" debug="on" encoding="UTF-8">
+                    <compilerarg value="-Xlint:all"/>
+                    <compilerarg value="-Xlint:-serial"/>
+                </javac>
+            </groovyc>
+        </sequential>
+    </target>
+    <target name="test" depends="dist, test-compile"
+        description="Run unit tests. OSM API (TEST) account shall be set with -Dosm.username and -Dosm.password">
+        <taskdef uri="antlib:org.jacoco.ant" resource="org/jacoco/ant/antlib.xml" classpath="../00_core_tools/jacocoant.jar" />
+        <sequential>
+            <echo message="Running unit tests with JUnit"/>
+            <jacoco:coverage destfile="${plugin.test.dir}/jacoco.exec">
+                <junit printsummary="yes" fork="true" forkmode="once" dir="${basedir}">
+                    <jvmarg value="-Dfile.encoding=UTF-8"/>
+                    <sysproperty key="josm.home" value="${plugin.test.dir}/config/unit-josm.home"/>
+                    <sysproperty key="josm.test.data" value="${plugin.test.dir}/data"/>
+                    <sysproperty key="java.awt.headless" value="true"/>
+                    <sysproperty key="suppressPermanentFailure" value="${suppressPermanentFailure}"/>
+                    <classpath>
+                        <fileset refid="plugin.requires.jars"/>
+                        <path refid="test.classpath"/>
+                        <pathelement path="${plugin.test.dir}/build/unit"/>
+                    </classpath>
+                    <formatter type="plain"/>
+                    <formatter type="xml"/>
+                    <batchtest fork="yes" todir="${plugin.test.dir}/report">
+                        <fileset dir="${plugin.test.dir}/build/unit" includes="**/*Test.class"/>
+                    </batchtest>
+                </junit>
+            </jacoco:coverage>
+        </sequential>
+    </target>
+
     <target name="runjosm" depends="install">
         <java jar="${josm}" fork="true">
         </java>
@@ -370,6 +487,7 @@
     You can use following targets:
     * dist        This default target builds the plugin jar file
     * clean       Cleanup automatical created files
+	* test        Run unit tests (if any)
     * publish     Checkin source code, build jar and checkin plugin jar
                   (requires proper entry for SVN commit message!)
     * install     Install the plugin in current system
