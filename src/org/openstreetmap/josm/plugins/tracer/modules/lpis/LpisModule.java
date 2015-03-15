@@ -22,7 +22,9 @@ package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 import java.awt.Cursor;
 import java.util.*;
 import java.util.Map;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
@@ -42,6 +44,20 @@ import org.openstreetmap.josm.tools.Pair;
 public final class LpisModule extends TracerModule  {
 
     private boolean moduleEnabled;
+
+    private static final ExecutorService m_downloadExecutor;
+
+    static {
+        int threads = Main.pref.getInteger("tracer.lpis.downloadThreads", 4);
+        if (threads > 0) {
+            if (threads > 20) // avoid stupid values
+                threads = 20;
+            m_downloadExecutor = Executors.newFixedThreadPool(threads);
+        }
+        else {
+            m_downloadExecutor = null;
+        }
+    }
 
     private static final double oversizeInDataBoundsMeters = 5.0;
     private static final double automaticOsmDownloadMeters = 900.0;
@@ -101,7 +117,7 @@ public final class LpisModule extends TracerModule  {
     }
 
     @Override
-    public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
+    public AbstractTracerTask trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
         return new LpisTracerTask (pos, ctrl, alt, shift);
     }
 
@@ -157,6 +173,11 @@ public final class LpisModule extends TracerModule  {
 
         private LpisRecord record() {
             return (LpisRecord) super.getRecord();
+        }
+
+        @Override
+        protected ExecutorService getDownloadRecordExecutor() {
+            return m_downloadExecutor;
         }
 
         @Override

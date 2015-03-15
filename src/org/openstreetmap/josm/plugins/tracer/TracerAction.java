@@ -99,8 +99,8 @@ class TracerAction extends MapMode implements MouseListener, KeyListener {
 
     protected void traceAsync(Point clickPoint) {
         final LatLon pos = Main.map.mapView.getLatLon(clickPoint.x, clickPoint.y);
-        PleaseWaitRunnable tracerTask = m_modules.getActiveModule().trace(pos, ctrl, alt, shift);
-        Main.worker.submit(tracerTask);
+        TracerModule.AbstractTracerTask tracer_task = m_modules.getActiveModule().trace(pos, ctrl, alt, shift);
+        tracer_task.run();
     }
 
     @Override

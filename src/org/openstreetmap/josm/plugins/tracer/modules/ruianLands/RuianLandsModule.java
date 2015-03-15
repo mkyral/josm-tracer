@@ -136,7 +136,7 @@ public final class RuianLandsModule extends TracerModule {
     };
 
     @Override
-    public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
+    public AbstractTracerTask trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
         return new RuianLandsTracerTask (pos, ctrl, alt, shift);
     }
 

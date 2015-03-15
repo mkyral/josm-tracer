@@ -64,7 +64,7 @@ public final class RuianModule extends BuildingTracerModule {
     };
 
     @Override
-    public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
+    public AbstractTracerTask trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
         return new RuianTracerTask (pos, ctrl, alt, shift);
     }
 
