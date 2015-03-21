@@ -43,6 +43,7 @@ import org.openstreetmap.josm.tools.Pair;
 public final class LpisModule extends TracerModule  {
 
     private boolean moduleEnabled;
+    private LpisCache m_lpisCache = null;
 
     private static final ExecutorService m_downloadExecutor;
 
@@ -181,8 +182,21 @@ public final class LpisModule extends TracerModule  {
 
         @Override
         protected TracerRecord downloadRecord(LatLon pos) throws Exception {
+
+            if (m_lpisCache == null) {
+                m_lpisCache = new LpisCache (LatLonSize.get(pos, 750));
+            } else {
+                LpisRecord rec = m_lpisCache.get(pos);
+                if (rec != null)
+                    return rec;
+            }
+
             LpisServer server = new LpisServer();
-            return server.getElementData(pos, lpisUrl, 0.0, 0.0);
+            LpisRecord record = server.getElementData(pos, lpisUrl, 0.0, 0.0);
+            if (record != null) {
+                m_lpisCache.add (record);
+            }
+            return record;
         }
 
         @Override
