@@ -43,8 +43,6 @@ import org.openstreetmap.josm.tools.Pair;
 public final class LpisModule extends TracerModule  {
 
     private boolean moduleEnabled;
-    private LpisCache m_lpisCache = null;
-
     private static final ExecutorService m_downloadExecutor;
 
     static {
@@ -58,6 +56,12 @@ public final class LpisModule extends TracerModule  {
             m_downloadExecutor = null;
         }
     }
+
+    // calibrate cache tile's LatLonSize according to a point in the middle of the Czech Republic
+    private static final double cacheTileSizeMeters = 750.0;
+    private static final LatLon cacheTileCalibrationLatLon = new LatLon (49.79633635284708, 15.572776799999998);
+
+    private final LpisCache m_lpisCache = new LpisCache (LatLonSize.get(cacheTileCalibrationLatLon, cacheTileSizeMeters));
 
     private static final double oversizeInDataBoundsMeters = 5.0;
     private static final double automaticOsmDownloadMeters = 900.0;
@@ -183,13 +187,9 @@ public final class LpisModule extends TracerModule  {
         @Override
         protected TracerRecord downloadRecord(LatLon pos) throws Exception {
 
-            if (m_lpisCache == null) {
-                m_lpisCache = new LpisCache (LatLonSize.get(pos, 750));
-            } else {
-                LpisRecord rec = m_lpisCache.get(pos);
-                if (rec != null)
-                    return rec;
-            }
+            LpisRecord rec = m_lpisCache.get(pos);
+            if (rec != null)
+                return rec;
 
             LpisServer server = new LpisServer();
             LpisRecord record = server.getElementData(pos, lpisUrl, 0.0, 0.0);
