@@ -107,6 +107,16 @@ public class QuadCache<T extends IQuadCacheObject> {
             long ilon = (long) Math.floor (lon / quad_size.lonSize());
             return new QuadIndex (ilat, ilon);
         }
+
+        public static BBox quadIndexToBBox (LatLonSize quad_size, QuadIndex qi) {
+            double alat = (double)qi.iLat() * quad_size.latSize();
+            double alon = (double)qi.iLon() * quad_size.lonSize();
+            alat -= 90;
+            alon -= 180;
+            LatLon a = new LatLon (alat, alon);
+            LatLon b = new LatLon (alat + quad_size.latSize(), alon + quad_size.lonSize());
+            return new BBox (a, b);
+        }
     }
 
     private class Bucket<T extends IQuadCacheObject> {

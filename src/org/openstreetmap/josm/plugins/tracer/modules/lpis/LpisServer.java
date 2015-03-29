@@ -23,9 +23,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
 import org.xml.sax.SAXException;
 
@@ -88,5 +90,37 @@ public class LpisServer {
             lpis.parseXML("extra", content);
         }
         return lpis;
+    }
+
+    public List<LpisRecord> getMultipleRecords (BBox bbox, String url, double adjlat, double adjlon) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+        krovak k = new krovak();
+
+        LatLon a = bbox.getTopLeft();
+        LatLon b = bbox.getBottomRight();
+
+        xyCoor axy = k.LatLon2krovak(a);
+        xyCoor bxy = k.LatLon2krovak(b);
+
+        String wfsbox = axy.x()+","+axy.y()+","+bxy.x()+","+bxy.y();
+
+        String request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+wfsbox+"&SRSNAME=EPSG:102067";
+
+        System.out.println("Request: " + request);
+        String content = callServer(request);
+        System.out.println("Reply: " + content);
+
+        List<LpisRecord> list = LpisRecord.parseBasicXML (content, adjlat, adjlon);
+
+        for (LpisRecord lpis: list) {
+            if (lpis.getLpisID() <= 0 || !lpis.hasOuter())
+                continue;
+            request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
+            System.out.println("Request: " + request);
+            content = callServer(request);
+            System.out.println("Reply: " + content);
+            lpis.parseXML("extra", content);
+        }
+
+        return list;
     }
 }

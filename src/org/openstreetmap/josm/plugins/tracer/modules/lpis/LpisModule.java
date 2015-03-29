@@ -63,7 +63,7 @@ public final class LpisModule extends TracerModule  {
     private static final LatLonSize cacheTileSize = LatLonSize.get(cacheTileCalibrationLatLon, cacheTileSizeMeters);
 
     private final LpisCache m_lpisCache = new LpisCache (cacheTileSize);
-    private final LpisPrefetch m_lpisPrefetch = new LpisPrefetch (cacheTileSize, m_lpisCache);
+    private final LpisPrefetch m_lpisPrefetch = new LpisPrefetch (cacheTileSize, m_lpisCache, lpisUrl);
 
     private static final double oversizeInDataBoundsMeters = 5.0;
     private static final double automaticOsmDownloadMeters = 900.0;

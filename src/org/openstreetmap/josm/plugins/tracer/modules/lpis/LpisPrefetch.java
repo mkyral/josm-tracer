@@ -20,16 +20,20 @@
 package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.plugins.tracer.QuadCache;
 import org.openstreetmap.josm.plugins.tracer.connectways.LatLonSize;
 
 public class LpisPrefetch {
 
     private static final ExecutorService m_prefetchExecutor = Executors.newSingleThreadExecutor();
+
+    private final String m_lpisUrl;
 
     private final LatLonSize m_quadSize;
     private final LpisCache m_lpisCache;
@@ -38,9 +42,10 @@ public class LpisPrefetch {
     private final Object m_lock = new Object ();
     private Set <QuadCache.QuadIndex> m_prefetchQueue = null;  // m_lock, null means prefetching task is not running
 
-    public LpisPrefetch (LatLonSize quad_size, LpisCache cache) {
+    public LpisPrefetch (LatLonSize quad_size, LpisCache cache, String url) {
         m_quadSize = quad_size;
         m_lpisCache = cache;
+        m_lpisUrl = url;
     }
 
     public void schedulePrefetch (LatLon pos) {
@@ -146,7 +151,23 @@ public class LpisPrefetch {
 
     private boolean downloadLpisTile(QuadCache.QuadIndex qi) {
         System.out.println ("prefetch: downloading tile: " + qi.toString());
-        // #### not implemented
+
+        try {
+            BBox box = QuadCache.QuadIndex.quadIndexToBBox(m_quadSize, qi);
+            LpisServer server = new LpisServer();
+            List<LpisRecord> list = server.getMultipleRecords(box, m_lpisUrl, 0.0, 0.0);
+
+            for (LpisRecord lpis: list) {
+                if (!lpis.hasData())
+                    continue;
+                m_lpisCache.add(lpis);
+            }
+
+        }
+        catch (Exception e) {
+            return false;
+        }
+
         return true;
     }
 }
