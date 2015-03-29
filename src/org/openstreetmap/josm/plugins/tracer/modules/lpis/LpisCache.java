@@ -50,6 +50,12 @@ public class LpisCache {
         }
     }
 
+    boolean containsLpisID (long id) {
+        synchronized (m_lock) {
+            return m_records.containsKey(id);
+        }
+    }
+
     public LpisRecord get (LatLon latlon) {
         synchronized (m_lock) {
             List<LpisRecord> list = m_cache.search(latlon);

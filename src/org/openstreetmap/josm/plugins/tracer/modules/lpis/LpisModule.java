@@ -62,9 +62,8 @@ public final class LpisModule extends TracerModule  {
     private static final LatLon cacheTileCalibrationLatLon = new LatLon (49.79633635284708, 15.572776799999998);
     private static final LatLonSize cacheTileSize = LatLonSize.get(cacheTileCalibrationLatLon, cacheTileSizeMeters);
 
-    private final LpisCache m_lpisCache = new LpisCache (cacheTileSize);
-    private final LpisServer m_lpisServer = new LpisServer (lpisUrl);
-    private final LpisPrefetch m_lpisPrefetch = new LpisPrefetch (cacheTileSize, m_lpisServer, m_lpisCache);
+    private final LpisServer m_lpisServer = new LpisServer (lpisUrl, cacheTileSize);
+    private final LpisPrefetch m_lpisPrefetch = new LpisPrefetch (cacheTileSize, m_lpisServer);
 
     private static final double oversizeInDataBoundsMeters = 5.0;
     private static final double automaticOsmDownloadMeters = 900.0;
@@ -189,18 +188,8 @@ public final class LpisModule extends TracerModule  {
 
         @Override
         protected TracerRecord downloadRecord(LatLon pos) throws Exception {
-
             m_lpisPrefetch.schedulePrefetch(pos);
-
-            LpisRecord rec = m_lpisCache.get(pos);
-            if (rec != null)
-                return rec;
-
-            LpisRecord record = m_lpisServer.getRecord (pos, 0.0, 0.0);
-            if (record != null && record.hasData()) {
-                m_lpisCache.add (record);
-            }
-            return record;
+            return m_lpisServer.getRecord (pos);
         }
 
         @Override

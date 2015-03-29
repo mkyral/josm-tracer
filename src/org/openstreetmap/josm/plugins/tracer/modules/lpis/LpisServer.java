@@ -29,14 +29,21 @@ import javax.xml.xpath.XPathExpressionException;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+import org.openstreetmap.josm.plugins.tracer.connectways.LatLonSize;
 import org.xml.sax.SAXException;
 
 public class LpisServer {
 
-    private static String m_url;
+    private final String m_url;
+    private final LpisCache m_lpisCache;
 
-    public LpisServer(String url) {
+    // LpisRecords have fixed constant coord adjustment
+    private static final double adjustLat = 0.0;
+    private static final double adjustLon = 0.0;
+
+    public LpisServer(String url, LatLonSize cache_tile_size) {
         m_url = url;
+        m_lpisCache = new LpisCache (cache_tile_size);
     }
 
     /**
@@ -67,7 +74,13 @@ public class LpisServer {
      * @throws org.xml.sax.SAXException
      * @throws javax.xml.xpath.XPathExpressionException
      */
-    public LpisRecord getRecord (LatLon pos, double adjlat, double adjlon) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+    public LpisRecord getRecord (LatLon pos) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+
+        // cached?
+        LpisRecord rec = m_lpisCache.get (pos);
+        if (rec != null)
+            return rec;
+
         krovak k = new krovak();
         xyCoor xy = k.LatLon2krovak(pos);
 
@@ -79,7 +92,7 @@ public class LpisServer {
         System.out.println("Request: " + request);
         String content = callServer(request);
         System.out.println("Reply: " + content);
-        LpisRecord lpis = new LpisRecord(adjlat, adjlon);
+        LpisRecord lpis = new LpisRecord(adjustLat, adjustLon);
         lpis.parseXML("basic", content);
 
         // get additional information for given ID
@@ -90,10 +103,16 @@ public class LpisServer {
             System.out.println("Reply: " + content);
             lpis.parseXML("extra", content);
         }
+
+        // cache record
+        if (lpis.hasData()) {
+            m_lpisCache.add(lpis);
+        }
+
         return lpis;
     }
 
-    public List<LpisRecord> getMultipleRecords (BBox bbox, double adjlat, double adjlon) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+    void prefetchRecords (BBox bbox) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
         krovak k = new krovak();
 
         LatLon a = bbox.getTopLeft();
@@ -110,18 +129,36 @@ public class LpisServer {
         String content = callServer(request);
         System.out.println("Reply: " + content);
 
-        List<LpisRecord> list = LpisRecord.parseBasicXML (content, adjlat, adjlon);
+        List<LpisRecord> list = LpisRecord.parseBasicXML (content, adjustLat, adjustLon);
+
+        long prefetched = 0;
+        long existing = 0;
 
         for (LpisRecord lpis: list) {
+
+            // ignore incomplete records
             if (lpis.getLpisID() <= 0 || !lpis.hasOuter())
                 continue;
+
+            // ignore records already in cache (avoids unnecessary downloads of extra data)
+            if (m_lpisCache.containsLpisID(lpis.getLpisID())) {
+                ++existing;
+                continue;
+            }
+
             request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
             System.out.println("Request: " + request);
             content = callServer(request);
             System.out.println("Reply: " + content);
             lpis.parseXML("extra", content);
+
+            // cache record
+            if (lpis.hasData()) {
+                m_lpisCache.add(lpis);
+                ++prefetched;
+            }
         }
 
-        return list;
+        System.out.println("LpisCache: prefetched: " + Long.toString(prefetched) + ", existing: " + Long.toString (existing) + " bbox: " + bbox.toString());
     }
 }
