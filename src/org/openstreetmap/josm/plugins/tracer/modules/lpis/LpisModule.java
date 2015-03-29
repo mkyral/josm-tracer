@@ -60,8 +60,10 @@ public final class LpisModule extends TracerModule  {
     // calibrate cache tile's LatLonSize according to a point in the middle of the Czech Republic
     private static final double cacheTileSizeMeters = 750.0;
     private static final LatLon cacheTileCalibrationLatLon = new LatLon (49.79633635284708, 15.572776799999998);
+    private static final LatLonSize cacheTileSize = LatLonSize.get(cacheTileCalibrationLatLon, cacheTileSizeMeters);
 
-    private final LpisCache m_lpisCache = new LpisCache (LatLonSize.get(cacheTileCalibrationLatLon, cacheTileSizeMeters));
+    private final LpisCache m_lpisCache = new LpisCache (cacheTileSize);
+    private final LpisPrefetch m_lpisPrefetch = new LpisPrefetch (cacheTileSize, m_lpisCache);
 
     private static final double oversizeInDataBoundsMeters = 5.0;
     private static final double automaticOsmDownloadMeters = 900.0;
@@ -186,6 +188,8 @@ public final class LpisModule extends TracerModule  {
 
         @Override
         protected TracerRecord downloadRecord(LatLon pos) throws Exception {
+
+            m_lpisPrefetch.schedulePrefetch(pos);
 
             LpisRecord rec = m_lpisCache.get(pos);
             if (rec != null)

@@ -99,6 +99,14 @@ public class QuadCache<T extends IQuadCacheObject> {
         public String toString () {
             return Long.toString(m_ilat) + "+" + Long.toString (m_ilon);
         }
+
+        public static QuadIndex latLonToQuadIndex (LatLonSize quad_size, double alat, double alon) {
+            double lat = alat + 90;
+            double lon = alon + 180;
+            long ilat = (long) Math.floor (lat / quad_size.latSize());
+            long ilon = (long) Math.floor (lon / quad_size.lonSize());
+            return new QuadIndex (ilat, ilon);
+        }
     }
 
     private class Bucket<T extends IQuadCacheObject> {
@@ -132,11 +140,7 @@ public class QuadCache<T extends IQuadCacheObject> {
     }
 
     public QuadIndex latLonToQuadIndex (double alat, double alon) {
-        double lat = alat + 90;
-        double lon = alon + 180;
-        long ilat = (long) Math.floor (lat / m_quadSize.latSize());
-        long ilon = (long) Math.floor (lon / m_quadSize.lonSize());
-        return new QuadIndex (ilat, ilon);
+        return QuadIndex.latLonToQuadIndex(m_quadSize, alat, alon);
     }
 
     public Pair<QuadIndex, QuadIndex> bboxToQuadIndexBox(BBox bbox) {
