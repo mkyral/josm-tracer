@@ -33,9 +33,10 @@ import org.xml.sax.SAXException;
 
 public class LpisServer {
 
+    private static String m_url;
 
-    public LpisServer() {
-
+    public LpisServer(String url) {
+        m_url = url;
     }
 
     /**
@@ -66,14 +67,14 @@ public class LpisServer {
      * @throws org.xml.sax.SAXException
      * @throws javax.xml.xpath.XPathExpressionException
      */
-    public LpisRecord getElementData(LatLon pos, String url, double adjlat, double adjlon) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+    public LpisRecord getRecord (LatLon pos, double adjlat, double adjlon) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
         krovak k = new krovak();
         xyCoor xy = k.LatLon2krovak(pos);
 
         System.out.println ("LatLon: "+pos+" <-> XY: "+xy.x()+" "+xy.y());
         String bbox = xy.x()+","+xy.y()+","+xy.x()+","+xy.y();
 
-        String request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+bbox+"&SRSNAME=EPSG:102067";
+        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+bbox+"&SRSNAME=EPSG:102067";
 
         System.out.println("Request: " + request);
         String content = callServer(request);
@@ -83,7 +84,7 @@ public class LpisServer {
 
         // get additional information for given ID
         if (lpis.getLpisID() > 0) {
-            request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
+            request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
             System.out.println("Request: " + request);
             content = callServer(request);
             System.out.println("Reply: " + content);
@@ -92,7 +93,7 @@ public class LpisServer {
         return lpis;
     }
 
-    public List<LpisRecord> getMultipleRecords (BBox bbox, String url, double adjlat, double adjlon) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+    public List<LpisRecord> getMultipleRecords (BBox bbox, double adjlat, double adjlon) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
         krovak k = new krovak();
 
         LatLon a = bbox.getTopLeft();
@@ -103,7 +104,7 @@ public class LpisServer {
 
         String wfsbox = axy.x()+","+axy.y()+","+bxy.x()+","+bxy.y();
 
-        String request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+wfsbox+"&SRSNAME=EPSG:102067";
+        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+wfsbox+"&SRSNAME=EPSG:102067";
 
         System.out.println("Request: " + request);
         String content = callServer(request);
@@ -114,7 +115,7 @@ public class LpisServer {
         for (LpisRecord lpis: list) {
             if (lpis.getLpisID() <= 0 || !lpis.hasOuter())
                 continue;
-            request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
+            request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
             System.out.println("Request: " + request);
             content = callServer(request);
             System.out.println("Reply: " + content);

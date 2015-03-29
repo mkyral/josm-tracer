@@ -33,19 +33,18 @@ public class LpisPrefetch {
 
     private static final ExecutorService m_prefetchExecutor = Executors.newSingleThreadExecutor();
 
-    private final String m_lpisUrl;
-
     private final LatLonSize m_quadSize;
     private final LpisCache m_lpisCache;
+    private final LpisServer m_lpisServer;
     private final Set<QuadCache.QuadIndex> m_prefetchedTiles = new HashSet<> ();
 
     private final Object m_lock = new Object ();
     private Set <QuadCache.QuadIndex> m_prefetchQueue = null;  // m_lock, null means prefetching task is not running
 
-    public LpisPrefetch (LatLonSize quad_size, LpisCache cache, String url) {
+    public LpisPrefetch (LatLonSize quad_size, LpisServer server, LpisCache cache) {
         m_quadSize = quad_size;
+        m_lpisServer = server;
         m_lpisCache = cache;
-        m_lpisUrl = url;
     }
 
     public void schedulePrefetch (LatLon pos) {
@@ -154,15 +153,13 @@ public class LpisPrefetch {
 
         try {
             BBox box = QuadCache.QuadIndex.quadIndexToBBox(m_quadSize, qi);
-            LpisServer server = new LpisServer();
-            List<LpisRecord> list = server.getMultipleRecords(box, m_lpisUrl, 0.0, 0.0);
+            List<LpisRecord> list = m_lpisServer.getMultipleRecords(box, 0.0, 0.0);
 
             for (LpisRecord lpis: list) {
                 if (!lpis.hasData())
                     continue;
                 m_lpisCache.add(lpis);
             }
-
         }
         catch (Exception e) {
             return false;
