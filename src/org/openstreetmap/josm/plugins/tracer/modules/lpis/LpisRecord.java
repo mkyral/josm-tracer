@@ -219,8 +219,10 @@ public final class LpisRecord extends TracerRecord {
 
             System.out.println("parseXML(extra) - expUsage: " + expUsage);
             nodeList = (NodeList) xPath.compile(expUsage).evaluate(doc, XPathConstants.NODESET);
-            m_usage = nodeList.item(0).getFirstChild().getNodeValue();
-            mapToOsm();
+            if (nodeList != null && nodeList.getLength() > 0 && nodeList.item(0).hasChildNodes()) {
+                m_usage = nodeList.item(0).getFirstChild().getNodeValue();
+                mapToOsm();
+            }
             System.out.println("parseXML(extra) - m_usage: " + m_usage);
         }
 
