@@ -19,8 +19,8 @@
 
 package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,7 +38,7 @@ public class LpisPrefetch {
     private final Set<QuadCache.QuadIndex> m_prefetchedTiles = new HashSet<> ();
 
     private final Object m_lock = new Object ();
-    private Set <QuadCache.QuadIndex> m_prefetchQueue = null;  // m_lock, null means prefetching task is not running
+    private PrefetchQueue <QuadCache.QuadIndex> m_prefetchQueue = null;  // m_lock, null means prefetching task is not running
 
     public LpisPrefetch (LatLonSize quad_size, LpisServer server) {
         m_quadSize = quad_size;
@@ -49,22 +49,22 @@ public class LpisPrefetch {
         QuadCache.QuadIndex qi = QuadCache.QuadIndex.latLonToQuadIndex(m_quadSize, pos.lat(), pos.lon());
         QuadCache.QuadIndex[] list = new QuadCache.QuadIndex[9];
         int index = 0;
-        list[index++] = qi;
+        list[index++] = new QuadCache.QuadIndex (qi.iLat() - 1, qi.iLon() - 1);
+        list[index++] = new QuadCache.QuadIndex (qi.iLat() - 1, qi.iLon() + 1);
+        list[index++] = new QuadCache.QuadIndex (qi.iLat() + 1, qi.iLon() - 1);
+        list[index++] = new QuadCache.QuadIndex (qi.iLat() + 1, qi.iLon() + 1);
         list[index++] = new QuadCache.QuadIndex (qi.iLat(), qi.iLon() - 1);
         list[index++] = new QuadCache.QuadIndex (qi.iLat(), qi.iLon() + 1);
         list[index++] = new QuadCache.QuadIndex (qi.iLat() - 1, qi.iLon());
-        list[index++] = new QuadCache.QuadIndex (qi.iLat() - 1, qi.iLon() - 1);
-        list[index++] = new QuadCache.QuadIndex (qi.iLat() - 1, qi.iLon() + 1);
         list[index++] = new QuadCache.QuadIndex (qi.iLat() + 1, qi.iLon());
-        list[index++] = new QuadCache.QuadIndex (qi.iLat() + 1, qi.iLon() - 1);
-        list[index++] = new QuadCache.QuadIndex (qi.iLat() + 1, qi.iLon() + 1);
+        list[index++] = qi;
         schedulePrefetchTiles (list);
     }
 
     private void schedulePrefetchTiles (QuadCache.QuadIndex[] list) {
         synchronized (m_lock) {
 
-            Set <QuadCache.QuadIndex> new_queue = null;
+            PrefetchQueue <QuadCache.QuadIndex> new_queue = null;
 
             for (QuadCache.QuadIndex qi : list) {
 
@@ -74,20 +74,16 @@ public class LpisPrefetch {
                     continue;
                 }
 
-                // prefetch task is running, add to existing prefetch queue if not queued yet
+                // prefetch task is running, add to existing prefetch queue
                 if (m_prefetchQueue != null) {
-                    if (!m_prefetchQueue.contains(qi)) {
-                        System.out.println ("prefetch: adding to running queue: " + qi.toString());
-                        m_prefetchQueue.add (qi);
-                    } else {
-                        System.out.println ("prefetch: already scheduled for prefetch: " + qi.toString());
-                    }
+                    System.out.println ("prefetch: adding to running queue: " + qi.toString());
+                    m_prefetchQueue.add (qi);
                     continue;
                 }
 
                 // no prefetch task running, prepare add to new queue
                 if (new_queue == null)
-                    new_queue = new HashSet<> ();
+                    new_queue = new PrefetchQueue<> ();
                 System.out.println ("prefetch: scheduling for new prefetch batch: " + qi.toString());
                 new_queue.add (qi);
             }
@@ -131,7 +127,7 @@ public class LpisPrefetch {
                         m_prefetchQueue = null;
                         return;
                     }
-                    QuadCache.QuadIndex aqi = m_prefetchQueue.iterator().next();
+                    QuadCache.QuadIndex aqi = m_prefetchQueue.peek();
                     if (m_prefetchedTiles.contains(aqi)) {
                         System.out.println ("prefetch: queued tile already prefetched: " + aqi.toString());
                         m_prefetchQueue.remove(aqi);
@@ -158,5 +154,37 @@ public class LpisPrefetch {
         }
 
         return true;
+    }
+
+    class PrefetchQueue<Element> {
+        private final ArrayList<Element> m_Queue = new ArrayList<>(9);
+
+        public boolean isEmpty () {
+            return m_Queue.isEmpty();
+        }
+
+        public Element peek () {
+            return m_Queue.get(m_Queue.size() - 1);
+        }
+
+        public boolean remove (Element e) {
+            int index = m_Queue.indexOf (e);
+            if (index < 0) {
+                return false;
+            }
+            m_Queue.remove (index);
+            return true;
+        }
+
+        public void add (Element e) {
+            int index = m_Queue.indexOf (e);
+            if (index < 0) {
+                m_Queue.add (e);
+            }
+            else if (index != m_Queue.size() - 1) {
+                m_Queue.remove (index);
+                m_Queue.add (e);
+            }
+        }
     }
 }
