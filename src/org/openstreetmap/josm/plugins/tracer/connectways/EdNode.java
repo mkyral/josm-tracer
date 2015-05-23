@@ -213,6 +213,11 @@ public class EdNode extends EdObject {
         checkNotDeleted();
         return BBoxUtils.isInsideBounds(m_node.getCoor(), bounds, extrasize);
     }
+
+    @Override
+    public EdWay getFirstOuterWay () {
+        throw new UnsupportedOperationException("This operation is not supported for nodes.");
+    }
 }
 
 

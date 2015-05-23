@@ -389,5 +389,6 @@ public abstract class EdObject {
     public abstract double getEastNorthArea();
     public abstract boolean isInsideBounds(List<Bounds> bounds, LatLonSize oversize);
     public abstract Set<EdWay> getAllWays ();
+    public abstract EdWay getFirstOuterWay ();
 }
 

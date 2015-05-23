@@ -578,4 +578,12 @@ public class EdMultipolygon extends EdObject {
 
         return result;
     }
+
+    @Override
+    public EdWay getFirstOuterWay () {
+        checkEditable ();
+        if (m_outerWays.isEmpty())
+            throw new IllegalStateException(tr("EdMultipolygon has no outer way"));
+        return m_outerWays.get(0);
+    }
 }

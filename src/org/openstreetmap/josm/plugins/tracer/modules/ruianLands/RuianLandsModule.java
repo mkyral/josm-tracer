@@ -246,7 +246,7 @@ public final class RuianLandsModule extends TracerModule {
                 if (m_invertClip) {
                     ClipObjectArea clip = new ClipObjectArea (editor, m_clipSettings, postTraceNotifications ());
                     EdObject obj = clip.clipObject (multipolygon == null ? outer_way : multipolygon, filter, m_pos);
-                    outer_way = getAnyOuterWay(obj);
+                    outer_way = obj.getFirstOuterWay();
                     multipolygon = obj.isMultipolygon() ? (EdMultipolygon)obj : null;
                 }
                 else {

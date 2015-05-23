@@ -655,6 +655,10 @@ public class EdWay extends EdObject {
         return result;
     }
 
+    @Override
+    public EdWay getFirstOuterWay () {
+        return this;
+    }
 }
 
 
