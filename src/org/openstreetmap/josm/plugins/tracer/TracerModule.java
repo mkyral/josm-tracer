@@ -315,6 +315,20 @@ public abstract class TracerModule {
                 });
         }
 
+        protected EdWay getAnyOuterWay(EdObject obj) {
+            if (obj.isWay()) {
+                return (EdWay)obj;
+            }
+            if (obj.isMultipolygon()) {
+                EdMultipolygon mp = (EdMultipolygon)obj;
+                List<EdWay> ways = mp.outerWays();
+                if (ways.size() >= 1) {
+                    return ways.get(0);
+                }
+            }
+            throw new AssertionError("Cannot determine outer way of EdObject");
+        }
+
         private void stepCreateTracedPolygon() {
             GuiHelper.runInEDT(new Runnable() {
                 @Override
