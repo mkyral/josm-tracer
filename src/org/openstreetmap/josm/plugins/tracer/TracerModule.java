@@ -55,6 +55,7 @@ enum TracerTaskStep {
     ttsDownloadRecord,
     ttsDownloadMissingArea,
     ttsDownloadIncompleteMultipolygons,
+    ttsCreateTracedPolygon,
 };
 
 /**
@@ -158,6 +159,8 @@ public abstract class TracerModule {
                 case ttsDownloadIncompleteMultipolygons:
                     stepCreateTracedPolygon ();
                     break;
+                case ttsCreateTracedPolygon:
+                    throw new AssertionError ("Internal error, no next step available");
                 default:
                     throw new AssertionError ("Unknown TracerTaskStep");
             }
@@ -186,8 +189,10 @@ public abstract class TracerModule {
                 return;
             }
 
-            if (!async)
+            if (!async) {
                 nextStep ();
+                return;
+            }
 
             // Explicitly serialize subsequent tasks after asynchronous download.
             // This reduces the chance that the same area/relation downloads are
@@ -316,6 +321,9 @@ public abstract class TracerModule {
         }
 
         private void stepCreateTracedPolygon() {
+
+            m_taskStep = TracerTaskStep.ttsCreateTracedPolygon;
+
             GuiHelper.runInEDT(new Runnable() {
                 @Override
                 @SuppressWarnings("CallToPrintStackTrace")
