@@ -219,8 +219,10 @@ public final class LpisRecord extends TracerRecord {
 
             System.out.println("parseXML(extra) - expUsage: " + expUsage);
             nodeList = (NodeList) xPath.compile(expUsage).evaluate(doc, XPathConstants.NODESET);
-            m_usage = nodeList.item(0).getFirstChild().getNodeValue();
-            mapToOsm();
+            if (nodeList != null && nodeList.getLength() > 0 && nodeList.item(0).hasChildNodes()) {
+                m_usage = nodeList.item(0).getFirstChild().getNodeValue();
+                mapToOsm();
+            }
             System.out.println("parseXML(extra) - m_usage: " + m_usage);
         }
 
@@ -256,4 +258,49 @@ public final class LpisRecord extends TracerRecord {
     public boolean hasData() {
         return m_lpis_id > 0 && super.hasOuter();
     }
+
+    static List<LpisRecord> parseBasicXML(String content, double adjlat, double adjlon) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+        DocumentBuilderFactory docBuilderFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder docBuilder = docBuilderFactory.newDocumentBuilder();
+        Document doc = docBuilder.parse (new ByteArrayInputStream(content.getBytes("utf-8")));
+        doc.getDocumentElement().normalize();
+
+        XPath xPath =  XPathFactory.newInstance().newXPath();
+        String expID = "//*[name()='ms:LPIS_FB4_BBOX']/*[name()='ms:idPudnihoBloku']";
+
+        System.out.println("parseXML(basic) - expID: " + expID);
+        NodeList expids = (NodeList) xPath.compile(expID).evaluate(doc, XPathConstants.NODESET);
+
+        List<LpisRecord> list = new ArrayList<> (expids.getLength());
+
+        for (int i = 0; i < expids.getLength(); i++) {
+            final long exp_id = Long.parseLong(expids.item(i).getFirstChild().getNodeValue());
+
+            LpisRecord lpis = new LpisRecord (adjlat, adjlon);
+            lpis.m_lpis_id = exp_id;
+
+            String expOuter = "//*[name()='ms:LPIS_FB4_BBOX' and @*='LPIS_FB4_BBOX." + Long.toString(exp_id) + "']//*[name()='gml:exterior']//*[name()='gml:posList']";
+            NodeList outernl = (NodeList) xPath.compile(expOuter).evaluate(doc, XPathConstants.NODESET);
+            if (outernl.getLength() > 0) {
+                String outer = outernl.item(0).getFirstChild().getNodeValue();
+                List<LatLon> way = lpis.parseGeometry(outer);
+                lpis.setOuter(way);
+            } else {
+                continue;
+            }
+
+            String expInner = "//*[name()='ms:LPIS_FB4_BBOX' and @*='LPIS_FB4_BBOX." + Long.toString(exp_id) + "']//*[name()='gml:interior']//*[name()='gml:posList']";
+            NodeList innersnl = (NodeList) xPath.compile(expInner).evaluate(doc, XPathConstants.NODESET);
+
+            for (int j = 0; j < innersnl.getLength(); j++) {
+                String inner = innersnl.item(j).getFirstChild().getNodeValue();
+                lpis.addInner(lpis.parseGeometry(inner));
+            }
+
+            list.add (lpis);
+        }
+
+        return list;
+    }
+
 }

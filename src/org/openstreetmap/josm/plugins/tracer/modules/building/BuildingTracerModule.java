@@ -271,10 +271,16 @@ public abstract class BuildingTracerModule extends TracerModule {
             // keep church/chapel tag if the new one is civic
             else if ("civic".equals(new_building_tag) && ("church".equals(old_building_tag) || "chapel".equals(old_building_tag)))
                 new_keys.put("building", old_building_tag);
+            // keep train_station
+            else if ("transportation".equals(new_building_tag) && "train_station".equals(old_building_tag))
+                new_keys.put("building", old_building_tag);
             // ... add other known conflicting building tags that should be resolved automatically
 
-            // silently discard old source=cuzk:km tag
-            if (new_keys.containsKey("source") && "cuzk:km".equals(old_keys.get("source")))
+            // silently discard old source=cuzk:km or source=ruian or source=bing tags
+            if (new_keys.containsKey("source") &&
+                    ("cuzk:km".equals(old_keys.get("source")) ||
+                    "ruian".equals(old_keys.get("source")) ||
+                    "bing".equals(old_keys.get("source"))))
                 old_keys.put("source", new_keys.get("source"));
 
             // merge missing keys to avoid resolution dialog when there're no collisions

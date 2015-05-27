@@ -22,13 +22,14 @@ package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 import java.awt.Cursor;
 import java.util.*;
 import java.util.Map;
-
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
-import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
@@ -42,6 +43,27 @@ import org.openstreetmap.josm.tools.Pair;
 public final class LpisModule extends TracerModule  {
 
     private boolean moduleEnabled;
+    private static final ExecutorService m_downloadExecutor;
+
+    static {
+        int threads = Main.pref.getInteger("tracer.lpis.download_threads", 4);
+        if (threads > 0) {
+            if (threads > 20) // avoid stupid values
+                threads = 20;
+            m_downloadExecutor = Executors.newFixedThreadPool(threads);
+        }
+        else {
+            m_downloadExecutor = null;
+        }
+    }
+
+    // calibrate cache tile's LatLonSize according to a point in the middle of the Czech Republic
+    private static final double cacheTileSizeMeters = 750.0;
+    private static final LatLon cacheTileCalibrationLatLon = new LatLon (49.79633635284708, 15.572776799999998);
+    private static final LatLonSize cacheTileSize = LatLonSize.get(cacheTileCalibrationLatLon, cacheTileSizeMeters);
+
+    private final LpisServer m_lpisServer = new LpisServer (lpisUrl, cacheTileSize);
+    private final LpisPrefetch m_lpisPrefetch = new LpisPrefetch (cacheTileSize, m_lpisServer);
 
     private static final double oversizeInDataBoundsMeters = 5.0;
     private static final double automaticOsmDownloadMeters = 900.0;
@@ -101,7 +123,7 @@ public final class LpisModule extends TracerModule  {
     }
 
     @Override
-    public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
+    public AbstractTracerTask trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
         return new LpisTracerTask (pos, ctrl, alt, shift);
     }
 
@@ -160,9 +182,14 @@ public final class LpisModule extends TracerModule  {
         }
 
         @Override
+        protected ExecutorService getDownloadRecordExecutor() {
+            return m_downloadExecutor;
+        }
+
+        @Override
         protected TracerRecord downloadRecord(LatLon pos) throws Exception {
-            LpisServer server = new LpisServer();
-            return server.getElementData(pos, lpisUrl, 0.0, 0.0);
+            m_lpisPrefetch.schedulePrefetch(pos);
+            return m_lpisServer.getRecord (pos);
         }
 
         @Override

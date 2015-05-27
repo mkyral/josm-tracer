@@ -177,6 +177,11 @@ public class EdNode extends EdObject {
     }
 
     @Override
+    public boolean connectNonIncludedTouchingNodes(GeomDeviation tolerance, EdObject obj) {
+        throw new UnsupportedOperationException("This operation is not supported for nodes.");
+    }
+
+    @Override
     public double getEastNorthArea() {
         return 0.0;
     }
@@ -199,9 +204,19 @@ public class EdNode extends EdObject {
     }
 
     @Override
+    public Set<EdWay> getAllWays () {
+        return new HashSet<> ();
+    }
+
+    @Override
     public boolean isInsideBounds(List<Bounds> bounds, LatLonSize extrasize) {
         checkNotDeleted();
         return BBoxUtils.isInsideBounds(m_node.getCoor(), bounds, extrasize);
+    }
+
+    @Override
+    public EdWay getFirstOuterWay () {
+        throw new UnsupportedOperationException("This operation is not supported for nodes.");
     }
 }
 

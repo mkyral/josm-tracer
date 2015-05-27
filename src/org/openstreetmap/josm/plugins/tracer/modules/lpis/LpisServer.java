@@ -23,17 +23,27 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.util.List;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathExpressionException;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+import org.openstreetmap.josm.plugins.tracer.connectways.LatLonSize;
 import org.xml.sax.SAXException;
 
 public class LpisServer {
 
+    private final String m_url;
+    private final LpisCache m_lpisCache;
 
-    public LpisServer() {
+    // LpisRecords have fixed constant coord adjustment
+    private static final double adjustLat = 0.0;
+    private static final double adjustLon = 0.0;
 
+    public LpisServer(String url, LatLonSize cache_tile_size) {
+        m_url = url;
+        m_lpisCache = new LpisCache (cache_tile_size);
     }
 
     /**
@@ -64,29 +74,91 @@ public class LpisServer {
      * @throws org.xml.sax.SAXException
      * @throws javax.xml.xpath.XPathExpressionException
      */
-    public LpisRecord getElementData(LatLon pos, String url, double adjlat, double adjlon) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+    public LpisRecord getRecord (LatLon pos) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+
+        // cached?
+        LpisRecord rec = m_lpisCache.get (pos);
+        if (rec != null)
+            return rec;
+
         krovak k = new krovak();
         xyCoor xy = k.LatLon2krovak(pos);
 
         System.out.println ("LatLon: "+pos+" <-> XY: "+xy.x()+" "+xy.y());
         String bbox = xy.x()+","+xy.y()+","+xy.x()+","+xy.y();
 
-        String request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+bbox+"&SRSNAME=EPSG:102067";
+        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+bbox+"&SRSNAME=EPSG:102067";
 
         System.out.println("Request: " + request);
         String content = callServer(request);
         System.out.println("Reply: " + content);
-        LpisRecord lpis = new LpisRecord(adjlat, adjlon);
+        LpisRecord lpis = new LpisRecord(adjustLat, adjustLon);
         lpis.parseXML("basic", content);
 
         // get additional information for given ID
         if (lpis.getLpisID() > 0) {
-            request = url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
+            request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
             System.out.println("Request: " + request);
             content = callServer(request);
             System.out.println("Reply: " + content);
             lpis.parseXML("extra", content);
         }
+
+        // cache record
+        if (lpis.hasData()) {
+            m_lpisCache.add(lpis);
+        }
+
         return lpis;
+    }
+
+    void prefetchRecords (BBox bbox) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
+        krovak k = new krovak();
+
+        LatLon a = bbox.getTopLeft();
+        LatLon b = bbox.getBottomRight();
+
+        xyCoor axy = k.LatLon2krovak(a);
+        xyCoor bxy = k.LatLon2krovak(b);
+
+        String wfsbox = axy.x()+","+axy.y()+","+bxy.x()+","+bxy.y();
+
+        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+wfsbox+"&SRSNAME=EPSG:102067";
+
+        System.out.println("Request: " + request);
+        String content = callServer(request);
+        System.out.println("Reply: " + content);
+
+        List<LpisRecord> list = LpisRecord.parseBasicXML (content, adjustLat, adjustLon);
+
+        long prefetched = 0;
+        long existing = 0;
+
+        for (LpisRecord lpis: list) {
+
+            // ignore incomplete records
+            if (lpis.getLpisID() <= 0 || !lpis.hasOuter())
+                continue;
+
+            // ignore records already in cache (avoids unnecessary downloads of extra data)
+            if (m_lpisCache.containsLpisID(lpis.getLpisID())) {
+                ++existing;
+                continue;
+            }
+
+            request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
+            System.out.println("Request: " + request);
+            content = callServer(request);
+            System.out.println("Reply: " + content);
+            lpis.parseXML("extra", content);
+
+            // cache record
+            if (lpis.hasData()) {
+                m_lpisCache.add(lpis);
+                ++prefetched;
+            }
+        }
+
+        System.out.println("LpisCache: prefetched: " + Long.toString(prefetched) + ", existing: " + Long.toString (existing) + " bbox: " + bbox.toString());
     }
 }

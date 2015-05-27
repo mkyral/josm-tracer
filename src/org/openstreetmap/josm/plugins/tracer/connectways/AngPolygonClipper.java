@@ -87,7 +87,7 @@ public class AngPolygonClipper {
     }
 
     @SuppressWarnings("CallToPrintStackTrace")
-    public void polygonDifference (EdWay clip_way, EdObject subj) {
+    public void polygonDifference (EdObject clip, EdObject subj) {
 
         // initialize collections
         m_outers = new ArrayList<>();
@@ -106,8 +106,8 @@ public class AngPolygonClipper {
             // non-intersecting touching nodes of the subject from other polygons!
 
             Clipper clipper = new Clipper(Clipper.ioStrictlySimple + Clipper.ioPreserveCollinear);
-            clipper.addPath(wayToPath(clip_way), PolyType.ptClip, true);
-            clipper.addPaths(edObjectToPaths(subj), PolyType.ptSubject, true);
+            clipper.addPaths(edObjectToPaths(clip, false), PolyType.ptClip, true);
+            clipper.addPaths(edObjectToPaths(subj, true), PolyType.ptSubject, true);
 
             PolyTree ptree = new PolyTree();
             clipper.execute(ClipType.ctDifference, ptree);
@@ -308,7 +308,7 @@ public class AngPolygonClipper {
     }
 
 
-    private Path wayToPath(EdWay w) {
+    private Path wayToPath(EdWay w, boolean issubj) {
         if (!w.isClosed())
             throw new IllegalArgumentException ("Way must be closed");
 
@@ -318,6 +318,8 @@ public class AngPolygonClipper {
         {
             EdNode node = w.getNode(i);
             p.add (nodeToPoint2d(node));
+            if (issubj)
+                m_subjectNodes.add(node);
         }
         return p;
     }
@@ -332,7 +334,6 @@ public class AngPolygonClipper {
         long y = (long)(en.getY() * fixedPointScale);
         Point2d pt = new Point2d(x, y);
         m_nodesMap.put(node.getCoor().getRoundedToOsmPrecision(), node);
-        m_subjectNodes.add(node);
         return pt;
     }
 
@@ -354,24 +355,24 @@ public class AngPolygonClipper {
         return node;
     }
 
-    private Paths edObjectToPaths(EdObject obj) {
+    private Paths edObjectToPaths(EdObject obj, boolean issubj) {
         if (obj.isWay()) {
-            Path p = wayToPath((EdWay)obj);
+            Path p = wayToPath((EdWay)obj, issubj);
             Paths pp = new Paths();
             pp.add(p);
             return pp;
         }
         if (obj.isMultipolygon())
-            return multipolygonToPaths((EdMultipolygon)obj);
+            return multipolygonToPaths((EdMultipolygon)obj, issubj);
         throw new IllegalArgumentException("EdObject must be either EdWay or EdMultipolygon");
     }
 
-    private Paths multipolygonToPaths(EdMultipolygon mp) {
+    private Paths multipolygonToPaths(EdMultipolygon mp, boolean issubj) {
         Paths pp = new Paths();
         for (EdWay w: mp.outerWays())
-            pp.add(wayToPath(w));
+            pp.add(wayToPath(w, issubj));
         for (EdWay w: mp.innerWays())
-            pp.add(wayToPath(w));
+            pp.add(wayToPath(w, issubj));
         return pp;
     }
 

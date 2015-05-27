@@ -29,9 +29,11 @@ import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import org.openstreetmap.josm.data.Bounds;
+import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
+import org.openstreetmap.josm.data.projection.Projections;
 import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
 import org.openstreetmap.josm.plugins.tracer.connectways.BBoxUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdMultipolygon;
@@ -42,16 +44,18 @@ import org.openstreetmap.josm.plugins.tracer.connectways.GeomUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.LatLonSize;
 import org.openstreetmap.josm.plugins.tracer.connectways.WayEditor;
 
-public abstract class TracerRecord {
+public abstract class TracerRecord implements IQuadCacheObject {
 
     private List<LatLon> m_outer;
     private List<List<LatLon>> m_inners;
+    private BBox m_bbox;
 
     private final double m_adjustLat;
     private final double m_adjustLon;
 
     public TracerRecord (double adjlat, double adjlon) {
         m_outer = null;
+        m_bbox = null;
         m_inners = new ArrayList<>();
         m_adjustLat = adjlat;
         m_adjustLon = adjlon;
@@ -100,7 +104,14 @@ public abstract class TracerRecord {
      * Returns BBox of the traced geometry
      * @return BBox of the geometry
      */
+    @Override
     public final BBox getBBox() {
+        if (!hasOuter() || m_bbox == null)
+            throw new IllegalStateException(tr("No outer geometry available"));
+        return m_bbox;
+    }
+
+    private void updateBBox () {
         List<LatLon> outer = this.getOuter();
         LatLon p0 = outer.get(0);
 
@@ -110,11 +121,12 @@ public abstract class TracerRecord {
             bbox.add(p.lon(), p.lat());
         }
 
-        return bbox;
+        m_bbox = bbox;
     }
 
     protected final void setOuter(List<LatLon> outer) {
         m_outer = adjustWay (outer);
+        updateBBox ();
     }
 
     protected final void addInner(List<LatLon> inner) {
@@ -301,5 +313,76 @@ public abstract class TracerRecord {
         }
 
         return result;
+    }
+
+    @Override
+    public final boolean containsPoint (LatLon latlon) {
+
+        // must be inside geometry bbox
+        BBox bbox = this.getBBox();
+        if (!bbox.bounds(latlon))
+            return false;
+
+        // must be inside outer way
+        if (!polygonContainsPoint (this.getOuter(), latlon))
+            return false;
+
+        // must not be inside inner ways
+        for (List<LatLon> inner: this.getInners()) {
+            if (polygonContainsPoint (inner, latlon))
+                return false;
+        }
+
+        return true;
+    }
+
+    private boolean polygonContainsPoint(List<LatLon> way, LatLon latlon) {
+        // (stolen from JOSM's Geometry, nodeInsidePolygon)
+
+        if (way.size() < 2)
+            return false;
+
+        boolean inside = false;
+        EastNorth p1, p2;
+        EastNorth pointEn = getEastNorth (latlon);
+
+        // iterate each side of the polygon, start with the last segment
+        LatLon oldPoint = way.get(way.size() - 1);
+        EastNorth oldEn = getEastNorth(oldPoint);
+
+        for (LatLon newPoint : way) {
+            //skip duplicate points
+            if (newPoint.equals(oldPoint)) {
+                continue;
+            }
+
+            EastNorth newEn = getEastNorth(newPoint);
+
+            // order points so p1.lat <= p2.lat
+            if (newEn.getY() > oldEn.getY()) {
+                p1 = oldEn;
+                p2 = newEn;
+            } else {
+                p1 = newEn;
+                p2 = oldEn;
+            }
+
+            //test if the line is crossed and if so invert the inside flag.
+            if ((newEn.getY() < pointEn.getY()) == (pointEn.getY() <= oldEn.getY())
+                && (pointEn.getX() - p1.getX()) * (p2.getY() - p1.getY())
+                < (p2.getX() - p1.getX()) * (pointEn.getY() - p1.getY()))
+            {
+                inside = !inside;
+            }
+
+            oldPoint = newPoint;
+            oldEn = newEn;
+        }
+
+        return inside;
+    }
+
+    private EastNorth getEastNorth (LatLon latlon) {
+        return Projections.project(latlon);
     }
 }

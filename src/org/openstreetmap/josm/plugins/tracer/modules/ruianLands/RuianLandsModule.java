@@ -25,7 +25,6 @@ import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
@@ -136,7 +135,7 @@ public final class RuianLandsModule extends TracerModule {
     };
 
     @Override
-    public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
+    public AbstractTracerTask trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
         return new RuianLandsTracerTask (pos, ctrl, alt, shift);
     }
 
@@ -145,8 +144,11 @@ public final class RuianLandsModule extends TracerModule {
         private final GeomDeviation m_tolerance = new GeomDeviation (0.2, Math.PI / 3);
         private final ClipAreasSettings m_clipSettings = new ClipAreasSettings (m_tolerance);
 
+        private final boolean m_invertClip;
+
         RuianLandsTracerTask  (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
             super (pos, ctrl, alt, shift);
+            m_invertClip = alt;
         }
 
         private RuianLandsRecord record() {
@@ -240,10 +242,18 @@ public final class RuianLandsModule extends TracerModule {
 
             // Clip other areas
             if (m_performClipping) {
-                // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
                 AreaPredicate filter = new AreaPredicate (clipWayMatch);
-                ClipAreas clip = new ClipAreas(editor, m_clipSettings, postTraceNotifications());
-                clip.clipAreas(outer_way, filter);
+                if (m_invertClip) {
+                    ClipObjectArea clip = new ClipObjectArea (editor, m_clipSettings, postTraceNotifications ());
+                    EdObject obj = clip.clipObject (multipolygon == null ? outer_way : multipolygon, filter, m_pos);
+                    outer_way = obj.getFirstOuterWay();
+                    multipolygon = obj.isMultipolygon() ? (EdMultipolygon)obj : null;
+                }
+                else {
+                    // #### Now, it clips using only the outer way. Consider if multipolygon clip is necessary/useful.
+                    ClipAreas clip = new ClipAreas(editor, m_clipSettings, postTraceNotifications());
+                    clip.clipAreas(outer_way, filter);
+                }
             }
 
             // Merge duplicate ways

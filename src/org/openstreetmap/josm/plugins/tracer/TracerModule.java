@@ -19,8 +19,10 @@
 package org.openstreetmap.josm.plugins.tracer;
 
 import java.awt.Cursor;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import javax.swing.JOptionPane;
 import org.openstreetmap.josm.Main;
@@ -38,6 +40,7 @@ import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
 import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
 import org.openstreetmap.josm.gui.util.GuiHelper;
+import org.openstreetmap.josm.io.OsmTransferException;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdMultipolygon;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdNode;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdObject;
@@ -45,6 +48,15 @@ import org.openstreetmap.josm.plugins.tracer.connectways.EdWay;
 import org.openstreetmap.josm.plugins.tracer.connectways.LatLonSize;
 import org.openstreetmap.josm.plugins.tracer.connectways.MultipolygonMatch;
 import org.openstreetmap.josm.plugins.tracer.connectways.WayEditor;
+import org.xml.sax.SAXException;
+
+enum TracerTaskStep {
+    ttsInit,
+    ttsDownloadRecord,
+    ttsDownloadMissingArea,
+    ttsDownloadIncompleteMultipolygons,
+    ttsCreateTracedPolygon,
+};
 
 /**
  * Base class for Tracer modules
@@ -85,9 +97,12 @@ public abstract class TracerModule {
      *  Returns a tracer task that extracts the object for given position
      *  @param pos position to trase
      */
-    public abstract PleaseWaitRunnable trace(LatLon pos, boolean ctrl, boolean alt, boolean shift);
+    public abstract AbstractTracerTask trace(LatLon pos, boolean ctrl, boolean alt, boolean shift);
 
-    public abstract class AbstractTracerTask extends PleaseWaitRunnable {
+    public abstract class AbstractTracerTask {
+
+        TracerTaskStep m_taskStep;
+        private boolean m_cancelled;
 
         protected final LatLon m_pos;
         protected final boolean m_ctrl;
@@ -99,7 +114,6 @@ public abstract class TracerModule {
         protected boolean m_performWayMerging;
 
         private TracerRecord m_record;
-        private boolean m_cancelled;
 
         private static final double resurrectNodesDistanceMeters = 10.0;
         private static final double defaultAutomaticOsmDownloadMeters = 500.0;
@@ -107,88 +121,65 @@ public abstract class TracerModule {
         private final PostTraceNotifications m_postTraceNotifications = new PostTraceNotifications();
 
         protected AbstractTracerTask (LatLon pos, boolean ctrl, boolean alt, boolean shift) {
-            super (tr("Tracing"));
+            this.m_taskStep = TracerTaskStep.ttsInit;
+            this.m_cancelled = false;
+
             this.m_pos = pos;
             this.m_ctrl = ctrl;
             this.m_alt = alt;
             this.m_shift = shift;
             this.m_record = null;
-            this.m_cancelled = false;
 
             this.m_performClipping = !m_ctrl;
             this.m_performRetrace = !m_ctrl;
             this.m_performWayMerging = !m_ctrl;
         }
 
-        /**
-         * Returns list of all existing incomplete multipolygons that might participate in
-         * traced polygon clipping. These relations must be downloaded first, clipping
-         * doesn't support incomplete multipolygons.
-         * @return List of incomplete multipolygon relations
-         */
-        private List<Relation> getIncompleteMultipolygonsForDownload() {
-            DataSet ds = Main.main.getCurrentDataSet();
-            ds.getReadLock().lock();
-            BBox bbox = m_record.getBBox();
-            try {
-                List<Relation> list = new ArrayList<>();
-                for (Relation rel : ds.searchRelations(bbox)) {
-                    if (!MultipolygonMatch.match(rel))
-                        continue;
-                    if (rel.isIncomplete() || rel.hasIncompleteMembers())
-                        list.add(rel);
-                }
-                return list;
-            } finally {
-                ds.getReadLock().unlock();
+        public void run () {
+            if (m_taskStep != TracerTaskStep.ttsInit)
+                throw new AssertionError("Tracer task already in progress");
+            nextStep ();
+        }
+
+        private void nextStep () {
+
+            if (m_cancelled)
+                return;
+
+            switch (m_taskStep) {
+                case ttsInit:
+                    stepDownloadRecord ();
+                    break;
+                case ttsDownloadRecord:
+                    stepDownloadMissingArea ();
+                    break;
+                case ttsDownloadMissingArea:
+                    stepDownloadIncompleteMultipolygons ();
+                    break;
+                case ttsDownloadIncompleteMultipolygons:
+                    stepCreateTracedPolygon ();
+                    break;
+                case ttsCreateTracedPolygon:
+                    throw new AssertionError ("Internal error, no next step available");
+                default:
+                    throw new AssertionError ("Unknown TracerTaskStep");
             }
         }
 
-        protected void wayIsOutsideDownloadedAreaDialog() {
-            ExtendedDialog ed = new ExtendedDialog(
-                Main.parent, tr("Way is outside downloaded area"),
-                new String[] {tr("Ok")});
-            ed.setButtonIcons(new String[] {"ok"});
-            ed.setIcon(JOptionPane.ERROR_MESSAGE);
-            ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
-            ed.showDialog();
+        /**
+         * Returns ExecutorService to be used for background asynchronous download of a traced record.
+         * @return An ExecutorService instance if the download should run on background. Null if
+         * foreground PleaseWaitRunnable task should be used.
+         */
+        protected ExecutorService getDownloadRecordExecutor() {
+            return null;
         }
 
-        @Override
-        protected final void finish() {
-        }
-
-        @Override
-        protected final void cancel() {
-            m_cancelled = true;
-            // #### TODO: break the connection to remote server
-        }
-
-        protected boolean cancelled() {
-            return m_cancelled;
-        }
-
-        protected TracerRecord getRecord() {
-            if (m_record == null)
-                throw new IllegalStateException("Record is null");
-            return m_record;
-        }
-
-        protected PostTraceNotifications postTraceNotifications() {
-            return m_postTraceNotifications;
-        }
-
-        @Override
-        @SuppressWarnings({"CallToPrintStackTrace", "UseSpecificCatch", "BroadCatchBlock", "TooBroadCatch"})
-        protected final void realRun() {
-
+        private void downloadRecordTaskBody (boolean async) {
             System.out.println("");
-            System.out.println("-----------------");
             System.out.println("----- Trace -----");
-            System.out.println("-----------------");
             System.out.println("");
 
-            progressMonitor.indeterminateSubTask(tr("Downloading {0} data..." , getName()));
             try {
                 m_record = downloadRecord(m_pos);
             }
@@ -198,98 +189,141 @@ public abstract class TracerModule {
                 return;
             }
 
-            if (cancelled())
+            if (!async) {
+                nextStep ();
                 return;
+            }
+
+            // Explicitly serialize subsequent tasks after asynchronous download.
+            // This reduces the chance that the same area/relation downloads are
+            // triggered multiple times.
+            Main.worker.submit (new Runnable () {
+                @Override
+                public void run() {
+                    nextStep ();
+                }
+            });
+        }
+
+        private void stepDownloadRecord () {
+
+            // Initial step, always schedule download record task
+            m_taskStep = TracerTaskStep.ttsDownloadRecord;
+
+            ExecutorService exec = getDownloadRecordExecutor();
+
+            // run as background asynchronous task
+            if (exec != null) {
+                exec.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        downloadRecordTaskBody (true);
+                    }
+                });
+                return;
+            }
+
+            // run as blocking PleaseWaitRunnable window
+            Main.worker.submit (new PleaseWaitRunnable (tr("Tracing")) {
+                    @Override
+                    protected void cancel() {
+                        m_cancelled = true;
+                    }
+
+                    @Override
+                    protected void realRun() throws SAXException, IOException, OsmTransferException {
+                        this.getProgressMonitor().indeterminateSubTask(tr("Downloading {0} data..." , getName()));
+                        downloadRecordTaskBody (false);
+                        this.getProgressMonitor().subTask(tr("Creating {0} polygon...", getName()));
+                    }
+
+                    @Override
+                    protected void finish() {}
+                });
+        }
+
+        private void stepDownloadMissingArea () {
 
             // No data available?
-            if (!m_record.hasData()) {
+            if (m_record == null || !m_record.hasData()) {
                 TracerUtils.showNotification(tr("Data not available.")+ "\n(" + m_pos.toDisplayString() + ")", "warning");
                 return;
             }
 
-            // Schedule all required tasks
+            // Download missing area
+            m_taskStep = TracerTaskStep.ttsDownloadMissingArea;
+
             LatLonSize downloadsize = LatLonSize.get (m_pos, this.getAutomaticOsmDownloadMeters ());
             LatLonSize extrasize = this.getMissingAreaCheckExtraSize(m_pos);
             Bounds area = m_record.getMissingAreaToDownload(Main.main.getCurrentDataSet(), extrasize, downloadsize);
-            if (area != null) {
-                DownloadOsmTask task = new DownloadOsmMissingAreaTask();
-                final Future<?> future = task.download(false, area, null);
-                // Note: we don't start PostDownloadHandler after download because we're
-                // not interested in download errors.
 
-                // Note: be careful, this download doesn't guarantee that the required area will be available.
-                // First, the download can fail at any time. Second, getMissingAreaToDownload() doesn't
-                // consider object retracing. That is, if the retraced object is significantly different
-                // from the traced one, it still can be outside of downloaded bounds. Because retrace object
-                // is selected inside WayEditor transaction, there's no easy way to get it now. Also, retraced
-                // object might be an incomplete multipolygon that is not downloaded yet. So, we ignore these
-                // corner cases here and all modules still must must carefully check if data bounds requirements
-                // are satisfied.
+            // nothing to download? go ahead
+            if (area == null) {
+                nextStep ();
+                return;
+            }
 
-                Main.worker.submit(new Runnable() {
-                    @Override
+            // Schedule missing area download
+            final DownloadOsmTask task = new DownloadOsmMissingAreaTask();
+            final Future<?> future = task.download(false, area, null);
+            // Note: we don't start PostDownloadHandler after download because we're
+            // not interested in download errors.
+
+            // Note: be careful, this download doesn't guarantee that the required area will be available.
+            // First, the download can fail at any time. Second, getMissingAreaToDownload() doesn't
+            // consider object retracing. That is, if the retraced object is significantly different
+            // from the traced one, it still can be outside of downloaded bounds. Because retrace object
+            // is selected inside WayEditor transaction, there's no easy way to get it now. Also, retraced
+            // object might be an incomplete multipolygon that is not downloaded yet. So, we ignore these
+            // corner cases here and all modules still must must carefully check if data bounds requirements
+            // are satisfied.
+            Main.worker.submit(new Runnable() {
+                @Override
                     public void run() {
-                        try { future.get(); } catch (Exception e) {}
-                        downloadIncompleteMultipolygonsTask();
+                        try {
+                            future.get();
+                            if (task.isCanceled())
+                                m_cancelled = true;
+                        } catch (Exception e) {}
+                        nextStep ();
                     }
                 });
-                Main.worker.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        createTracedPolygon();
-                    }
-                });
-            }
-            else if (downloadIncompleteMultipolygonsTask()) {
-                Main.worker.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        createTracedPolygon();
-                    }
-                });
-            }
-            else {
-                progressMonitor.subTask(tr("Creating {0} polygon...", getName()));
-                createTracedPolygon();
-            }
         }
 
-        private boolean downloadIncompleteMultipolygonsTask() {
+        private void stepDownloadIncompleteMultipolygons () {
 
             // Look for incomplete multipolygons that might participate in clipping
+            m_taskStep = TracerTaskStep.ttsDownloadIncompleteMultipolygons;
+
             List<Relation> incomplete_multipolygons = null;
             if (m_performClipping)
                 incomplete_multipolygons = getIncompleteMultipolygonsForDownload ();
 
-            if (incomplete_multipolygons == null || incomplete_multipolygons.isEmpty())
-                return false;
+            // nothing to download? go ahead
+            if (incomplete_multipolygons == null || incomplete_multipolygons.isEmpty()) {
+                nextStep();
+                return;
+            }
 
             // Schedule task to download incomplete multipolygons
-            Main.worker.submit(new DownloadRelationTask(incomplete_multipolygons, Main.main.getEditLayer()));
-            return true;
+            final DownloadRelationTask task = new DownloadRelationTask(incomplete_multipolygons, Main.main.getEditLayer());
+            final Future<?> future = Main.worker.submit(task);
+            Main.worker.submit (new Runnable() {
+                @Override
+                    public void run() {
+                        try {
+                            future.get();
+                            // mmhm, DownloadRelationTask doesn't expose "cancelled" flag :-(
+                        } catch (Exception e) {}
+                        nextStep ();
+                    }
+                });
         }
 
-        protected abstract LatLonSize getMissingAreaCheckExtraSize(LatLon pos);
+        private void stepCreateTracedPolygon() {
 
-        protected double getAutomaticOsmDownloadMeters () {
-            return defaultAutomaticOsmDownloadMeters;
-        }
+            m_taskStep = TracerTaskStep.ttsCreateTracedPolygon;
 
-        protected EdWay getOuterWay(EdObject obj) {
-            if (obj.isWay()) {
-                return (EdWay)obj;
-            }
-            if (obj.isMultipolygon()) {
-                EdMultipolygon mp = (EdMultipolygon)obj;
-                List<EdWay> ways = mp.outerWays();
-                if (ways.size() == 1) {
-                    return ways.get(0);
-                }
-            }
-            throw new AssertionError("Cannot determine outer way of EdObject");
-        }
-
-        private void createTracedPolygon() {
             GuiHelper.runInEDT(new Runnable() {
                 @Override
                 @SuppressWarnings("CallToPrintStackTrace")
@@ -352,6 +386,70 @@ public abstract class TracerModule {
                     System.out.println("undoRedo time (ms): " + Long.toString(time_msecs));
                 }
             });
+        }
+
+        /**
+         * Returns list of all existing incomplete multipolygons that might participate in
+         * traced polygon clipping. These relations must be downloaded first, clipping
+         * doesn't support incomplete multipolygons.
+         * @return List of incomplete multipolygon relations
+         */
+        private List<Relation> getIncompleteMultipolygonsForDownload() {
+            DataSet ds = Main.main.getCurrentDataSet();
+            ds.getReadLock().lock();
+            BBox bbox = m_record.getBBox();
+            try {
+                List<Relation> list = new ArrayList<>();
+                for (Relation rel : ds.searchRelations(bbox)) {
+                    if (!MultipolygonMatch.match(rel))
+                        continue;
+                    if (rel.isIncomplete() || rel.hasIncompleteMembers())
+                        list.add(rel);
+                }
+                return list;
+            } finally {
+                ds.getReadLock().unlock();
+            }
+        }
+
+        protected void wayIsOutsideDownloadedAreaDialog() {
+            ExtendedDialog ed = new ExtendedDialog(
+                Main.parent, tr("Way is outside downloaded area"),
+                new String[] {tr("Ok")});
+            ed.setButtonIcons(new String[] {"ok"});
+            ed.setIcon(JOptionPane.ERROR_MESSAGE);
+            ed.setContent(tr("Sorry.\nThe traced way (or part of the way) is outside of the downloaded area.\nPlease download area around the way and try again."));
+            ed.showDialog();
+        }
+
+        protected TracerRecord getRecord() {
+            if (m_record == null)
+                throw new IllegalStateException("Record is null");
+            return m_record;
+        }
+
+        protected PostTraceNotifications postTraceNotifications() {
+            return m_postTraceNotifications;
+        }
+
+        protected abstract LatLonSize getMissingAreaCheckExtraSize(LatLon pos);
+
+        protected double getAutomaticOsmDownloadMeters () {
+            return defaultAutomaticOsmDownloadMeters;
+        }
+
+        protected EdWay getOuterWay(EdObject obj) {
+            if (obj.isWay()) {
+                return (EdWay)obj;
+            }
+            if (obj.isMultipolygon()) {
+                EdMultipolygon mp = (EdMultipolygon)obj;
+                List<EdWay> ways = mp.outerWays();
+                if (ways.size() == 1) {
+                    return ways.get(0);
+                }
+            }
+            throw new AssertionError("Cannot determine outer way of EdObject");
         }
 
         protected double getResurrectNodesDistanceMeters() {

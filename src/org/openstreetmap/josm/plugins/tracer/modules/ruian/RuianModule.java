@@ -20,7 +20,6 @@ package org.openstreetmap.josm.plugins.tracer.modules.ruian;
 
 import java.awt.Cursor;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.plugins.tracer.modules.building.BuildingTracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
@@ -64,7 +63,7 @@ public final class RuianModule extends BuildingTracerModule {
     };
 
     @Override
-    public PleaseWaitRunnable trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
+    public AbstractTracerTask trace(final LatLon pos, final boolean ctrl, final boolean alt, final boolean shift) {
         return new RuianTracerTask (pos, ctrl, alt, shift);
     }
 
