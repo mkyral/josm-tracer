@@ -49,6 +49,8 @@ import org.openstreetmap.josm.plugins.tracer.modules.ruian.RuianRecord;
 import static org.openstreetmap.josm.tools.I18n.tr;
 import org.openstreetmap.josm.tools.Pair;
 
+import org.openstreetmap.josm.plugins.tracer.TracerUtils;
+
 public abstract class BuildingTracerModule extends TracerModule {
 
     private static final double oversizeInDataBoundsMeters = 2.0;
@@ -283,6 +285,12 @@ public abstract class BuildingTracerModule extends TracerModule {
                     "bing".equals(old_keys.get("source"))))
                 old_keys.put("source", new_keys.get("source"));
 
+            // silently replace wrong ruian date format
+            if (old_keys.containsKey("start_date") &&
+                new_keys.containsKey("start_date") &&
+                TracerUtils.convertDate(old_keys.get("start_date")).equals(new_keys.get("start_date")))
+                old_keys.put("start_date", new_keys.get("start_date"));
+
             // merge missing keys to avoid resolution dialog when there're no collisions
             for (Map.Entry<String, String> tag: old_keys.entrySet()) {
                 if (!new_keys.containsKey(tag.getKey()))
@@ -293,7 +301,7 @@ public abstract class BuildingTracerModule extends TracerModule {
                     old_keys.put(tag.getKey(), tag.getValue());
             }
 
-            // combine and resolve conflicting keys 
+            // combine and resolve conflicting keys
             Map<String, String> result = CombineTagsResolver.launchIfNecessary(old_keys, new_keys);
             if (result == null)
                 return false;
