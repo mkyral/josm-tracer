@@ -279,10 +279,13 @@ public abstract class BuildingTracerModule extends TracerModule {
             // ... add other known conflicting building tags that should be resolved automatically
 
             // silently discard old source=cuzk:km or source=ruian or source=bing tags
-            if (new_keys.containsKey("source") &&
-                    ("cuzk:km".equals(old_keys.get("source")) ||
-                    "ruian".equals(old_keys.get("source")) ||
-                    "bing".equals(old_keys.get("source"))))
+            if (new_keys.containsKey("source") && old_keys.containsKey("source") &&
+                    (old_keys.get("source").startsWith("cuzk") ||
+                    old_keys.get("source").equals("ruian") ||
+                    old_keys.get("source").equals("bing")||
+                    old_keys.get("source").startsWith("uhul")||
+                    old_keys.get("source").startsWith("orto")
+                    ))
                 old_keys.put("source", new_keys.get("source"));
 
             // silently replace wrong ruian date format
