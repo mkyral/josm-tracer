@@ -19,6 +19,7 @@
 
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -494,7 +495,7 @@ public class EdMultipolygon extends EdObject {
         for (String key : conflicting_keys)
             values.remove(key);
 
-        for (String linear_tag : Main.pref.getCollection("multipoly.lineartagstokeep", CreateMultipolygonAction.DEFAULT_LINEAR_TAGS))
+        for (String linear_tag : Main.pref.getCollection("multipoly.lineartagstokeep", Arrays.asList(new String[] {"barrier", "source"})))
             values.remove(linear_tag);
 
         if ("coastline".equals(values.get("natural")))
