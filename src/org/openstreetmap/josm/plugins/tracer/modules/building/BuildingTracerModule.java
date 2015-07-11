@@ -291,7 +291,8 @@ public abstract class BuildingTracerModule extends TracerModule {
             // silently replace wrong ruian date format
             if (old_keys.containsKey("start_date") &&
                 new_keys.containsKey("start_date") &&
-                TracerUtils.convertDate(old_keys.get("start_date")).equals(new_keys.get("start_date")))
+                (TracerUtils.convertDate(old_keys.get("start_date")).equals(new_keys.get("start_date")) ||
+                 old_keys.get("start_date").startsWith(new_keys.get("start_date"))))
                 old_keys.put("start_date", new_keys.get("start_date"));
 
             // merge missing keys to avoid resolution dialog when there're no collisions
