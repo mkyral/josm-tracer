@@ -31,7 +31,7 @@ public final class MultipolygonMatch {
 
     static {
         try {
-            m_multipolygonMatch = SearchCompiler.compile("type=multipolygon", false, false);
+            m_multipolygonMatch = SearchCompiler.compile("type=multipolygon");
         }
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile pattern"));

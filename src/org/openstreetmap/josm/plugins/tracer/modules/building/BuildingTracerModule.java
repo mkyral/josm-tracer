@@ -80,11 +80,11 @@ public abstract class BuildingTracerModule extends TracerModule {
 
     static {
         try {
-            m_reuseExistingBuildingNodeMatch = SearchCompiler.compile(reuseExistingBuildingNodePattern, false, false);
+            m_reuseExistingBuildingNodeMatch = SearchCompiler.compile(reuseExistingBuildingNodePattern);
             m_clipBuildingWayMatch = m_reuseExistingBuildingNodeMatch; // use the same
             m_mergeBuildingWayMatch = m_clipBuildingWayMatch; // use the same
-            m_retraceAreaMatch = SearchCompiler.compile(retraceAreaPattern, false, false);
-            m_ruianSourceMatch = SearchCompiler.compile(ruianSourcePattern, false, false);
+            m_retraceAreaMatch = SearchCompiler.compile(retraceAreaPattern);
+            m_ruianSourceMatch = SearchCompiler.compile(ruianSourcePattern);
         }
         catch (SearchCompiler.ParseError e) {
             throw new AssertionError(tr("Unable to compile pattern"));

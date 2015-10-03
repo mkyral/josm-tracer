@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Tracer" default="dist" basedir=".">
     <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Added RUIAN support. Added ability to modify existing way from Tracer2 plugin"/>
+    <property name="commit.message" value="Tracer-testing refactor for upcoming search API changes"/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
-    <property name="plugin.main.version" value="7001"/>
+    <property name="plugin.main.version" value="8811"/>
     <property name="plugin.canloadatruntime" value="true"/>
 
     <property name="plugin.author" value="Jan Bilak, Petr Dlouhý, Marián Kyral"/>

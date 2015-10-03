@@ -84,10 +84,10 @@ public final class LpisModule extends TracerModule  {
 
     static {
         try {
-            m_reuseExistingLanduseNodeMatch = SearchCompiler.compile(reuseExistingLanduseNodePattern, false, false);
+            m_reuseExistingLanduseNodeMatch = SearchCompiler.compile(reuseExistingLanduseNodePattern);
             m_clipLanduseWayMatch = m_reuseExistingLanduseNodeMatch; // use the same
             m_mergeLanduseWayMatch = m_clipLanduseWayMatch; // use the same
-            m_retraceAreaMatch = SearchCompiler.compile(retraceAreaPattern, false, false);
+            m_retraceAreaMatch = SearchCompiler.compile(retraceAreaPattern);
         }
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile pattern"));

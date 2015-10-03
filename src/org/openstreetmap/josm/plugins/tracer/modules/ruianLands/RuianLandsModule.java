@@ -58,10 +58,10 @@ public final class RuianLandsModule extends TracerModule {
 
     static {
         try {
-            m_reuseExistingLanduseNodeMatch = SearchCompiler.compile(reuseExistingLanduseNodePattern, false, false);
+            m_reuseExistingLanduseNodeMatch = SearchCompiler.compile(reuseExistingLanduseNodePattern);
             m_clipLanduseWayMatch = m_reuseExistingLanduseNodeMatch; // use the same
             m_mergeLanduseWayMatch = m_clipLanduseWayMatch; // use the same
-            m_retraceLandsAreaMatch = SearchCompiler.compile(retraceLandsAreaPattern, false, false);
+            m_retraceLandsAreaMatch = SearchCompiler.compile(retraceLandsAreaPattern);
         }
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile landuse pattern"));
@@ -74,7 +74,7 @@ public final class RuianLandsModule extends TracerModule {
 
     static {
         try {
-            m_clipGardenWayMatch = SearchCompiler.compile(reuseExistingGardenWayPattern, false, false);
+            m_clipGardenWayMatch = SearchCompiler.compile(reuseExistingGardenWayPattern);
         }
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile garden pattern"));
@@ -94,10 +94,10 @@ public final class RuianLandsModule extends TracerModule {
 
     static {
         try {
-            m_reuseExistingBuildingNodeMatch = SearchCompiler.compile(reuseExistingBuildingNodePattern, false, false);
+            m_reuseExistingBuildingNodeMatch = SearchCompiler.compile(reuseExistingBuildingNodePattern);
             m_clipBuildingWayMatch = m_reuseExistingBuildingNodeMatch; // use the same
             m_mergeBuildingWayMatch = m_clipBuildingWayMatch; // use the same
-            m_retraceBuildingAreaMatch = SearchCompiler.compile(retraceBuildingAreaPattern, false, false);
+            m_retraceBuildingAreaMatch = SearchCompiler.compile(retraceBuildingAreaPattern);
         }
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile building pattern"));
