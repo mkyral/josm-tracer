@@ -64,7 +64,7 @@ public abstract class CombineTagsResolver {
         // Resolve tag conflicts if necessary
         if (!dialog.isResolvedCompletely()) {
             dialog.setVisible(true);
-            if (dialog.isCanceled()) {
+            if (!dialog.isApplied()) {
                 return null;
             }
         }
