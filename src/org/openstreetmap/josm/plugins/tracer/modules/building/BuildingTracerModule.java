@@ -294,6 +294,21 @@ public abstract class BuildingTracerModule extends TracerModule {
                 (TracerUtils.convertDate(old_keys.get("start_date")).equals(new_keys.get("start_date")) ||
                  old_keys.get("start_date").startsWith(new_keys.get("start_date"))))
                 old_keys.put("start_date", new_keys.get("start_date"));
+                
+            // silently replace building:levels=0
+            if (old_keys.containsKey("building:levels") &&
+                new_keys.containsKey("building:levels") &&
+                (old_keys.get("building:levels")).equals("0") &&
+                 !new_keys.get("building:levels").equals("0"))
+                old_keys.put("building:levels", new_keys.get("building:levels"));
+
+            // silently replace building:flats=0
+            if (old_keys.containsKey("building:flats") &&
+                new_keys.containsKey("building:flats") &&
+                (old_keys.get("building:flats")).equals("0") &&
+                 !new_keys.get("building:flats").equals("0"))
+                old_keys.put("building:flats", new_keys.get("building:flats"));
+
 
             // merge missing keys to avoid resolution dialog when there're no collisions
             for (Map.Entry<String, String> tag: old_keys.entrySet()) {
