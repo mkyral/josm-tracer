@@ -271,7 +271,24 @@ public abstract class BuildingTracerModule extends TracerModule {
             else if (old_building_tag != null && "yes".equals(new_building_tag))
                 new_keys.put("building", old_building_tag);
             // keep church/chapel tag if the new one is civic
-            else if ("civic".equals(new_building_tag) && ("church".equals(old_building_tag) || "chapel".equals(old_building_tag)))
+            else if ("civic".equals(new_building_tag) &&
+                      ("church".equals(old_building_tag) ||
+                       "chapel".equals(old_building_tag) ||
+                       "cathedral".equals(old_building_tag) ||
+                       "synagogue".equals(old_building_tag) ||
+                       "university".equals(old_building_tag) ||
+                       "college".equals(old_building_tag) ||
+                       "school".equals(old_building_tag) ||
+                       "kindergarten".equals(old_building_tag) ||
+                       "train_station".equals(old_building_tag) ||
+                       "hotel".equals(old_building_tag) ||
+                       "apartments".equals(old_building_tag) ||
+                       "transportation".equals(old_building_tag) ||
+                       "hospital".equals(old_building_tag) ||
+                       "hall".equals(old_building_tag) ||
+                       "public".equals(old_building_tag)
+                      )
+                    )
                 new_keys.put("building", old_building_tag);
             // keep train_station
             else if ("transportation".equals(new_building_tag) && "train_station".equals(old_building_tag))
@@ -294,7 +311,7 @@ public abstract class BuildingTracerModule extends TracerModule {
                 (TracerUtils.convertDate(old_keys.get("start_date")).equals(new_keys.get("start_date")) ||
                  old_keys.get("start_date").startsWith(new_keys.get("start_date"))))
                 old_keys.put("start_date", new_keys.get("start_date"));
-                
+
             // silently replace building:levels=0
             if (old_keys.containsKey("building:levels") &&
                 new_keys.containsKey("building:levels") &&
