@@ -121,6 +121,7 @@ public abstract class TracerModule {
         protected boolean m_performRetrace;
         protected boolean m_performClipping;
         protected boolean m_performWayMerging;
+        protected boolean m_updateTagsOnly;
 
         private TracerRecord m_record;
 
@@ -142,6 +143,7 @@ public abstract class TracerModule {
             this.m_performClipping = !m_ctrl;
             this.m_performRetrace = !m_ctrl;
             this.m_performWayMerging = !m_ctrl;
+            this.m_updateTagsOnly=m_shift;
         }
 
         public void run () {

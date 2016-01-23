@@ -192,6 +192,23 @@ public abstract class BuildingTracerModule extends TracerModule {
                 }
             }
 
+            // Only update tags, do not change geometry of the object
+            if (m_updateTagsOnly) {
+
+                // To update tags only we need an existing object to update
+                if (retrace_object == null) {
+                    postTraceNotifications().add(tr("No existing Ruian building polygon found, tags only update is not possible."));
+                    return null;
+                }
+
+                // Tag object
+                if (!tagTracedObject(retrace_object))
+                    return null;
+
+                return retrace_object;
+            }
+
+            // Update object geometry as well
             // Create traced object
             EdObject trobj = getRecord().createObject(editor);
 

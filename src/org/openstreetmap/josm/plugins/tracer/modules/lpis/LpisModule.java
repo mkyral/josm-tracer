@@ -112,6 +112,9 @@ public final class LpisModule extends TracerModule  {
         if (ctrl){
             return ImageProvider.getCursor("crosshair", "tracer-lpis-new-sml");
         }
+        if (shift){
+            return ImageProvider.getCursor("crosshair", "tracer-lpis-tags-sml");
+        }
         return ImageProvider.getCursor("crosshair", "tracer-lpis-sml");
     }
 
@@ -219,6 +222,28 @@ public final class LpisModule extends TracerModule  {
                 }
             }
 
+            // Only update tags, do not change geometry of the object
+            if (m_updateTagsOnly) {
+
+                // To update tags only we need an existing object to update
+                if (retrace_object == null) {
+                    postTraceNotifications().add(tr("No existing LPIS polygon found, tags only update is not possible."));
+                    return null;
+                }
+
+                // TODO - allows update of Multipolygons tags
+                if (!retrace_object.isWay() || retrace_object.hasReferrers()) {
+                    postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
+                    return null;
+                }
+
+                // Tag object
+                tagTracedObject(retrace_object);
+
+                return retrace_object;
+            }
+
+            // Update object geometry as well
             // Create traced object
             EdObject trobj = record().createObject(editor);
 

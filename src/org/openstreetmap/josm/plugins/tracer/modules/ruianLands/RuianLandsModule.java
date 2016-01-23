@@ -125,6 +125,10 @@ public final class RuianLandsModule extends TracerModule {
         if (ctrl){
             return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-new-sml");
         }
+
+        if (shift){
+            return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-tags-sml");
+        }
         return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-sml");
     }
 
@@ -214,11 +218,33 @@ public final class RuianLandsModule extends TracerModule {
                 boolean ambiguous_retrace = repl.b;
 
                 if (ambiguous_retrace) {
-                    postTraceNotifications().add(tr("Multiple existing Ruian building polygons found, retrace is not possible."));
+                    postTraceNotifications().add(tr("Multiple existing Ruian polygons found, retrace is not possible."));
                     return null;
                 }
             }
 
+            // Only update tags, do not change geometry of the object
+            if (m_updateTagsOnly) {
+
+                // To update tags only we need an existing object to update
+                if (retrace_object == null) {
+                    postTraceNotifications().add(tr("No existing Ruian polygon found, tags only update is not possible."));
+                    return null;
+                }
+
+                // TODO - allows update of Multipolygons tags
+                if (!retrace_object.isWay() || retrace_object.hasReferrers()) {
+                    postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
+                    return null;
+                }
+
+                // Tag object
+                tagTracedObject(retrace_object);
+
+                return retrace_object;
+            }
+
+            // Update object geometry as well
             // Create traced object
             Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
             if (trobj == null)
