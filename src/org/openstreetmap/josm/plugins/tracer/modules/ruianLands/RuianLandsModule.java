@@ -119,6 +119,15 @@ public final class RuianLandsModule extends TracerModule {
         return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-sml");
     }
 
+
+    @Override
+    public Cursor getCursor(boolean ctrl, boolean alt, boolean shift) {
+        if (ctrl){
+            return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-new-sml");
+        }
+        return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-sml");
+    }
+
     @Override
     public String getName() {
         return tr("RUIAN-Lands");

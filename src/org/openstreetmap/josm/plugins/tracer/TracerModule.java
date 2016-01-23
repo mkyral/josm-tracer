@@ -76,6 +76,15 @@ public abstract class TracerModule {
     public abstract Cursor getCursor();
 
     /**
+     *  Returns cursor image
+     *  @param ctrl   Ctrl pressed true/false
+     *  @param alt     Alt pressed true/false
+     *  @param shift Shift pressed true/false
+     *  @return Module cursor image
+     */
+    public abstract Cursor getCursor(boolean ctrl, boolean alt, boolean shift);
+
+    /**
      *  Returns module name
      *  @return the module name
      */

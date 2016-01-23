@@ -48,6 +48,14 @@ public final class ClassicModule extends BuildingTracerModule {
     }
 
     @Override
+    public Cursor getCursor(boolean ctrl, boolean alt, boolean shift) {
+        if (ctrl){
+            return ImageProvider.getCursor("crosshair", "tracer-new-sml");
+        }
+        return ImageProvider.getCursor("crosshair", "tracer-sml");
+    }
+
+    @Override
     public String getName() {
         return tr("Classic");
     }

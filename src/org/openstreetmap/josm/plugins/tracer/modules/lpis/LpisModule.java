@@ -108,6 +108,14 @@ public final class LpisModule extends TracerModule  {
     }
 
     @Override
+    public Cursor getCursor(boolean ctrl, boolean alt, boolean shift) {
+        if (ctrl){
+            return ImageProvider.getCursor("crosshair", "tracer-lpis-new-sml");
+        }
+        return ImageProvider.getCursor("crosshair", "tracer-lpis-sml");
+    }
+
+    @Override
     public String getName() {
         return tr("LPIS");
     }
