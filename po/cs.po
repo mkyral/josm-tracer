@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-01-23 21:46+0100\n"
-"PO-Revision-Date: 2016-01-23 21:58+0100\n"
+"POT-Creation-Date: 2016-01-24 00:23+0100\n"
+"PO-Revision-Date: 2016-01-24 00:23+0100\n"
 "Last-Translator: Marian Kyral <mkyral@email.cz>\n"
 "Language-Team: Czech <kde-i18n-doc@kde.org>\n"
 "Language: cs\n"
@@ -379,8 +379,8 @@ msgstr ""
 msgid ""
 "Subject multipolygon contains tagged ways, object clip is not supported yet."
 msgstr ""
-"Multipolygon obsahuje otagované cesty, ořezávání těchto objektů není současné "
-"době podporováno."
+"Multipolygon obsahuje otagované cesty, ořezávání těchto objektů není "
+"současné době podporováno."
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipObjectArea.java:96
 #, java-format
@@ -415,6 +415,14 @@ msgstr "EdWay.reuseExistingNodes na uzavřené cestě vytvořil neuzavřenou ces
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerException.java:27
 msgid "An unknown error has occurred"
 msgstr "Vyskytla se neznámá chyba"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/CombineTagsResolver.java:41
+msgid "/osm/"
+msgstr "/osm/"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/CombineTagsResolver.java:42
+msgid "/traced/"
+msgstr "/natrasováno/"
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:42
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:43
@@ -477,9 +485,6 @@ msgstr "Trasovač: Přepnuto na modul {0}."
 
 #~ msgid "Downloading RUIAN building data..."
 #~ msgstr "Stahuji data Ruan budovy..."
-
-#~ msgid "Trace"
-#~ msgstr "Trasovač"
 
 #~ msgid "Remove Fully covered ways"
 #~ msgstr "Odstranění pohlcených ploch"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2016-01-23 21:46+0100\n"
+"POT-Creation-Date: 2016-01-24 00:23+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -397,6 +397,14 @@ msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerException.java:27
 msgid "An unknown error has occurred"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/CombineTagsResolver.java:41
+msgid "/osm/"
+msgstr ""
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/CombineTagsResolver.java:42
+msgid "/traced/"
 msgstr ""
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:42
