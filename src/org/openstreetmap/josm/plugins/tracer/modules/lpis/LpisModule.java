@@ -30,6 +30,7 @@ import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.plugins.tracer.CombineTagsResolver;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
@@ -70,12 +71,11 @@ public final class LpisModule extends TracerModule  {
     private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.25, Math.PI / 15);
     private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.25, Math.PI / 40);
 
-    private static final String source = "lpis";
     private static final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
     private static final String reuseExistingLanduseNodePattern =
-        "((landuse=* -landuse=no -landuse=military) | natural=scrub | natural=wood | natural=grassland | natural=wood | leisure=garden)";
+        "((landuse=* -landuse=no -landuse=military) | natural=scrub | natural=wood | natural=grassland | natural=water | natural=wood | leisure=garden)";
     private static final String retraceAreaPattern =
-        "(landuse=farmland | landuse=meadow | landuse=orchard | landuse=vineyard | landuse=plant_nursery | (landuse=forest source=lpis))";
+        "(landuse=farmland | landuse=meadow | landuse=orchard | landuse=vineyard | landuse=plant_nursery | landuse =  village_green | natural=water | (landuse=forest source=lpis))";
 
     private static final Match m_reuseExistingLanduseNodeMatch;
     private static final Match m_clipLanduseWayMatch;
@@ -238,7 +238,8 @@ public final class LpisModule extends TracerModule  {
                 }
 
                 // Tag object
-                tagTracedObject(retrace_object);
+                if (!tagTracedObject(retrace_object))
+                    return null;
 
                 return retrace_object;
             }
@@ -271,7 +272,8 @@ public final class LpisModule extends TracerModule  {
             }
 
             // Tag object
-            tagTracedObject(trobj);
+            if (!tagTracedObject(trobj))
+                return null;
 
             // Connect to touching nodes of near landuse polygons
             connectExistingTouchingNodes(trobj);
@@ -306,18 +308,70 @@ public final class LpisModule extends TracerModule  {
             return trobj;
         }
 
-        private void tagTracedObject (EdObject obj) {
+        private boolean tagTracedObject (EdObject obj) {
 
-            Map <String, String> map = obj.getKeys();
+            Map <String, String> old_keys = obj.getKeys();
+            Map <String, String> new_keys = new HashMap <> (getRecord().getKeys());
 
-            Map <String, String> new_keys = new HashMap <> (record().getKeys());
-            for (Map.Entry<String, String> new_key: new_keys.entrySet()) {
-                map.put(new_key.getKey(), new_key.getValue());
+            // Silently replace lpis ref
+            if (old_keys.containsKey("source") &&
+                old_keys.containsKey("ref") &&
+                old_keys.get("source").equals("lpis") &&
+               !old_keys.get("ref").equals(new_keys.get("ref"))) {
+
+                old_keys.put("ref", new_keys.get("ref"));
             }
 
-            map.put("source", source);
-            map.put("ref", Long.toString(record().getLpisID()));
-            obj.setKeys(map);
+            // Silently switch between farmland and meadow
+            if (old_keys.containsKey("landuse") && new_keys.containsKey("landuse") &&
+                !old_keys.get("landuse").equals(new_keys.get("landuse"))) {
+
+                // From meadow to farmland
+                if (old_keys.get("landuse").equals("meadow") &&
+                    new_keys.get("landuse").equals("farmland")) {
+
+                    old_keys.put("landuse", new_keys.get("landuse"));
+                    if (old_keys.containsKey("meadow")) {
+                        old_keys.remove("meadow");
+                    }
+                }
+
+                // From farmland to meadow
+                if (old_keys.get("landuse").equals("farmland") &&
+                    new_keys.get("landuse").equals("meadow")) {
+
+                    old_keys.put("landuse", new_keys.get("landuse"));
+                    if (old_keys.containsKey("crop")) {
+                        old_keys.remove("crop");
+                    }
+                }
+            }
+
+            // Silently replace village_green
+            if (old_keys.containsKey("landuse") &&
+                new_keys.containsKey("landuse") &&
+                old_keys.get("landuse").equals("village_green")) {
+
+                old_keys.put("landuse", new_keys.get("landuse"));
+            }
+
+            // merge missing keys to avoid resolution dialog when there're no collisions
+            for (Map.Entry<String, String> tag: old_keys.entrySet()) {
+                if (!new_keys.containsKey(tag.getKey()))
+                    new_keys.put(tag.getKey(), tag.getValue());
+            }
+            for (Map.Entry<String, String> tag: new_keys.entrySet()) {
+                if (!old_keys.containsKey(tag.getKey()))
+                    old_keys.put(tag.getKey(), tag.getValue());
+            }
+
+            // combine and resolve conflicting keys
+            Map<String, String> result = CombineTagsResolver.launchIfNecessary(old_keys, new_keys);
+            if (result == null)
+                return false;
+
+            obj.setKeys(result);
+            return true;
         }
 
         private Pair<EdObject, Boolean> getObjectToRetrace(WayEditor editor, LatLon pos) {

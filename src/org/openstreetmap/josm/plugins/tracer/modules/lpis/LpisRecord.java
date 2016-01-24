@@ -250,7 +250,11 @@ public final class LpisRecord extends TracerRecord {
      */
     @Override
     public Map<String, String> getKeys(boolean alt) {
-        return m_usageOsm;
+        Map <String, String> keys = new HashMap <> (m_usageOsm);
+
+        keys.put("source", "lpis");
+        keys.put("ref", Long.toString(m_lpis_id));
+        return keys;
     }
 
     /**
