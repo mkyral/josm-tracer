@@ -10,27 +10,51 @@ Currently, there is a new source [RUIAN](http://wiki.openstreetmap.org/wiki/RUIA
 **Disadvantage:** Does not cover whole Czech Republic (but cadastral map has not full coverage as well).
 
 
-##Changes
-The original Tracer stays almost untouched (I added settings only) and could be still used in areas covered by Cadastral maps but not covered by RUIAN.
+##Changes description
+Tracer plugin was modularized, connecting to existing polygons was improved (thanks [Martin Švec](https://github.com/Maatts) for his big help).
 
-For RUIAN I've created a new mode, available in **More tools/Tracer - RUIAN** (shortcut *Ctrl+T*)
+Currently, following modules are available:
 
-###Main changes:
+* Classic - the original bitmap tracer module
+* RUIAN - buildings from ruian (via [poloha.net](http://www.poloha.net))
+* LPIS - landuse from Czech Department of Agriculture
+* RUIAN Lands - an special and experimental module for landuses from RUIAN (via [poloha.net](http://www.poloha.net))
 
-* Data from RUIAN are used
-* Additional information are added to the traced building (building=*, building:levels=, building:flats, start_date...)
-* Configuration added - user could specify custom server URL and adjust position of the traced building if necessary.
-* I like Tracer2 ability to update existing buildings to a new geometry, so I adopted improved Tracer2 ConnectWays class.
-* I prevent plugin to traced already traced building again - caused duplicities
-* I tried to eliminate duplicity nodes that come from garages blocks tracing (still not perfect)
+On plugin configuration page you can activate only modules you want to use.
 
-##Future plans:
+## Work with Tracer
+Tracer tool is available in menu ```More tools/Tracer - RUIAN``` and under key ```T``` When activated, tracer will initialize last used module. By pressing key ```T``` you can switch to next enabled module. Activated module is indicated on cursor.
 
-* Final solution for duplicity nodes
-* In case that there is more JOSM building types available, let user to choose the correct one
-* Implement reconnecting of previously connected buildings
-* Implement solution for overlapping buildings
-* Add new RUIAN mode, this time for Landuse
+![](https://raw.githubusercontent.com/mkyral/josm-tracer/development/doc/img/cursor_mode_standard.png) RUIAN module is activated
+
+The letter 'R' is used to indicate RUIAN (building) module, LP is for LPIS, RL is for RUAN - Lands and no letter means original (classic) module.
+
+To start tracing just choose correct module and click into the feature you want to trace. You need to load appropriate tms/wms layer to see, where to click. All are available in JOSM by default.
+
+| Name |Description|
+|--|--|
+| **CZ / Český RÚIAN budovy** | RUIAN (buildings)|
+| **CZ / Český pLPIS** | LPIS|
+| **CZ / Český RÚIAN parcely** | RUIAN Lands|
+| **CZ / Český CUZK:KM** | CZ bitmap cadastral map|
+
+
+In standard mode, when user clicks inside feature (e.g.: building), plugin will ask server for details of feature, create new OSM object or update existing and connect object to near features or clip them if needed.
+
+However, this behavior can be changed via modification keys. Mouse click + Ctrl causes that new OSM object is created, but existing object is not updated and near objects are not clipped or connected to newly traced object. Pressing of modificator key changes mouse cursor.
+
+When user clicks while shift is pressed, now object is not created, but tags on existing object are updated.
+
+|Cursor|Mode description|
+|--|--|
+|![](https://raw.githubusercontent.com/mkyral/josm-tracer/development/doc/img/cursor_mode_standard.png)|Standard mode|
+|![](https://raw.githubusercontent.com/mkyral/josm-tracer/development/doc/img/cursor_mode_new.png)|Only create object|
+|![](https://raw.githubusercontent.com/mkyral/josm-tracer/development/doc/img/cursor_mode_paste_tags_only.png)|Only paste tags, do not update object geometry|
+
+
+
+##TODO:
+* Allows retracing of multipolygons (mainly for Lpis) module
 
 
 ##Screenshots
