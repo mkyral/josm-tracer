@@ -7,6 +7,7 @@ The original plugin traces ways (buildings and other areas) from Czech cadastral
 Currently, there is a new source [RUIAN](http://wiki.openstreetmap.org/wiki/RUIAN) available. It contains already digitalized buildings and parcels and even some additional data like type of building/parcel, number of building levels, flats, associated address.
 
 **Advantages:** Quick tracing, additional attributes. No bitmap download, just small JSON text file with building geometry and its attributes.
+
 **Disadvantage:** Does not cover whole Czech Republic (but cadastral map has not full coverage as well).
 
 
@@ -27,16 +28,16 @@ Tracer tool is available in menu ```More tools/Tracer - RUIAN``` and under key `
 
 ![](https://raw.githubusercontent.com/mkyral/josm-tracer/development/doc/img/cursor_mode_standard.png) RUIAN module is activated
 
-The letter 'R' is used to indicate RUIAN (building) module, LP is for LPIS, RL is for RUAN - Lands and no letter means original (classic) module.
+The letter ```R``` is used to indicate RUIAN (building) module, ```LP``` is for LPIS, ```RL``` is for RUAN - Lands and no letter means original (classic) module.
 
 To start tracing just choose correct module and click into the feature you want to trace. You need to load appropriate tms/wms layer to see, where to click. All are available in JOSM by default.
 
-| Name |Description|
-|--|--|
-| **CZ / Český RÚIAN budovy** | RUIAN (buildings)|
-| **CZ / Český pLPIS** | LPIS|
-| **CZ / Český RÚIAN parcely** | RUIAN Lands|
-| **CZ / Český CUZK:KM** | CZ bitmap cadastral map|
+ Name |Description
+------|-----------
+ **CZ / Český RÚIAN budovy** | RUIAN (buildings)
+ **CZ / Český pLPIS** | LPIS
+ **CZ / Český RÚIAN parcely** | RUIAN Lands
+ **CZ / Český CUZK:KM** | CZ bitmap cadastral map
 
 
 In standard mode, when user clicks inside feature (e.g.: building), plugin will ask server for details of feature, create new OSM object or update existing and connect object to near features or clip them if needed.
@@ -45,16 +46,18 @@ However, this behavior can be changed via modification keys. Mouse click + Ctrl 
 
 When user clicks while shift is pressed, now object is not created, but tags on existing object are updated.
 
-|Cursor|Mode description|
-|--|--|
-|![](https://raw.githubusercontent.com/mkyral/josm-tracer/development/doc/img/cursor_mode_standard.png)|Standard mode|
-|![](https://raw.githubusercontent.com/mkyral/josm-tracer/development/doc/img/cursor_mode_new.png)|Only create object|
-|![](https://raw.githubusercontent.com/mkyral/josm-tracer/development/doc/img/cursor_mode_paste_tags_only.png)|Only paste tags, do not update object geometry|
+Cursor|Mode description
+------|----------------
+![](https://raw.githubusercontent.com/mkyral/josm-tracer/development/doc/img/cursor_mode_standard.png)|Standard mode
+![](https://raw.githubusercontent.com/mkyral/josm-tracer/development/doc/img/cursor_mode_new.png)|Only create object
+![](https://raw.githubusercontent.com/mkyral/josm-tracer/development/doc/img/cursor_mode_paste_tags_only.png)|Only paste tags, do not update object geometry
 
 
 
 ##TODO:
-* Allows retracing of multipolygons (mainly for Lpis) module
+- [ ] Allows retracing of multipolygons (mainly for Lpis) module
+- [ ] Update documentation on JOSM wiki
+- [ ] Replace original Tracer plugin in josm svn repository
 
 
 ##Screenshots
