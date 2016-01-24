@@ -330,9 +330,9 @@ public final class LpisModule extends TracerModule  {
             boolean multiple_areas = false;
             EdObject lpis_area = null;
             for (EdObject area: areas) {
-                String source = area.get("source");
-                if (source == null || !source.equals("lpis"))
-                    continue;
+//                 String source = area.get("source");
+//                 if (source == null || !source.equals("lpis"))
+//                     continue;
 
                 if (area.isWay())
                     System.out.println("Retrace candidate EdWay: " + Long.toString(area.getUniqueId()));
