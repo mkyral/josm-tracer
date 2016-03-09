@@ -87,7 +87,7 @@ public class LpisServer {
         System.out.println ("LatLon: "+pos+" <-> XY: "+xy.x()+" "+xy.y());
         String bbox = xy.x()+","+xy.y()+","+xy.x()+","+xy.y();
 
-        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+bbox+"&SRSNAME=EPSG:102067";
+        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE_BBOX&bbox="+bbox+"&SRSNAME=EPSG:102067";
 
         System.out.println("Request: " + request);
         String content = callServer(request);
@@ -97,7 +97,7 @@ public class LpisServer {
 
         // get additional information for given ID
         if (lpis.getLpisID() > 0) {
-            request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
+            request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE&&featureID=LPIS_DPB_UCINNE."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
             System.out.println("Request: " + request);
             content = callServer(request);
             System.out.println("Reply: " + content);
@@ -123,7 +123,7 @@ public class LpisServer {
 
         String wfsbox = axy.x()+","+axy.y()+","+bxy.x()+","+bxy.y();
 
-        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4_BBOX&bbox="+wfsbox+"&SRSNAME=EPSG:102067";
+        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE_BBOX&bbox="+wfsbox+"&SRSNAME=EPSG:102067";
 
         System.out.println("Request: " + request);
         String content = callServer(request);
@@ -146,7 +146,7 @@ public class LpisServer {
                 continue;
             }
 
-            request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_FB4&&featureID=LPIS_FB4."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
+            request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE&&featureID=LPIS_DPB_UCINNE."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
             System.out.println("Request: " + request);
             content = callServer(request);
             System.out.println("Reply: " + content);
