@@ -36,6 +36,7 @@ class TracerAction extends MapMode implements MouseListener, KeyListener {
 
     private static final long serialVersionUID = 1L;
     private final Modules m_modules = new Modules();
+    private enum key_mode {KEY_PRESSED, KEY_RELEASED};
 
     public TracerAction(MapFrame mapFrame) {
         super(tr("Tracer"), "tracer-sml", tr("Tracer."),
@@ -71,29 +72,40 @@ class TracerAction extends MapMode implements MouseListener, KeyListener {
 
     @Override
     public void keyReleased(KeyEvent e) {
+        checkKey(e, key_mode.KEY_RELEASED);
     }
 
     @Override
     public void keyTyped(KeyEvent e) {
-        checkKey(e);
+        checkKey(e, key_mode.KEY_PRESSED);
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        checkKey(e);
+        checkKey(e, key_mode.KEY_PRESSED);
     }
 
-    private void checkKey(KeyEvent e) {
+    private void checkKey(KeyEvent e, key_mode mode) {
         String previousModule = m_modules.getActiveModuleName();
 
         switch (e.getKeyCode()) {
             case KeyEvent.VK_T: // T
-                m_modules.nextModule();
-                if (!previousModule.equals(m_modules.getActiveModuleName())) {
-                    TracerUtils.showNotification(tr("Tracer: Switched to {0} module.", m_modules.getActiveModuleName()), "info", 700);
-                    Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
+                if (mode == key_mode.KEY_PRESSED){
+                    m_modules.nextModule();
+                    if (!previousModule.equals(m_modules.getActiveModuleName())) {
+                        TracerUtils.showNotification(tr("Tracer: Switched to {0} module.", m_modules.getActiveModuleName()), "info", 700);
+                        Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
+                    }
                 }
                 break;
+            case KeyEvent.VK_ALT: // alt
+            case KeyEvent.VK_CONTROL: // control
+            case KeyEvent.VK_SHIFT: // shift
+                updateKeyModifiers(e);
+                Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor(ctrl, alt, shift));
+                break;
+            default:
+                Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
         }
     }
 

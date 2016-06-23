@@ -1,13 +1,13 @@
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
 #
-# Marian Kyral <mkyral@email.cz>, 2014, 2015.
+# Marian Kyral <mkyral@email.cz>, 2014, 2015, 2016.
 msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2015-01-11 08:01+0100\n"
-"PO-Revision-Date: 2015-01-11 08:10+0100\n"
+"POT-Creation-Date: 2016-01-24 00:23+0100\n"
+"PO-Revision-Date: 2016-01-24 00:23+0100\n"
 "Last-Translator: Marian Kyral <mkyral@email.cz>\n"
 "Language-Team: Czech <kde-i18n-doc@kde.org>\n"
 "Language: cs\n"
@@ -17,94 +17,88 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 "X-Generator: Lokalize 1.5\n"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/building/BuildingTracerModule.java:88
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:71
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/building/BuildingTracerModule.java:90
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:93
 #: ../src/org/openstreetmap/josm/plugins/tracer/connectways/MultipolygonMatch.java:37
 msgid "Unable to compile pattern"
 msgstr "Vzor nelze zkompilovat"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/building/BuildingTracerModule.java:188
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:206
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/building/BuildingTracerModule.java:190
 msgid ""
 "Multiple existing Ruian building polygons found, retrace is not possible."
 msgstr "Nalezeno více Ruian budov, nelze znova natrasovat."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:90
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/building/BuildingTracerModule.java:200
+msgid ""
+"No existing Ruian building polygon found, tags only update is not possible."
+msgstr ""
+"Nebyla nalezena existující Ruian budova, pouhé aktualizování tagů není možné."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:123
 msgid "LPIS"
 msgstr "LPIS"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:182
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:220
 msgid "Multiple existing LPIS polygons found, retrace is not possible."
 msgstr "Nalezeno více LPIS polygonů, nelze znova natrasovat."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:127
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:230
+msgid "No existing LPIS polygon found, tags only update is not possible."
+msgstr ""
+"Nebyl nalezen existující LPIS polygon, pouhé aktualizování tagů není možné."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java:236
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:237
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:258
+msgid "Multipolygon retrace is not supported yet."
+msgstr "Přetrasovávaní polygonů není v současné době podporováno."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:134
 msgid "Tracer: Not mapped value found: "
 msgstr "Tracer: Chybí mapování pro: "
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:127
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java:134
 msgid "Please report it to @talk-cz"
 msgstr "Zašlete prosím zprávu na @talk-cz"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:68
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:67
 msgid "Unable to compile landuse pattern"
 msgstr "Vzor landuse nelze zkompilovat"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:81
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:80
 msgid "Unable to compile garden pattern"
 msgstr "Vzor garden nelze zkompilovat"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:104
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:103
 msgid "Unable to compile building pattern"
 msgstr "Vzor building nelze zkompilovat"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:125
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:137
 msgid "RUIAN-Lands"
 msgstr "RUIAN-Parcely"
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:221
-msgid "Multipolygon retrace is not supported yet."
-msgstr "Přetrasovávaní polygonů není v současné době podporováno."
+msgid "Multiple existing Ruian polygons found, retrace is not possible."
+msgstr "Nalezeno více Ruian polygonů, nelze znova natrasovat."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:301
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:231
+msgid "No existing Ruian polygon found, tags only update is not possible."
+msgstr ""
+"Nebyl nalezen existující Ruian polygon, pouhé aktualizování tagů není možné."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruianLands/RuianLandsModule.java:346
 msgid "Outer way consists of less than 3 nodes"
 msgstr "Vnější cesta obsahuje méně než tři uzly"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:53
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/classic/ClassicModule.java:60
 msgid "Classic"
 msgstr "Klasický"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:53
+#: ../src/org/openstreetmap/josm/plugins/tracer/modules/ruian/RuianModule.java:63
 msgid "RUIAN"
 msgstr "RUIAN"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:110
-msgid "Tracing"
-msgstr "Trasuji"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:149
-msgid "Way is outside downloaded area"
-msgstr "Cesta je mimo staženou oblast"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:150
-msgid "Ok"
-msgstr "Ok"
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:153
-msgid ""
-"Sorry.\n"
-"The traced way (or part of the way) is outside of the downloaded area.\n"
-"Please download area around the way and try again."
-msgstr ""
-"Lituji\n"
-"Získaná cesta (nebo její část) je mimo staženou oblast.\n"
-"Stáhněte prosím oblast okolo cesty a zkuste to znovu."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:191
-#, java-format
-msgid "Downloading {0} data..."
-msgstr "Stahuji {0} data..."
-
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:197
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:199
 #, java-format
 msgid ""
 "{0} download failed ({1}).\n"
@@ -113,22 +107,49 @@ msgstr ""
 "Chyba při stahování {0} dat ({1}).\n"
 "Chyba: {2}"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:206
-msgid "Data not available."
-msgstr "Data nejsou dostupná."
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:238
+msgid "Tracing"
+msgstr "Trasuji"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:252
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:246
+#, java-format
+msgid "Downloading {0} data..."
+msgstr "Stahuji {0} data..."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:248
 #, java-format
 msgid "Creating {0} polygon..."
 msgstr "Vytvářím {0} polygon..."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:325
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:260
+msgid "Data not available."
+msgstr "Data nejsou dostupná."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:370
 msgid "Nothing changed."
 msgstr "Beze změny."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:331
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:376
 msgid "Trace object"
 msgstr "Trasování objektu"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:428
+msgid "Way is outside downloaded area"
+msgstr "Cesta je mimo staženou oblast"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:429
+msgid "Ok"
+msgstr "Ok"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java:432
+msgid ""
+"Sorry.\n"
+"The traced way (or part of the way) is outside of the downloaded area.\n"
+"Please download area around the way and try again."
+msgstr ""
+"Lituji\n"
+"Získaná cesta (nebo její část) je mimo staženou oblast.\n"
+"Stáhněte prosím oblast okolo cesty a zkuste to znovu."
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java:147
 msgid "Tracer plugin settings"
@@ -189,40 +210,45 @@ msgstr "Nastavte posun pro Lon. Rozmezí <0-999>"
 msgid "Custom Ruian server url"
 msgstr "Vlastní url RUIAN serveru"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerRecord.java:161
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerRecord.java:110
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerRecord.java:173
 msgid "No outer geometry available"
 msgstr "Chybí vnější obrys."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:62
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:63
 msgid "Cannot edit multipolygon with non-Way members!"
 msgstr "Multipolygon neobsahující cesty nelze editovat."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:64
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:65
 msgid "Cannot edit multipolygon with members having no role!"
 msgstr "Nelze editovat multipolygon obsahující členy bez role!"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:73
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:74
 #, java-format
 msgid "Cannot edit multipolygon member with unknown role: {0}"
 msgstr "Nelze editovat multipolygon obsahující člen s neznámou rolí: {0}"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:109
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:124
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:110
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:125
 msgid "EdWay from a different WayEditor"
 msgstr "EdWay z jiného WayEditoru"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:112
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:127
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:113
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:128
 msgid "EdWay is already member of the multipolygon"
 msgstr "EdWay již je členem multipolygonu"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:179
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:180
 msgid "EdMultipolygon has no original Relation"
 msgstr "EdMultipolygon bez původní Relace"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:256
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:257
 msgid "Multipolygon must have type=multipolygon"
 msgstr "Multipolygon musí obsahovat klíč type=multipolygon"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdMultipolygon.java:587
+msgid "EdMultipolygon has no outer way"
+msgstr "EdMultipolygon nemá vnější cestu"
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:90
 #, java-format
@@ -236,6 +262,7 @@ msgstr ""
 "Jednoduchá cesta {0} bude zcela odstraněna. Ignoruji, prosím zkontrolujte."
 
 #: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipAreas.java:113
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipObjectArea.java:114
 msgid "PolygonClipper.polygonDifference returned nonsense!"
 msgstr "PolygonClipper.polygonDifference vrátil nesmysl!"
 
@@ -282,11 +309,11 @@ msgid "This kind of multipolygon retrace is not supported."
 msgstr ""
 "Přetrasovávaní tohoto typu multipolygonu není v současné době podporováno."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdObject.java:187
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdObject.java:189
 msgid "EdObject is finalized"
 msgstr "EdObject je dokončen"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdObject.java:192
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdObject.java:194
 msgid "EdObject is deleted"
 msgstr "EdObject je smazán"
 
@@ -342,6 +369,24 @@ msgstr "Relace není multipolygon"
 msgid "Original Relation ID mapped to a different Relation object"
 msgstr "Původní ID relace namapováno na jiný objekt relace"
 
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipObjectArea.java:48
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipObjectArea.java:60
+msgid "Subject way has original object, object clip is not supported yet."
+msgstr ""
+"Cesta obsahuje originální objekt, tento druh ořezávání není zatím podporován."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipObjectArea.java:55
+msgid ""
+"Subject multipolygon contains tagged ways, object clip is not supported yet."
+msgstr ""
+"Multipolygon obsahuje otagované cesty, ořezávání těchto objektů není "
+"současné době podporováno."
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipObjectArea.java:96
+#, java-format
+msgid "Subject {0} would be modified outside downloaded area, ignoring."
+msgstr "Objekt {0} by byl změněn mimo stáhnutou oblast, ignoruji."
+
 #: ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdNode.java:67
 msgid "EdNode has no original Node"
 msgstr "EdNode nemá původní uzel"
@@ -371,21 +416,29 @@ msgstr "EdWay.reuseExistingNodes na uzavřené cestě vytvořil neuzavřenou ces
 msgid "An unknown error has occurred"
 msgstr "Vyskytla se neznámá chyba"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:41
+#: ../src/org/openstreetmap/josm/plugins/tracer/CombineTagsResolver.java:41
+msgid "/osm/"
+msgstr "/osm/"
+
+#: ../src/org/openstreetmap/josm/plugins/tracer/CombineTagsResolver.java:42
+msgid "/traced/"
+msgstr "/natrasováno/"
+
 #: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:42
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:43
 msgid "Tracer"
 msgstr "Trasovač"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:41
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:42
 msgid "Tracer."
 msgstr "Trasovač."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:42
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:43
 #, java-format
 msgid "Tool: {0}"
 msgstr "Nástroje: {0}"
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:53
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:54
 msgid ""
 "Tracer: No active module found!\n"
 "Please enable some in configuration."
@@ -393,12 +446,12 @@ msgstr ""
 "Trasovač: Žádný aktivní modul nebyl nalezen!\n"
 "Povolte prosím nějaký v konfiguraci."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:62
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:63
 #, java-format
 msgid "Tracer: Module {0} activated."
 msgstr "Trasovač: Modul {0} byl aktivován."
 
-#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:93
+#: ../src/org/openstreetmap/josm/plugins/tracer/TracerAction.java:96
 #, java-format
 msgid "Tracer: Switched to {0} module."
 msgstr "Trasovač: Přepnuto na modul {0}."
@@ -432,9 +485,6 @@ msgstr "Trasovač: Přepnuto na modul {0}."
 
 #~ msgid "Downloading RUIAN building data..."
 #~ msgstr "Stahuji data Ruan budovy..."
-
-#~ msgid "Trace"
-#~ msgstr "Trasovač"
 
 #~ msgid "Remove Fully covered ways"
 #~ msgstr "Odstranění pohlcených ploch"

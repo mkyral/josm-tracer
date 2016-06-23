@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
@@ -13,6 +14,8 @@ import org.openstreetmap.josm.data.osm.Tag;
 import org.openstreetmap.josm.data.osm.TagCollection;
 import org.openstreetmap.josm.gui.conflict.tags.CombinePrimitiveResolverDialog;
 import org.openstreetmap.josm.gui.conflict.tags.TagConflictResolutionUtil;
+
+import static org.openstreetmap.josm.tools.I18n.*;
 
 public abstract class CombineTagsResolver {
 
@@ -30,15 +33,48 @@ public abstract class CombineTagsResolver {
         // The function was deprecated by introduction of CombinePrimitiveResolverDialog.launchIfNecessary()
         // but it's still available for public use.
 
+        // Prepare tags - for collision tags put theirs source
+        Map<String, String> m_old_keys = new HashMap<>(old_keys);
+        Map<String, String> m_new_keys = new HashMap<>(new_keys);
+
+        String m_spacer = "    .. ";
+        String m_osm =    tr("/osm/");
+        String m_traced = tr("/traced/");
+
+        for (Entry<String, String> entry : old_keys.entrySet())
+        {
+            if (new_keys.containsKey(entry.getKey())) {
+                // Both lists contains the same key
+                if (new_keys.get(entry.getKey()).equals(entry.getValue())) {
+                    // ... and values of this key are equal
+                    m_old_keys.put(entry.getKey(), entry.getValue());
+                    m_new_keys.put(entry.getKey(), entry.getValue());
+                } else {
+                    m_old_keys.put(entry.getKey(), entry.getValue() + m_spacer + m_osm);
+                    m_new_keys.put(entry.getKey(), new_keys.get(entry.getKey()) + m_spacer + m_traced);
+                }
+            } else {
+                // Unique key in old_keys
+                m_old_keys.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        // Finish update from new_keys
+        for (Entry<String, String> entry : new_keys.entrySet())
+        {
+            if (!m_new_keys.containsKey(entry.getKey())) {
+                m_new_keys.put(entry.getKey(), entry.getValue());
+            }
+        }
         // Setup collection of all tags
-        TagCollection tagsOfPrimitives = TagCollection.from(old_keys);
-        tagsOfPrimitives.add(TagCollection.from(new_keys));
+        TagCollection tagsOfPrimitives = TagCollection.from(m_old_keys);
+        tagsOfPrimitives.add(TagCollection.from(m_new_keys));
 
         // Create faked primitives for resolution functions
         OsmPrimitive prim1 = new Node();
         OsmPrimitive prim2 = new Node();
-        prim1.setKeys(old_keys);
-        prim2.setKeys(new_keys);
+        prim1.setKeys(m_old_keys);
+        prim2.setKeys(m_new_keys);
         List<OsmPrimitive> primitives = new ArrayList<>(2);
         primitives.add(prim1);
         primitives.add(prim2);
@@ -64,7 +100,7 @@ public abstract class CombineTagsResolver {
         // Resolve tag conflicts if necessary
         if (!dialog.isResolvedCompletely()) {
             dialog.setVisible(true);
-            if (dialog.isCanceled()) {
+            if (!dialog.isApplied()) {
                 return null;
             }
         }
@@ -73,7 +109,7 @@ public abstract class CombineTagsResolver {
         Map<String, String> result = new HashMap<>(new_keys);
         TagCollection resolution = dialog.getTagConflictResolverModel().getAllResolutions();
         for (Tag tag: resolution) {
-            result.put(tag.getKey(), tag.getValue());
+            result.put(tag.getKey(), tag.getValue().replaceFirst("^(.*)    \\.\\. "+ m_osm +"$","$1").replaceFirst("^(.*)    \\.\\. " + m_traced + "$","$1"));
         }
 
         return result;

@@ -58,10 +58,10 @@ public final class RuianLandsModule extends TracerModule {
 
     static {
         try {
-            m_reuseExistingLanduseNodeMatch = SearchCompiler.compile(reuseExistingLanduseNodePattern, false, false);
+            m_reuseExistingLanduseNodeMatch = SearchCompiler.compile(reuseExistingLanduseNodePattern);
             m_clipLanduseWayMatch = m_reuseExistingLanduseNodeMatch; // use the same
             m_mergeLanduseWayMatch = m_clipLanduseWayMatch; // use the same
-            m_retraceLandsAreaMatch = SearchCompiler.compile(retraceLandsAreaPattern, false, false);
+            m_retraceLandsAreaMatch = SearchCompiler.compile(retraceLandsAreaPattern);
         }
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile landuse pattern"));
@@ -74,7 +74,7 @@ public final class RuianLandsModule extends TracerModule {
 
     static {
         try {
-            m_clipGardenWayMatch = SearchCompiler.compile(reuseExistingGardenWayPattern, false, false);
+            m_clipGardenWayMatch = SearchCompiler.compile(reuseExistingGardenWayPattern);
         }
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile garden pattern"));
@@ -94,10 +94,10 @@ public final class RuianLandsModule extends TracerModule {
 
     static {
         try {
-            m_reuseExistingBuildingNodeMatch = SearchCompiler.compile(reuseExistingBuildingNodePattern, false, false);
+            m_reuseExistingBuildingNodeMatch = SearchCompiler.compile(reuseExistingBuildingNodePattern);
             m_clipBuildingWayMatch = m_reuseExistingBuildingNodeMatch; // use the same
             m_mergeBuildingWayMatch = m_clipBuildingWayMatch; // use the same
-            m_retraceBuildingAreaMatch = SearchCompiler.compile(retraceBuildingAreaPattern, false, false);
+            m_retraceBuildingAreaMatch = SearchCompiler.compile(retraceBuildingAreaPattern);
         }
         catch (ParseError e) {
             throw new AssertionError(tr("Unable to compile building pattern"));
@@ -116,6 +116,19 @@ public final class RuianLandsModule extends TracerModule {
 
     @Override
     public Cursor getCursor() {
+        return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-sml");
+    }
+
+
+    @Override
+    public Cursor getCursor(boolean ctrl, boolean alt, boolean shift) {
+        if (ctrl){
+            return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-new-sml");
+        }
+
+        if (shift){
+            return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-tags-sml");
+        }
         return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-sml");
     }
 
@@ -205,11 +218,33 @@ public final class RuianLandsModule extends TracerModule {
                 boolean ambiguous_retrace = repl.b;
 
                 if (ambiguous_retrace) {
-                    postTraceNotifications().add(tr("Multiple existing Ruian building polygons found, retrace is not possible."));
+                    postTraceNotifications().add(tr("Multiple existing Ruian polygons found, retrace is not possible."));
                     return null;
                 }
             }
 
+            // Only update tags, do not change geometry of the object
+            if (m_updateTagsOnly) {
+
+                // To update tags only we need an existing object to update
+                if (retrace_object == null) {
+                    postTraceNotifications().add(tr("No existing Ruian polygon found, tags only update is not possible."));
+                    return null;
+                }
+
+                // TODO - allows update of Multipolygons tags
+                if (!retrace_object.isWay() || retrace_object.hasReferrers()) {
+                    postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
+                    return null;
+                }
+
+                // Tag object
+                tagTracedObject(retrace_object);
+
+                return retrace_object;
+            }
+
+            // Update object geometry as well
             // Create traced object
             Pair<EdWay, EdMultipolygon> trobj = this.createTracedEdObject(editor);
             if (trobj == null)

@@ -48,6 +48,17 @@ public final class RuianModule extends BuildingTracerModule {
     }
 
     @Override
+    public Cursor getCursor(boolean ctrl, boolean alt, boolean shift) {
+        if (ctrl){
+            return ImageProvider.getCursor("crosshair", "tracer-ruian-new-sml");
+        }
+        if (shift){
+            return ImageProvider.getCursor("crosshair", "tracer-ruian-tags-sml");
+        }
+        return ImageProvider.getCursor("crosshair", "tracer-ruian-sml");
+    }
+
+    @Override
     public String getName() {
         return tr("RUIAN");
     }

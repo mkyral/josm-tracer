@@ -1,6 +1,8 @@
 ../src/org/openstreetmap/josm/plugins/tracer/modules/building/BuildingTracerModule.java
 ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisModule.java
 ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/xyCoor.java
+../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisPrefetch.java
+../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisCache.java
 ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/krovak.java
 ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisServer.java
 ../src/org/openstreetmap/josm/plugins/tracer/modules/lpis/LpisRecord.java
@@ -25,6 +27,7 @@
 ../src/org/openstreetmap/josm/plugins/tracer/clipper/Point2d.java
 ../src/org/openstreetmap/josm/plugins/tracer/clipper/ClipType.java
 ../src/org/openstreetmap/josm/plugins/tracer/TracerModule.java
+../src/org/openstreetmap/josm/plugins/tracer/QuadCache.java
 ../src/org/openstreetmap/josm/plugins/tracer/TracerPreferences.java
 ../src/org/openstreetmap/josm/plugins/tracer/DownloadOsmMissingAreaTask.java
 ../src/org/openstreetmap/josm/plugins/tracer/PostTraceNotifications.java
@@ -48,6 +51,7 @@
 ../src/org/openstreetmap/josm/plugins/tracer/connectways/ReuseNearNodeMethod.java
 ../src/org/openstreetmap/josm/plugins/tracer/connectways/RemoveNeedlessNodes.java
 ../src/org/openstreetmap/josm/plugins/tracer/connectways/MergeIdenticalWays.java
+../src/org/openstreetmap/josm/plugins/tracer/connectways/ClipObjectArea.java
 ../src/org/openstreetmap/josm/plugins/tracer/connectways/IEdNodePredicate.java
 ../src/org/openstreetmap/josm/plugins/tracer/connectways/BBoxUtils.java
 ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdNode.java
@@ -56,6 +60,7 @@
 ../src/org/openstreetmap/josm/plugins/tracer/connectways/IReuseNearNodePredicate.java
 ../src/org/openstreetmap/josm/plugins/tracer/connectways/AngPolygonClipper.java
 ../src/org/openstreetmap/josm/plugins/tracer/connectways/EdWay.java
+../src/org/openstreetmap/josm/plugins/tracer/IQuadCacheObject.java
 ../src/org/openstreetmap/josm/plugins/tracer/TracerPlugin.java
 ../src/org/openstreetmap/josm/plugins/tracer/TracerException.java
 ../src/org/openstreetmap/josm/plugins/tracer/CombineTagsResolver.java
