@@ -129,6 +129,9 @@ public final class LpisRecord extends TracerRecord {
             case "jiná trvalá kultura":
                 m_usageOsm.put("landuse", "farmland");
                 break;
+            case "mimoprodukční kultura":
+                m_usageOsm.put("landuse", "farmland");
+                break;
             default:
                 System.out.println("  Warning: unknown value: " + m_usage);
                 TracerUtils.showNotification(tr("Tracer: Not mapped value found: ") + m_usage + ".\n " + tr("Please report it to @talk-cz"), "error", 5000);
