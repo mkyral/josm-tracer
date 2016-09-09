@@ -36,6 +36,7 @@ import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.gui.ExtendedDialog;
+import org.openstreetmap.josm.gui.layer.LayerManager;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
 import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
@@ -266,7 +267,7 @@ public abstract class TracerModule {
 
             LatLonSize downloadsize = LatLonSize.get (m_pos, this.getAutomaticOsmDownloadMeters ());
             LatLonSize extrasize = this.getMissingAreaCheckExtraSize(m_pos);
-            Bounds area = m_record.getMissingAreaToDownload(Main.main.getCurrentDataSet(), extrasize, downloadsize);
+            Bounds area = m_record.getMissingAreaToDownload(Main.main.getLayerManager().getEditDataSet(), extrasize, downloadsize);
 
             // nothing to download? go ahead
             if (area == null) {
@@ -317,7 +318,7 @@ public abstract class TracerModule {
             }
 
             // Schedule task to download incomplete multipolygons
-            final DownloadRelationTask task = new DownloadRelationTask(incomplete_multipolygons, Main.main.getEditLayer());
+            final DownloadRelationTask task = new DownloadRelationTask(incomplete_multipolygons, Main.main.getLayerManager().getEditLayer());
             final Future<?> future = Main.worker.submit(task);
             Main.worker.submit (new Runnable() {
                 @Override
@@ -340,7 +341,7 @@ public abstract class TracerModule {
                 @SuppressWarnings("CallToPrintStackTrace")
                 public void run() {
                     long start_time = System.nanoTime();
-                    DataSet data_set = Main.main.getCurrentDataSet();
+                    DataSet data_set = Main.main.getLayerManager().getEditDataSet();
                     data_set.beginUpdate();
                     try {
                         WayEditor editor = new WayEditor (data_set);
@@ -406,7 +407,7 @@ public abstract class TracerModule {
          * @return List of incomplete multipolygon relations
          */
         private List<Relation> getIncompleteMultipolygonsForDownload() {
-            DataSet ds = Main.main.getCurrentDataSet();
+            DataSet ds = Main.main.getLayerManager().getEditDataSet();
             ds.getReadLock().lock();
             BBox bbox = m_record.getBBox();
             try {

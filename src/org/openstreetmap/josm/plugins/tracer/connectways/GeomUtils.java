@@ -84,8 +84,8 @@ public abstract class GeomUtils {
      * @return Angle in radians
      */
     public static double unorientedAngleBetween(Node p0, Node p1, Node p2) {
-        double a1 = p1.getCoor().heading(p0.getCoor());
-        double a2 = p1.getCoor().heading(p2.getCoor());
+        double a1 = p1.getCoor().bearing(p0.getCoor());
+        double a2 = p1.getCoor().bearing(p2.getCoor());
         double angle = Math.abs(a2 - a1) % (2 * Math.PI);
         if (angle < 0)
             angle += 2 * Math.PI;
