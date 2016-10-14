@@ -187,8 +187,7 @@ public final class LpisRecord extends TracerRecord {
         XPath xPath =  XPathFactory.newInstance().newXPath();
         if ("basic".equals(action)) {
             init();
-            //       String expID = "/wfs:FeatureCollection/gml:featureMember/ms:LPIS_DPB_UCINNE_BBOX/ms:idPudnihoBloku";
-            String expID = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX'][1]/*[name()='ms:idPudnihoBloku']";
+            String expID = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX'][1]/*[name()='ms:id']";
             String expOuter = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX'][1]//*[name()='gml:exterior']//*[name()='gml:posList']";
             String expInner = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX'][1]//*[name()='gml:interior']//*[name()='gml:posList']";
 
@@ -280,7 +279,7 @@ public final class LpisRecord extends TracerRecord {
         doc.getDocumentElement().normalize();
 
         XPath xPath =  XPathFactory.newInstance().newXPath();
-        String expID = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX']/*[name()='ms:idPudnihoBloku']";
+        String expID = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX']/*[name()='ms:id']";
 
         System.out.println("parseXML(basic) - expID: " + expID);
         NodeList expids = (NodeList) xPath.compile(expID).evaluate(doc, XPathConstants.NODESET);
