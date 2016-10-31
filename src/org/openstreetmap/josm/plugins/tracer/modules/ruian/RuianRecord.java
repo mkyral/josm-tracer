@@ -99,11 +99,15 @@ public final class RuianRecord extends TracerRecord {
 
         // no geometry? leave record without data
         JsonObject geomObj = retrieveJsonObject(obj, "geometry");
-        if (geomObj == null)
-            return;
+	JsonArray outerArr;
+	if (geomObj == null) {
+	    outerArr = retrieveJsonArray(obj, "geometry");
+	    if (outerArr == null)
+		return;
+	} else
+	    outerArr = geomObj.getJsonArray("outer");
 
         // outer geometry
-        JsonArray outerArr = geomObj.getJsonArray("outer");
         List<LatLon> way = new ArrayList<>(outerArr.size());
         for (int i = 0; i < outerArr.size(); i++) {
             JsonArray node = outerArr.getJsonArray(i);
@@ -117,25 +121,27 @@ public final class RuianRecord extends TracerRecord {
         super.setOuter(way);
 
         // inner geometries
-        JsonArray innersArr = retrieveJsonArray(geomObj, "inners");
-        if (innersArr != null) {
-            for (int i = 0; i < innersArr.size(); i++) {
-                JsonArray innerArr = innersArr.getJsonArray(i);
-                ArrayList<LatLon> inner = new ArrayList<>();
+	if (geomObj != null) {
+	    JsonArray innersArr = retrieveJsonArray(geomObj, "inners");
+	    if (innersArr != null) {
+		for (int i = 0; i < innersArr.size(); i++) {
+		    JsonArray innerArr = innersArr.getJsonArray(i);
+		    ArrayList<LatLon> inner = new ArrayList<>();
 
-                System.out.println("");
-                for (int j = 0; j < innerArr.size(); j++) {
-                    JsonArray node = innerArr.getJsonArray(j);
-                    LatLon coor = new LatLon(
-                            LatLon.roundToOsmPrecision(node.getJsonNumber(1).doubleValue()),
-                            LatLon.roundToOsmPrecision(node.getJsonNumber(0).doubleValue())
-                    );
-                    System.out.println("inner[" + i + "][" + j + "]:coor: " + coor.toString());
-                    inner.add(coor);
-                }
-                super.addInner(inner);
-            }
-        }
+		    System.out.println("");
+		    for (int j = 0; j < innerArr.size(); j++) {
+			JsonArray node = innerArr.getJsonArray(j);
+			LatLon coor = new LatLon(
+				LatLon.roundToOsmPrecision(node.getJsonNumber(1).doubleValue()),
+				LatLon.roundToOsmPrecision(node.getJsonNumber(0).doubleValue())
+			);
+			System.out.println("inner[" + i + "][" + j + "]:coor: " + coor.toString());
+			inner.add(coor);
+		    }
+		    super.addInner(inner);
+		}
+	    }
+	}
 
         // SO data
         JsonObject building = retrieveJsonObject(obj, "stavebni_objekt");
