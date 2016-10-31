@@ -100,7 +100,7 @@ if (pg_num_rows($result) > 0)
   }
   $result = pg_query($CONNECT,$query);
 
-  if (pg_num_rows($result) == 1 && !"$req" == "full")
+  if (pg_num_rows($result) == 1 && "$req" != "full")
   {
 
     $geom = pg_result($result,0,"geom");
