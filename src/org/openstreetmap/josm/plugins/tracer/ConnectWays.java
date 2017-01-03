@@ -36,8 +36,8 @@ public class ConnectWays {
      * @return Commands.
      */
     public static Command connect(Way way) {
-        Map<Way, Way> modifiedWays = new HashMap<Way, Way>();
-        LinkedList<Command> cmds = new LinkedList<Command>();
+        Map<Way, Way> modifiedWays = new HashMap<>();
+        LinkedList<Command> cmds = new LinkedList<>();
         Way newWay = new Way(way);
         for (int i = 0; i < way.getNodesCount() - 1; i++) {
             Node n = way.getNode(i);
@@ -52,7 +52,7 @@ public class ConnectWays {
 
             // bude se node slucovat s jinym?
             double minDistanceSq = MIN_DISTANCE;
-            List<Node> nodes = Main.main.getCurrentDataSet().searchNodes(bbox);
+            List<Node> nodes = Main.getLayerManager().getEditDataSet().searchNodes(bbox);
             Node nearestNode = null;
             for (Node nn : nodes) {
                 if (!nn.isUsable() || way.containsNode(nn) || newWay.containsNode(nn) || !isInBuilding(nn)) {
@@ -91,7 +91,7 @@ public class ConnectWays {
      * @return List of Commands.
      */
     private static List<Command> mergeNodes(Node n1, Node n2, Way way){
-        List<Command> cmds = new LinkedList<Command>();
+        List<Command> cmds = new LinkedList<>();
         cmds.add(new MoveCommand(n2,
                  (n1.getEastNorth().getX() - n2.getEastNorth().getX())/2,
                  (n1.getEastNorth().getY() - n2.getEastNorth().getY())/2
@@ -132,7 +132,7 @@ public class ConnectWays {
 
         // node nebyl slouceny s jinym
         // hledani pripadne blizke usecky, kam bod pridat
-        List<Way> ways = Main.main.getCurrentDataSet().searchWays(bbox);
+        List<Way> ways = Main.getLayerManager().getEditDataSet().searchWays(bbox);
         double minDist = Double.MAX_VALUE;
         Way nearestWay = null;
         int nearestNodeIndex = 0;
@@ -189,7 +189,7 @@ public class ConnectWays {
             System.out.println(way.getNodes().get(i) + "-----" + way.getNodes().get((i + 1) % way.getNodesCount()));
             double minDistanceSq = MIN_DISTANCE_SQ;
             //double maxAngle = MAX_ANGLE;
-            List<Node> nodes = Main.main.getCurrentDataSet().searchNodes(new BBox(
+            List<Node> nodes = Main.getLayerManager().getEditDataSet().searchNodes(new BBox(
                 Math.min(n1.getX(), n2.getX()) - minDistanceSq,
                 Math.min(n1.getY(), n2.getY()) - minDistanceSq,
                 Math.max(n1.getX(), n2.getX()) + minDistanceSq,
