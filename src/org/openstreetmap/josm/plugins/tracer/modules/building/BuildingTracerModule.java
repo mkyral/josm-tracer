@@ -310,6 +310,15 @@ public abstract class BuildingTracerModule extends TracerModule {
             // keep train_station
             else if ("transportation".equals(new_building_tag) && "train_station".equals(old_building_tag))
                 new_keys.put("building", old_building_tag);
+            // keep apartments, detached, house, terrace tag if the new one is residential
+            else if ("residential".equals(new_building_tag) &&
+                      ("apartments".equals(old_building_tag) ||
+                       "detached".equals(old_building_tag) ||
+                       "house".equals(old_building_tag) ||
+                       "terrace".equals(old_building_tag)
+                      )
+                    )
+                new_keys.put("building", old_building_tag);
             // ... add other known conflicting building tags that should be resolved automatically
 
             // silently discard old source=cuzk:km or source=ruian or source=bing tags
