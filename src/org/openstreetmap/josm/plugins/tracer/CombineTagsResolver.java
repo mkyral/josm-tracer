@@ -81,7 +81,7 @@ public abstract class CombineTagsResolver {
 
         // Setup tag collections for resolution dialog
         final TagCollection completeWayTags = new TagCollection(tagsOfPrimitives);
-        TagConflictResolutionUtil.combineTigerTags(completeWayTags);
+        TagConflictResolutionUtil.applyAutomaticTagConflictResolution(completeWayTags);
         TagConflictResolutionUtil.normalizeTagCollectionBeforeEditing(completeWayTags, primitives);
         final TagCollection tagsToEdit = new TagCollection(completeWayTags);
         TagConflictResolutionUtil.completeTagCollectionForEditing(tagsToEdit);
