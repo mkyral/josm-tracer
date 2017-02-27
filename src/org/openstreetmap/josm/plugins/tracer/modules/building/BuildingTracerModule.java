@@ -284,6 +284,9 @@ public abstract class BuildingTracerModule extends TracerModule {
             // always silently replace building=yes with the new building tag
             if (new_building_tag != null && "yes".equals(old_building_tag))
                 old_keys.put("building", new_building_tag);
+            // always silently replace building=construction with the new building tag
+            if (new_building_tag != null && "construction".equals(old_building_tag))
+                old_keys.put("building", new_building_tag);
             // always keep old building tag if the new tag is building=yes
             else if (old_building_tag != null && "yes".equals(new_building_tag))
                 new_keys.put("building", old_building_tag);
