@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Tracer-testing" default="dist" basedir=".">
     <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Tracer-testing refactor for upcoming search API changes"/>
+    <property name="commit.message" value="Tracer-testing - fix changed api issue"/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
-    <property name="plugin.main.version" value="10580"/>
+    <property name="plugin.main.version" value="11606"/>
     <property name="plugin.canloadatruntime" value="true"/>
 
     <property name="plugin.author" value="Jan Bilak, Petr Dlouhý, Marián Kyral, Martin Švec"/>
@@ -16,6 +16,31 @@
     <!-- ** include targets that all plugins have in common ** -->
     <import file="./build-common.xml.testing"/>
 
+    <target name="my-init-git-revision-xml" unless="skip-revision">
+        <exec append="false" output="REVISION.XML" executable="git" failifexecutionfails="false" resultproperty="git.info.result">
+            <arg value="log"/>
+            <arg value="-1"/>
+            <arg value="--pretty=format:%at%n%ai"/>
+            <arg value="."/>
+        </exec>
+        <replaceregexp file="REVISION.XML" flags="s"
+                       match="\s*(\d*)\s+(\d{4}-\d{2}-\d{2}.\d{2}\:\d{2}\:\d{2}\s*[+-]\d{2}:?\d{2})\s*$"
+                       replace="&lt;info&gt;&lt;entry&gt;&lt;commit revision=&quot;\1&quot;&gt;&lt;date&gt;\2&lt;/date&gt;&lt;/commit&gt;&lt;/entry&gt;&lt;/info&gt;"/>
+       <condition property="git.fail">
+           <not>
+               <and>
+                   <equals arg1="${git.info.result}" arg2="0" />
+                   <length file="REVISION.XML" when="greater" length="1" />
+               </and>
+           </not>
+       </condition>
+    </target>
+
+    <target name="my-revision" depends="my-init-git-revision-xml,init-revision-fallback" unless="skip-revision">
+      <xmlproperty file="REVISION.XML" prefix="version" keepRoot="false" collapseAttributes="true"/>
+<!--       <delete file="REVISION.XML"/> -->
+    </target>
+
     <property name="jts" location="${plugin.dist.dir}/jts.jar"/>
     <property name="geotools" location="${plugin.dist.dir}/geotools.jar"/>
 
@@ -24,7 +49,7 @@
     ** compile - compiles the source tree
     **********************************************************
     -->
-    <target name="compile" depends="init">
+    <target name="compile" depends="init,my-revision">
         <echo message="compiling sources for  ${plugin.jar} ... "/>
         <javac srcdir="src" debug="true" destdir="${plugin.build.dir}" includeAntRuntime="false" encoding="UTF-8">
             <classpath>
