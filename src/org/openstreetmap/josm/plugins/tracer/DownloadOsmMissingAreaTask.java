@@ -34,12 +34,7 @@ public final class DownloadOsmMissingAreaTask extends DownloadOsmTask {
 
     protected class DownloadMissingAreaTask extends DownloadOsmTask.DownloadTask {
         public DownloadMissingAreaTask(boolean newLayer, OsmServerReader reader, ProgressMonitor progressMonitor) {
-            super(newLayer, reader, progressMonitor);
-        }
-
-        @Override
-        protected void computeBboxAndCenterScale(Bounds bounds) {
-            // do nothing... we don't want to center and scale to downloaded area
+            super(newLayer, reader, progressMonitor, false); // do not center and scale to downloaded area
         }
     }
 }
