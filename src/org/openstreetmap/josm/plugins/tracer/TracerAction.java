@@ -28,8 +28,6 @@ import java.awt.event.KeyListener;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.gui.PleaseWaitRunnable;
-import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.tools.Shortcut;
 
 class TracerAction extends MapMode implements MouseListener, KeyListener {
@@ -38,9 +36,9 @@ class TracerAction extends MapMode implements MouseListener, KeyListener {
     private final Modules m_modules = new Modules();
     private enum key_mode {KEY_PRESSED, KEY_RELEASED};
 
-    public TracerAction(MapFrame mapFrame) {
+    public TracerAction() {
         super(tr("Tracer"), "tracer-sml", tr("Tracer."),
-                Shortcut.registerShortcut("tools:tracer", tr("Tool: {0}", tr("Tracer")), KeyEvent.VK_T, Shortcut.DIRECT), mapFrame, null);
+                Shortcut.registerShortcut("tools:tracer", tr("Tool: {0}", tr("Tracer")), KeyEvent.VK_T, Shortcut.DIRECT), null);
     }
 
     @Override
