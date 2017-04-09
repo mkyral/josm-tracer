@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
@@ -19,19 +20,14 @@ import static org.openstreetmap.josm.tools.I18n.*;
 
 public abstract class CombineTagsResolver {
 
-    @SuppressWarnings("deprecation")
     public static Map<String, String> launchIfNecessary(
             final Map<String, String> old_keys,
             final Map<String, String> new_keys) {
 
-        // Note 1: this method was copied from CombinePrimitiveResolverDialog.launchIfNecessary() and
+        // Note: this method was copied from CombinePrimitiveResolverDialog.launchIfNecessary() and
         // adapted to resolution of tag sets only. It's not possible to use the original launchIfNecessary()
         // because (a) it requires primitives occurring in DataSet, (b) it tries to resolve relation
         // memberships, (c) it builds a list of DataSet Commands instead of the resolved set of tags.
-
-        // Note 2: this method relies on deprecated function CombinePrimitiveResolverDialog.getInstance().
-        // The function was deprecated by introduction of CombinePrimitiveResolverDialog.launchIfNecessary()
-        // but it's still available for public use.
 
         // Prepare tags - for collision tags put theirs source
         Map<String, String> m_old_keys = new HashMap<>(old_keys);
@@ -90,7 +86,7 @@ public abstract class CombineTagsResolver {
         final Set<Relation> parentRelations = new HashSet<>();
 
         // Build conflict resolution dialog
-        final CombinePrimitiveResolverDialog dialog = CombinePrimitiveResolverDialog.getInstance();
+        final CombinePrimitiveResolverDialog dialog = new CombinePrimitiveResolverDialog (Main.parent);
 
         dialog.getTagConflictResolverModel().populate(tagsToEdit, completeWayTags.getKeysWithMultipleValues());
         dialog.getRelationMemberConflictResolverModel().populate(parentRelations, primitives);
