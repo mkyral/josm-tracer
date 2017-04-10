@@ -21,15 +21,10 @@ package org.openstreetmap.josm.plugins.tracer;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 import javax.swing.JPanel;
-import javax.swing.JFormattedTextField;
 import javax.swing.DefaultListModel;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.LinkedList;
-import java.text.DecimalFormat;
 
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.gui.preferences.DefaultTabPreferenceSetting;
