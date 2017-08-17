@@ -46,7 +46,6 @@ import org.openstreetmap.josm.plugins.tracer.connectways.EdNode;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdObject;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdWay;
 import org.openstreetmap.josm.plugins.tracer.connectways.LatLonSize;
-import org.openstreetmap.josm.plugins.tracer.connectways.MultipolygonMatch;
 import org.openstreetmap.josm.plugins.tracer.connectways.WayEditor;
 import org.xml.sax.SAXException;
 
@@ -412,7 +411,7 @@ public abstract class TracerModule {
             try {
                 List<Relation> list = new ArrayList<>();
                 for (Relation rel : ds.searchRelations(bbox)) {
-                    if (!MultipolygonMatch.match(rel))
+                    if (!rel.isMultipolygon())
                         continue;
                     if (rel.isIncomplete() || rel.hasIncompleteMembers())
                         list.add(rel);

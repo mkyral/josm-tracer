@@ -101,7 +101,7 @@ public class AreaPredicate implements IEdAreaPredicate {
     @Override
     public boolean evaluate(Relation mp) {
 
-        if (!MultipolygonMatch.match(mp))
+        if (!mp.isMultipolygon())
             return false;
 
         // new-style multipolygon, ignore way tags
