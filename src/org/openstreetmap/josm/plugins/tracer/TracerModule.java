@@ -36,6 +36,7 @@ import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.gui.ExtendedDialog;
+import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.dialogs.relation.DownloadRelationTask;
 import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
@@ -208,7 +209,7 @@ public abstract class TracerModule {
             // Explicitly serialize subsequent tasks after asynchronous download.
             // This reduces the chance that the same area/relation downloads are
             // triggered multiple times.
-            Main.worker.submit (new Runnable () {
+            MainApplication.worker.submit (new Runnable () {
                 @Override
                 public void run() {
                     nextStep ();
@@ -235,7 +236,7 @@ public abstract class TracerModule {
             }
 
             // run as blocking PleaseWaitRunnable window
-            Main.worker.submit (new PleaseWaitRunnable (tr("Tracing")) {
+            MainApplication.worker.submit (new PleaseWaitRunnable (tr("Tracing")) {
                     @Override
                     protected void cancel() {
                         m_cancelled = true;
@@ -288,7 +289,7 @@ public abstract class TracerModule {
             // object might be an incomplete multipolygon that is not downloaded yet. So, we ignore these
             // corner cases here and all modules still must must carefully check if data bounds requirements
             // are satisfied.
-            Main.worker.submit(new Runnable() {
+            MainApplication.worker.submit(new Runnable() {
                 @Override
                     public void run() {
                         try {
@@ -318,8 +319,8 @@ public abstract class TracerModule {
 
             // Schedule task to download incomplete multipolygons
             final DownloadRelationTask task = new DownloadRelationTask(incomplete_multipolygons, Main.main.getLayerManager().getEditLayer());
-            final Future<?> future = Main.worker.submit(task);
-            Main.worker.submit (new Runnable() {
+            final Future<?> future = MainApplication.worker.submit(task);
+            MainApplication.worker.submit (new Runnable() {
                 @Override
                     public void run() {
                         try {
