@@ -267,7 +267,7 @@ public abstract class TracerModule {
 
             LatLonSize downloadsize = LatLonSize.get (m_pos, this.getAutomaticOsmDownloadMeters ());
             LatLonSize extrasize = this.getMissingAreaCheckExtraSize(m_pos);
-            Bounds area = m_record.getMissingAreaToDownload(Main.main.getLayerManager().getEditDataSet(), extrasize, downloadsize);
+            Bounds area = m_record.getMissingAreaToDownload(MainApplication.getLayerManager().getEditDataSet(), extrasize, downloadsize);
 
             // nothing to download? go ahead
             if (area == null) {
@@ -318,7 +318,7 @@ public abstract class TracerModule {
             }
 
             // Schedule task to download incomplete multipolygons
-            final DownloadRelationTask task = new DownloadRelationTask(incomplete_multipolygons, Main.main.getLayerManager().getEditLayer());
+            final DownloadRelationTask task = new DownloadRelationTask(incomplete_multipolygons, MainApplication.getLayerManager().getEditLayer());
             final Future<?> future = MainApplication.worker.submit(task);
             MainApplication.worker.submit (new Runnable() {
                 @Override
@@ -341,7 +341,7 @@ public abstract class TracerModule {
                 @SuppressWarnings("CallToPrintStackTrace")
                 public void run() {
                     long start_time = System.nanoTime();
-                    DataSet data_set = Main.main.getLayerManager().getEditDataSet();
+                    DataSet data_set = MainApplication.getLayerManager().getEditDataSet();
                     data_set.beginUpdate();
                     try {
                         WayEditor editor = new WayEditor (data_set);
@@ -407,7 +407,7 @@ public abstract class TracerModule {
          * @return List of incomplete multipolygon relations
          */
         private List<Relation> getIncompleteMultipolygonsForDownload() {
-            DataSet ds = Main.main.getLayerManager().getEditDataSet();
+            DataSet ds = MainApplication.getLayerManager().getEditDataSet();
             ds.getReadLock().lock();
             BBox bbox = m_record.getBBox();
             try {
