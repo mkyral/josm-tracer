@@ -25,9 +25,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.KeyListener;
 
-import org.openstreetmap.josm.Main;
+// import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.mapmode.MapMode;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.tools.Shortcut;
 
 class TracerAction extends MapMode implements MouseListener, KeyListener {
@@ -54,18 +55,18 @@ class TracerAction extends MapMode implements MouseListener, KeyListener {
         }
 
         super.enterMode();
-        Main.map.mapView.addMouseListener(this);
-        Main.map.mapView.addKeyListener(this);
-        Main.map.mapView.requestFocus();
-        Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
+        MainApplication.getMap().mapView.addMouseListener(this);
+        MainApplication.getMap().mapView.addKeyListener(this);
+        MainApplication.getMap().mapView.requestFocus();
+        MainApplication.getMap().mapView.setCursor(m_modules.getActiveModule().getCursor());
         TracerUtils.showNotification(tr("Tracer: Module {0} activated.", m_modules.getActiveModuleName()), "info", 700);
     }
 
     @Override
     public void exitMode() {
         super.exitMode();
-        Main.map.mapView.removeMouseListener(this);
-        Main.map.mapView.removeKeyListener(this);
+        MainApplication.getMap().mapView.removeMouseListener(this);
+        MainApplication.getMap().mapView.removeKeyListener(this);
     }
 
     @Override
@@ -92,7 +93,7 @@ class TracerAction extends MapMode implements MouseListener, KeyListener {
                     m_modules.nextModule();
                     if (!previousModule.equals(m_modules.getActiveModuleName())) {
                         TracerUtils.showNotification(tr("Tracer: Switched to {0} module.", m_modules.getActiveModuleName()), "info", 700);
-                        Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
+                        MainApplication.getMap().mapView.setCursor(m_modules.getActiveModule().getCursor());
                     }
                 }
                 break;
@@ -100,15 +101,15 @@ class TracerAction extends MapMode implements MouseListener, KeyListener {
             case KeyEvent.VK_CONTROL: // control
             case KeyEvent.VK_SHIFT: // shift
                 updateKeyModifiers(e);
-                Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor(ctrl, alt, shift));
+                MainApplication.getMap().mapView.setCursor(m_modules.getActiveModule().getCursor(ctrl, alt, shift));
                 break;
             default:
-                Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
+                MainApplication.getMap().mapView.setCursor(m_modules.getActiveModule().getCursor());
         }
     }
 
     protected void traceAsync(Point clickPoint) {
-        final LatLon pos = Main.map.mapView.getLatLon(clickPoint.x, clickPoint.y);
+        final LatLon pos = MainApplication.getMap().mapView.getLatLon(clickPoint.x, clickPoint.y);
         TracerModule.AbstractTracerTask tracer_task = m_modules.getActiveModule().trace(pos, ctrl, alt, shift);
         tracer_task.run();
     }
@@ -123,12 +124,12 @@ class TracerAction extends MapMode implements MouseListener, KeyListener {
 
     @Override
     public void mouseExited(MouseEvent e) {
-        Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
+        MainApplication.getMap().mapView.setCursor(m_modules.getActiveModule().getCursor());
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if (!Main.map.mapView.isActiveLayerDrawable()) {
+        if (!MainApplication.getMap().mapView.isActiveLayerDrawable()) {
             return;
         }
         requestFocusInMapView();
@@ -140,6 +141,6 @@ class TracerAction extends MapMode implements MouseListener, KeyListener {
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        Main.map.mapView.setCursor(m_modules.getActiveModule().getCursor());
+        MainApplication.getMap().mapView.setCursor(m_modules.getActiveModule().getCursor());
     }
 }
