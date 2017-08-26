@@ -19,7 +19,7 @@
 
 package org.openstreetmap.josm.plugins.tracer;
 
-import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MainMenu;
 import org.openstreetmap.josm.gui.preferences.PreferenceSetting;
 import org.openstreetmap.josm.plugins.Plugin;
@@ -29,7 +29,7 @@ public class TracerPlugin extends Plugin {
 
     public TracerPlugin(PluginInformation info) {
         super(info);
-        MainMenu.add(Main.main.menu.moreToolsMenu, new TracerAction());
+        MainMenu.add(MainApplication.getMenu().moreToolsMenu, new TracerAction());
     }
 
     @Override
