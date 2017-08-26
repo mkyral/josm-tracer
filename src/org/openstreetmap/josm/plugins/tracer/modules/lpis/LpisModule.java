@@ -25,11 +25,11 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.openstreetmap.josm.Main;
-import org.openstreetmap.josm.actions.search.SearchCompiler;
-import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
-import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.data.osm.search.SearchCompiler;
+import org.openstreetmap.josm.data.osm.search.SearchCompiler.Match;
+import org.openstreetmap.josm.data.osm.search.SearchParseError;
 import org.openstreetmap.josm.plugins.tracer.CombineTagsResolver;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
@@ -89,7 +89,7 @@ public final class LpisModule extends TracerModule  {
             m_mergeLanduseWayMatch = m_clipLanduseWayMatch; // use the same
             m_retraceAreaMatch = SearchCompiler.compile(retraceAreaPattern);
         }
-        catch (ParseError e) {
+        catch (SearchParseError e) {
             throw new AssertionError(tr("Unable to compile pattern"));
         }
     }

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Tracer-testing" default="dist" basedir=".">
     <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Tracer-testing - fix NoSuchMethodError in tags conflict resolver"/>
+    <property name="commit.message" value="Tracer-testing - move SearchCompiler from actions.search to data.osm.search"/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
-    <property name="plugin.main.version" value="11772"/>
+    <property name="plugin.main.version" value="12656"/>
     <property name="plugin.canloadatruntime" value="true"/>
 
     <property name="plugin.author" value="Jan Bilak, Petr Dlouhý, Marián Kyral, Martin Švec"/>

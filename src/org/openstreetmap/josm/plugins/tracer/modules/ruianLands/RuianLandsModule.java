@@ -21,10 +21,10 @@ package org.openstreetmap.josm.plugins.tracer.modules.ruianLands;
 import java.awt.Cursor;
 import java.util.*;
 
-import org.openstreetmap.josm.actions.search.SearchCompiler;
-import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
-import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.search.SearchCompiler;
+import org.openstreetmap.josm.data.osm.search.SearchCompiler.Match;
+import org.openstreetmap.josm.data.osm.search.SearchParseError;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerPreferences;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
@@ -63,7 +63,7 @@ public final class RuianLandsModule extends TracerModule {
             m_mergeLanduseWayMatch = m_clipLanduseWayMatch; // use the same
             m_retraceLandsAreaMatch = SearchCompiler.compile(retraceLandsAreaPattern);
         }
-        catch (ParseError e) {
+        catch (SearchParseError e) {
             throw new AssertionError(tr("Unable to compile landuse pattern"));
         }
     }
@@ -76,7 +76,7 @@ public final class RuianLandsModule extends TracerModule {
         try {
             m_clipGardenWayMatch = SearchCompiler.compile(reuseExistingGardenWayPattern);
         }
-        catch (ParseError e) {
+        catch (SearchParseError e) {
             throw new AssertionError(tr("Unable to compile garden pattern"));
         }
     }
@@ -99,7 +99,7 @@ public final class RuianLandsModule extends TracerModule {
             m_mergeBuildingWayMatch = m_clipBuildingWayMatch; // use the same
             m_retraceBuildingAreaMatch = SearchCompiler.compile(retraceBuildingAreaPattern);
         }
-        catch (ParseError e) {
+        catch (SearchParseError e) {
             throw new AssertionError(tr("Unable to compile building pattern"));
         }
     }

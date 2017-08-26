@@ -22,8 +22,9 @@ package org.openstreetmap.josm.plugins.tracer.modules.building;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import org.openstreetmap.josm.actions.search.SearchCompiler;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.data.osm.search.SearchCompiler;
+import org.openstreetmap.josm.data.osm.search.SearchParseError;
 import org.openstreetmap.josm.plugins.tracer.CombineTagsResolver;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.connectways.AreaBoundaryWayNodePredicate;
@@ -86,7 +87,7 @@ public abstract class BuildingTracerModule extends TracerModule {
             m_retraceAreaMatch = SearchCompiler.compile(retraceAreaPattern);
             m_ruianSourceMatch = SearchCompiler.compile(ruianSourcePattern);
         }
-        catch (SearchCompiler.ParseError e) {
+        catch (SearchParseError e) {
             throw new AssertionError(tr("Unable to compile pattern"));
         }
     }

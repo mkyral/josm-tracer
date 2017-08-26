@@ -20,7 +20,7 @@
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import java.util.List;
-import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
+import org.openstreetmap.josm.data.osm.search.SearchCompiler.Match;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;

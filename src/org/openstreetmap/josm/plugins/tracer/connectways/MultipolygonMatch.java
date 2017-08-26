@@ -21,10 +21,10 @@ package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import static org.openstreetmap.josm.tools.I18n.*;
 
-import org.openstreetmap.josm.actions.search.SearchCompiler;
-import org.openstreetmap.josm.actions.search.SearchCompiler.ParseError;
-import org.openstreetmap.josm.actions.search.SearchCompiler.Match;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.data.osm.search.SearchCompiler;
+import org.openstreetmap.josm.data.osm.search.SearchCompiler.Match;
+import org.openstreetmap.josm.data.osm.search.SearchParseError;
 
 public final class MultipolygonMatch {
     private static volatile Match m_multipolygonMatch;
@@ -33,7 +33,7 @@ public final class MultipolygonMatch {
         try {
             m_multipolygonMatch = SearchCompiler.compile("type=multipolygon");
         }
-        catch (ParseError e) {
+        catch (SearchParseError e) {
             throw new AssertionError(tr("Unable to compile pattern"));
         }
     }
