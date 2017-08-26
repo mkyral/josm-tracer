@@ -152,7 +152,7 @@ public class WayEditor {
             throw new IllegalArgumentException(tr("Cannot use Relation from with a different/null DataSet"));
         if (!rel.isUsable() || rel.hasIncompleteMembers())
             throw new IllegalArgumentException(tr("Cannot edit unusable/incomplete Relation"));
-        if (!MultipolygonMatch.match(rel))
+        if (!rel.isMultipolygon())
             throw new IllegalArgumentException(tr("Relation is not a multipolygon"));
 
         EdMultipolygon emp = m_originalMultipolygons.get(rel.getUniqueId());
@@ -625,7 +625,7 @@ public class WayEditor {
             List<Relation> relations = OsmPrimitive.getFilteredList(w.getReferrers(), Relation.class);
             boolean is_member_of_any_multipolygon = false;
             for (Relation rel: relations) {
-                if (MultipolygonMatch.match(rel)) {
+                if (rel.isMultipolygon()) {
                     is_member_of_any_multipolygon = true;
                     break;
                 }
@@ -669,7 +669,7 @@ public class WayEditor {
             // don't resurrect explicitly deleted nodes and nodes that were originally tagged
             if (dn.isDeleted() || dnorig.isTagged())
                 continue;
-            
+
             for (EdNode an: add_nodes) {
                 double dist = dnorig.getCoor().greatCircleDistance(an.getCoor());
                 if (dist > resurrect_dist)

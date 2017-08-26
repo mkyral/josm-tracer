@@ -355,6 +355,12 @@ public final class LpisModule extends TracerModule  {
                 old_keys.put("landuse", new_keys.get("landuse"));
             }
 
+            // Allow only type=multipolygon key
+            if (old_keys.containsKey("type") &&
+                !old_keys.get("type").equals("multipolygon")) {
+                old_keys.remove("type");
+            }
+
             // merge missing keys to avoid resolution dialog when there're no collisions
             for (Map.Entry<String, String> tag: old_keys.entrySet()) {
                 if (!new_keys.containsKey(tag.getKey()))

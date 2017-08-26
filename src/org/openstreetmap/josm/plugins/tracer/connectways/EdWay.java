@@ -144,7 +144,7 @@ public class EdWay extends EdObject {
         old.removeRef(this);
         ednode.addRef(this);
     }
-    
+
     public int getNodesCount() {
         return m_nodes.size();
     }
@@ -557,7 +557,7 @@ public class EdWay extends EdObject {
 
         List<Relation> relations = this.getExternalReferrers(Relation.class);
         for (Relation rel: relations)
-            if (MultipolygonMatch.match(rel))
+            if (rel.isMultipolygon())
                 return true;
 
         return false;
