@@ -374,7 +374,7 @@ public abstract class TracerModule {
 
                     long start_time = System.nanoTime();
 
-                    Main.main.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
+                    MainApplication.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
 
                     OsmPrimitive sel = null;
 
