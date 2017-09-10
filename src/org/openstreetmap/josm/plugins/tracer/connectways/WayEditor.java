@@ -445,7 +445,7 @@ public class WayEditor {
 
         // commands to add new nodes
         for (EdNode n: add_nodes)
-            cmds.add(new AddCommand(n.finalNode()));
+            cmds.add(new AddCommand(m_dataSet, n.finalNode()));
 
         // commands to change original nodes
         for (EdNode n: change_nodes)
@@ -453,7 +453,7 @@ public class WayEditor {
 
         // commands to add new ways
         for (EdWay w: add_ways) {
-            cmds.add(new AddCommand(w.finalWay()));
+            cmds.add(new AddCommand(m_dataSet, w.finalWay()));
             System.out.println(" - add way: " + Long.toString(w.getUniqueId()));
         }
 
@@ -466,7 +466,7 @@ public class WayEditor {
         // multipolygon commands
         for (EdMultipolygon emp: m_multipolygons) {
             if (!emp.hasOriginal() && !emp.isDeleted()) {
-                cmds.add(new AddCommand(emp.finalMultipolygon()));
+                cmds.add(new AddCommand(m_dataSet, emp.finalMultipolygon()));
                 System.out.println(" - add multipolygon: " + Long.toString(emp.getUniqueId()));
             }
             else if (emp.hasOriginal() && !emp.isDeleted() && emp.isModified()) {
