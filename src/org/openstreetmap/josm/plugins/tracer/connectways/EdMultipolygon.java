@@ -25,13 +25,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.CreateMultipolygonAction;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
+import org.openstreetmap.josm.spi.preferences.Config;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 
@@ -486,7 +486,7 @@ public class EdMultipolygon extends EdObject {
         }
 
         // filter out empty key conflicts - we need second iteration
-        if (!Main.pref.getBoolean("multipoly.alltags", false))
+        if (!Config.getPref().getBoolean("multipoly.alltags", false))
             for (EdWay way: outerWays())
                 for (String key : values.keySet())
                     if (!way.hasKey(key) && !this.hasKey(key))
@@ -495,7 +495,7 @@ public class EdMultipolygon extends EdObject {
         for (String key : conflicting_keys)
             values.remove(key);
 
-        for (String linear_tag : Main.pref.getCollection("multipoly.lineartagstokeep", Arrays.asList(new String[] {"barrier", "source"})))
+        for (String linear_tag : Config.getPref().getList("multipoly.lineartagstokeep", Arrays.asList(new String[] {"barrier", "source"})))
             values.remove(linear_tag);
 
         if ("coastline".equals(values.get("natural")))
@@ -503,7 +503,7 @@ public class EdMultipolygon extends EdObject {
 
         values.put("area", "yes");
 
-        boolean move_tags = Main.pref.getBoolean("multipoly.movetags", true);
+        boolean move_tags = Config.getPref().getBoolean("multipoly.movetags", true);
 
         for (Map.Entry<String, String> entry : values.entrySet()) {
             String key = entry.getKey();

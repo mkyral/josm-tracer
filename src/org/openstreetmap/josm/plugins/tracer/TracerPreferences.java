@@ -26,9 +26,9 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.LinkedList;
 
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.gui.preferences.DefaultTabPreferenceSetting;
 import org.openstreetmap.josm.gui.preferences.PreferenceTabbedPane;
+import org.openstreetmap.josm.spi.preferences.Config;
 
 
 public class TracerPreferences extends DefaultTabPreferenceSetting {
@@ -145,30 +145,30 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
         initComponents();
 
         // Enabled modules
-        for (String s : Main.pref.getCollection (KEY_MODULESAVAILABLE)) {
+        for (String s : Config.getPref().getList (KEY_MODULESAVAILABLE)) {
           m_modulesAvailableModel.addElement(s);
         }
 
-        for (String s : Main.pref.getCollection (KEY_MODULESENABLED)) {
+        for (String s : Config.getPref().getList (KEY_MODULESENABLED)) {
           m_modulesEnabledModel.addElement(s);
         }
 
         // Tracer
-        m_customTracerUrl             = Main.pref.getBoolean(KEY_TRACERURL,         TracerUrlCheckBox.isSelected());
-        m_customTracerUrlText         = Main.pref.get       (KEY_TRACERURLVALUE,    TracerUrlValueField.getText());
-        m_tracerAdjustPosition        = Main.pref.getBoolean(KEY_TRACERADJUSTPOSITION,    TracerAdjustCheckBox.isSelected());
-        m_tracerAdjustPositionLatSign = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLATSIGN, TracerLatSignComboBox.getSelectedIndex());
-        m_tracerAdjustPositionLonSign = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLONSIGN, TracerLonSignComboBox.getSelectedIndex());
-        m_tracerAdjustPositionLatVal  = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLAT, (Integer) TracerAdjustLatSpinner.getValue());
-        m_tracerAdjustPositionLonVal  = Main.pref.getInteger(KEY_TRACERADJUSTPOSITIONLON, (Integer) TracerAdjustLonSpinner.getValue());
+        m_customTracerUrl             = Config.getPref().getBoolean(KEY_TRACERURL,         TracerUrlCheckBox.isSelected());
+        m_customTracerUrlText         = Config.getPref().get       (KEY_TRACERURLVALUE,    TracerUrlValueField.getText());
+        m_tracerAdjustPosition        = Config.getPref().getBoolean(KEY_TRACERADJUSTPOSITION,    TracerAdjustCheckBox.isSelected());
+        m_tracerAdjustPositionLatSign = Config.getPref().getInt(KEY_TRACERADJUSTPOSITIONLATSIGN, TracerLatSignComboBox.getSelectedIndex());
+        m_tracerAdjustPositionLonSign = Config.getPref().getInt(KEY_TRACERADJUSTPOSITIONLONSIGN, TracerLonSignComboBox.getSelectedIndex());
+        m_tracerAdjustPositionLatVal  = Config.getPref().getInt(KEY_TRACERADJUSTPOSITIONLAT, (Integer) TracerAdjustLatSpinner.getValue());
+        m_tracerAdjustPositionLonVal  = Config.getPref().getInt(KEY_TRACERADJUSTPOSITIONLON, (Integer) TracerAdjustLonSpinner.getValue());
         // RUIAN
-        m_customRuianUrl             = Main.pref.getBoolean(KEY_RUIANURL,          RuianUrlCheckBox.isSelected());
-        m_customRuianUrlText         = Main.pref.get       (KEY_RUIANURLVALUE,     RuianUrlValueField.getText());
-        m_ruianAdjustPosition        = Main.pref.getBoolean(KEY_RUIANADJUSTPOSITION,    RuianAdjustCheckBox.isSelected());
-        m_ruianAdjustPositionLatSign = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLATSIGN, RuianLatSignComboBox.getSelectedIndex());
-        m_ruianAdjustPositionLonSign = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLONSIGN, RuianLonSignComboBox.getSelectedIndex());
-        m_ruianAdjustPositionLatVal  = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLAT, (Integer) RuianAdjustLatSpinner.getValue());
-        m_ruianAdjustPositionLonVal  = Main.pref.getInteger(KEY_RUIANADJUSTPOSITIONLON, (Integer) RuianAdjustLonSpinner.getValue());
+        m_customRuianUrl             = Config.getPref().getBoolean(KEY_RUIANURL,          RuianUrlCheckBox.isSelected());
+        m_customRuianUrlText         = Config.getPref().get       (KEY_RUIANURLVALUE,     RuianUrlValueField.getText());
+        m_ruianAdjustPosition        = Config.getPref().getBoolean(KEY_RUIANADJUSTPOSITION,    RuianAdjustCheckBox.isSelected());
+        m_ruianAdjustPositionLatSign = Config.getPref().getInt(KEY_RUIANADJUSTPOSITIONLATSIGN, RuianLatSignComboBox.getSelectedIndex());
+        m_ruianAdjustPositionLonSign = Config.getPref().getInt(KEY_RUIANADJUSTPOSITIONLONSIGN, RuianLonSignComboBox.getSelectedIndex());
+        m_ruianAdjustPositionLatVal  = Config.getPref().getInt(KEY_RUIANADJUSTPOSITIONLAT, (Integer) RuianAdjustLatSpinner.getValue());
+        m_ruianAdjustPositionLonVal  = Config.getPref().getInt(KEY_RUIANADJUSTPOSITIONLON, (Integer) RuianAdjustLonSpinner.getValue());
         setLatLonAdjust();
     }
 
@@ -887,52 +887,52 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
           enabledModules.add(e.nextElement());
         }
 
-        Main.pref.putCollection(KEY_MODULESAVAILABLE, availableModules);
-        Main.pref.putCollection(KEY_MODULESENABLED, enabledModules);
+        Config.getPref().putList(KEY_MODULESAVAILABLE, availableModules);
+        Config.getPref().putList(KEY_MODULESENABLED, enabledModules);
 
         // Tracer
         m_customTracerUrl = TracerUrlCheckBox.isSelected();
-        Main.pref.put(KEY_TRACERURL, m_customTracerUrl);
+        Config.getPref().putBoolean(KEY_TRACERURL, m_customTracerUrl);
 
         m_customTracerUrlText = TracerUrlValueField.getText();
-        Main.pref.put(KEY_TRACERURLVALUE, m_customTracerUrlText);
+        Config.getPref().put(KEY_TRACERURLVALUE, m_customTracerUrlText);
 
         m_tracerAdjustPosition = TracerAdjustCheckBox.isSelected();
-        Main.pref.put(KEY_TRACERADJUSTPOSITION, m_tracerAdjustPosition);
+        Config.getPref().putBoolean(KEY_TRACERADJUSTPOSITION, m_tracerAdjustPosition);
 
         m_tracerAdjustPositionLatVal = (Integer) TracerAdjustLatSpinner.getValue();
-        Main.pref.put(KEY_TRACERADJUSTPOSITIONLAT, Integer.toString(m_tracerAdjustPositionLatVal));
+        Config.getPref().put(KEY_TRACERADJUSTPOSITIONLAT, Integer.toString(m_tracerAdjustPositionLatVal));
 
         m_tracerAdjustPositionLonVal = (Integer) TracerAdjustLonSpinner.getValue();
-        Main.pref.put(KEY_TRACERADJUSTPOSITIONLON, Integer.toString(m_tracerAdjustPositionLonVal));
+        Config.getPref().put(KEY_TRACERADJUSTPOSITIONLON, Integer.toString(m_tracerAdjustPositionLonVal));
 
         m_tracerAdjustPositionLatSign = TracerLatSignComboBox.getSelectedIndex();
-        Main.pref.putInteger(KEY_TRACERADJUSTPOSITIONLATSIGN, m_tracerAdjustPositionLatSign);
+        Config.getPref().putInt(KEY_TRACERADJUSTPOSITIONLATSIGN, m_tracerAdjustPositionLatSign);
 
         m_tracerAdjustPositionLonSign = TracerLonSignComboBox.getSelectedIndex();
-        Main.pref.putInteger(KEY_TRACERADJUSTPOSITIONLONSIGN, m_tracerAdjustPositionLonSign);
+        Config.getPref().putInt(KEY_TRACERADJUSTPOSITIONLONSIGN, m_tracerAdjustPositionLonSign);
 
         // RUIAN
         m_customRuianUrl = RuianUrlCheckBox.isSelected();
-        Main.pref.put(KEY_RUIANURL, m_customRuianUrl);
+        Config.getPref().putBoolean(KEY_RUIANURL, m_customRuianUrl);
 
         m_customRuianUrlText = RuianUrlValueField.getText();
-        Main.pref.put(KEY_RUIANURLVALUE, m_customRuianUrlText);
+        Config.getPref().put(KEY_RUIANURLVALUE, m_customRuianUrlText);
 
         m_ruianAdjustPosition = RuianAdjustCheckBox.isSelected();
-        Main.pref.put(KEY_RUIANADJUSTPOSITION, m_ruianAdjustPosition);
+        Config.getPref().putBoolean(KEY_RUIANADJUSTPOSITION, m_ruianAdjustPosition);
 
         m_ruianAdjustPositionLatVal = (Integer) RuianAdjustLatSpinner.getValue();
-        Main.pref.put(KEY_RUIANADJUSTPOSITIONLAT, Integer.toString(m_ruianAdjustPositionLatVal));
+        Config.getPref().put(KEY_RUIANADJUSTPOSITIONLAT, Integer.toString(m_ruianAdjustPositionLatVal));
 
         m_ruianAdjustPositionLonVal = (Integer) RuianAdjustLonSpinner.getValue();
-        Main.pref.put(KEY_RUIANADJUSTPOSITIONLON, Integer.toString(m_ruianAdjustPositionLonVal));
+        Config.getPref().put(KEY_RUIANADJUSTPOSITIONLON, Integer.toString(m_ruianAdjustPositionLonVal));
 
         m_ruianAdjustPositionLatSign = RuianLatSignComboBox.getSelectedIndex();
-        Main.pref.putInteger(KEY_RUIANADJUSTPOSITIONLATSIGN, m_ruianAdjustPositionLatSign);
+        Config.getPref().putInt(KEY_RUIANADJUSTPOSITIONLATSIGN, m_ruianAdjustPositionLatSign);
 
         m_ruianAdjustPositionLonSign = RuianLonSignComboBox.getSelectedIndex();
-        Main.pref.putInteger(KEY_RUIANADJUSTPOSITIONLONSIGN, m_ruianAdjustPositionLonSign);
+        Config.getPref().putInt(KEY_RUIANADJUSTPOSITIONLONSIGN, m_ruianAdjustPositionLonSign);
 
         setLatLonAdjust();
 

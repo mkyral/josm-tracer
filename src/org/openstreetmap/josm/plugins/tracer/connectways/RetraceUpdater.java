@@ -21,8 +21,8 @@ package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import java.util.List;
 import java.util.Set;
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.plugins.tracer.PostTraceNotifications;
+import org.openstreetmap.josm.spi.preferences.Config;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 public class RetraceUpdater {
@@ -97,7 +97,7 @@ public class RetraceUpdater {
             return null;
 
         // try to convert old-style multipolygon to new-style
-        if (m_convertOldStyleMultipolygons && retrace_multipolygon.containsTaggedWays() && Main.pref.getBoolean("multipoly.movetags", true))
+        if (m_convertOldStyleMultipolygons && retrace_multipolygon.containsTaggedWays() && Config.getPref().getBoolean("multipoly.movetags", true))
             retrace_multipolygon.removeTagsFromWaysIfNeeded();
 
         // agressive retrace of multipolygon with untagged ways

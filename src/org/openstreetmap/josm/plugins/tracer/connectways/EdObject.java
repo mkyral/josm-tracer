@@ -28,12 +28,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.CreateMultipolygonAction;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.search.SearchCompiler.Match;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
+import org.openstreetmap.josm.spi.preferences.Config;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 
@@ -366,7 +366,7 @@ public abstract class EdObject {
 
         Map<String, String> values = src.getKeys();
 
-        for (String linear_tag: Main.pref.getCollection("multipoly.lineartagstokeep", Arrays.asList(new String[] {"barrier", "source"})))
+        for (String linear_tag: Config.getPref().getList("multipoly.lineartagstokeep", Arrays.asList(new String[] {"barrier", "source"})))
             values.remove(linear_tag);
 
         if ("coastline".equals(values.get("natural")))

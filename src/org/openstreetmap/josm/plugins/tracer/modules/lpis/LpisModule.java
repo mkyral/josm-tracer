@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.search.SearchCompiler;
@@ -34,6 +33,8 @@ import org.openstreetmap.josm.plugins.tracer.CombineTagsResolver;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
+import org.openstreetmap.josm.spi.preferences.Config;
+
 
 // import org.openstreetmap.josm.plugins.tracer.modules.lpis.LpisRecord;
 
@@ -47,7 +48,7 @@ public final class LpisModule extends TracerModule  {
     private static final ExecutorService m_downloadExecutor;
 
     static {
-        int threads = Main.pref.getInteger("tracer.lpis.download_threads", 4);
+        int threads = Config.getPref().getInt("tracer.lpis.download_threads", 4);
         if (threads > 0) {
             if (threads > 20) // avoid stupid values
                 threads = 20;

@@ -25,6 +25,7 @@ import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.projection.Ellipsoid;
+import org.openstreetmap.josm.spi.preferences.Config;
 import org.openstreetmap.josm.tools.Geometry;
 
 public abstract class GeomUtils {
@@ -180,7 +181,7 @@ public abstract class GeomUtils {
     }
 
     public static double duplicateNodesPrecision() {
-        return Main.pref.getDouble("validator.duplicatenodes.precision", 0.0);
+        return Config.getPref().getDouble("validator.duplicatenodes.precision", 0.0);
     }
 
     public static double getMetersPerDegreeOfLatitude (LatLon ll) {
