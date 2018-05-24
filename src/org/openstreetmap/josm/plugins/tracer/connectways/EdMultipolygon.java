@@ -182,12 +182,12 @@ public class EdMultipolygon extends EdObject {
     }
 
     public Relation finalMultipolygon() {
-        checkNotDeleted();
+//         checkNotDeleted();
         if (isFinalized())
             return m_relation;
 
         setFinalized();
-        if (hasOriginal() && !isModified()) {
+        if (hasOriginal() && (!isModified() || isDeleted())) {
             m_relation = originalMultipolygon();
         }
         else {

@@ -357,7 +357,7 @@ public abstract class EdObject {
     }
 
     public long getUniqueId() {
-        checkNotDeleted();
+//         checkNotDeleted();
         return currentPrimitive().getUniqueId();
     }
 

@@ -20,6 +20,7 @@
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.openstreetmap.josm.plugins.tracer.PostTraceNotifications;
 import org.openstreetmap.josm.spi.preferences.Config;
@@ -78,6 +79,26 @@ public class RetraceUpdater {
             EdObject res = updateRetracedMultipolygons(new_multipolygon, retrace_multipolygon);
             if (res != null)
                 return res;
+        }
+
+        // Multipolygon -> Simple way
+        // - Move all non-linear tags from multipolygon to way
+        // - Use retraced way instead of outer way
+        // - Remove inner ways from existing multipolygon and delete untaged ways
+        // - Remove existing multipolygon
+        if (retrace_object.isMultipolygon() && new_is_way) {
+            EdMultipolygon retrace_multipolygon = (EdMultipolygon)retrace_object;
+            EdWay way = (EdWay)new_object;
+            EdWay outer_way = retrace_multipolygon.outerWays().get(0);
+            outer_way.setNodes(way.getNodes());
+            way=outer_way;
+            Map<String,String> keys = retrace_multipolygon.getKeys();
+            keys.remove("type");
+            way.setKeys(keys);
+            retrace_multipolygon.removeAllWays();
+            retrace_multipolygon.deleteShallow();
+
+            return way;
         }
 
         m_postTraceNotifications.add(tr("This kind of multipolygon retrace is not supported."));
