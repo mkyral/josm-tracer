@@ -50,6 +50,9 @@ public class LpisServer {
      * Call Trace server.
      * @param urlString Input parameters.
      * @return Result text.
+     * @throws java.net.MalformedURLException Wrong url
+     * @throws java.io.UnsupportedEncodingException Unsuported encoding
+     * @throws java.io.IOException Input/Output issue
      */
     private String callServer(String urlString) throws MalformedURLException, UnsupportedEncodingException, IOException {
         try (BufferedReader reader = TracerUtils.openUrlStream (urlString, "UTF-8")) {
@@ -67,12 +70,11 @@ public class LpisServer {
     /**
      * Get element ID and geometry of the land on the position.
      * @param pos Position of the land.
-     * @param url LPIS WFS service URL
      * @return Land ID and geometry.
-     * @throws java.io.UnsupportedEncodingException
-     * @throws javax.xml.parsers.ParserConfigurationException
-     * @throws org.xml.sax.SAXException
-     * @throws javax.xml.xpath.XPathExpressionException
+     * @throws java.io.UnsupportedEncodingException Unsuported encoding
+     * @throws javax.xml.parsers.ParserConfigurationException Parser Configuration Exception
+     * @throws org.xml.sax.SAXException Incorrect xml structure
+     * @throws javax.xml.xpath.XPathExpressionException Wrong XPath Expression
      */
     public LpisRecord getRecord (LatLon pos) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
 

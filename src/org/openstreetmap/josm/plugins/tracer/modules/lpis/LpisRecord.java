@@ -50,7 +50,8 @@ public final class LpisRecord extends TracerRecord {
 
     /**
     * Constructor
-    *
+    * @param adjlat Value for Latitude adjusting
+    * @param adjlon Value for Longitude adjusting
     */
     public LpisRecord (double adjlat, double adjlon) {
         super (adjlat, adjlon);
@@ -167,10 +168,10 @@ public final class LpisRecord extends TracerRecord {
     *   - extra - get type (landuse) of the element
     *  @param action - basic or extra
     *  @param xmlStr - data for parsing
-     * @throws javax.xml.parsers.ParserConfigurationException
-     * @throws org.xml.sax.SAXException
-     * @throws java.io.IOException
-     * @throws javax.xml.xpath.XPathExpressionException
+     * @throws javax.xml.parsers.ParserConfigurationException Parser Configuration Exception
+     * @throws org.xml.sax.SAXException Incorrect xml structure
+     * @throws java.io.IOException Input/Output issue
+     * @throws javax.xml.xpath.XPathExpressionException Wrong XPath Expression
     *
     */
     public void parseXML (String action, String xmlStr) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {

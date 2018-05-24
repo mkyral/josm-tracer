@@ -105,6 +105,10 @@ public abstract class TracerModule {
     /**
      *  Returns a tracer task that extracts the object for given position
      *  @param pos position to trase
+     *  @param ctrl the Control key status On/Off
+     *  @param alt  the Alt key status On/Off
+     *  @param shift the Shift key status On/Off
+     *  @return tracer task
      */
     public abstract AbstractTracerTask trace(LatLon pos, boolean ctrl, boolean alt, boolean shift);
 

@@ -35,6 +35,8 @@ public final class RuianServer {
      *
      * @param urlString Input parameters.
      * @return Result text.
+     * @throws java.net.MalformedURLException Wrong url
+     * @throws java.io.IOException Input/Output issue
      */
     private String callServer(String urlString) throws MalformedURLException, IOException {
         try (BufferedReader reader = TracerUtils.openUrlStream (urlString)) {
@@ -58,7 +60,7 @@ public final class RuianServer {
      * @param adjlat Latitude correction to be applied to building geometry.
      * @param adjlon Longitude correction to be applied to building geometry.
      * @return Building data.
-     * @throws java.io.IOException
+     * @throws java.io.IOException Input/Output issue
      */
     public RuianRecord trace(LatLon pos, String url, double adjlat, double adjlon) throws IOException {
         String call_url = url + "/ruian-buildings/?req=full&lat=" + pos.lat() + "&lon=" + pos.lon();

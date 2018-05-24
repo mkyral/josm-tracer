@@ -780,6 +780,7 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
 
     /**
      *  Return whether is given module enabled
+     *  @param  module module name
      *  @return True if module is enabled
      */
     public boolean isModuleEnabled(String module) {

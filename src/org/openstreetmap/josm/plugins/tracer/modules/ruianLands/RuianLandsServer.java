@@ -36,6 +36,8 @@ public class RuianLandsServer {
      * Call Trace server.
      * @param urlString Input parameters.
      * @return Result text.
+     * @throws java.net.MalformedURLException Wrong url
+     * @throws java.io.IOException Input/Output issue
      */
     private String callServer(String urlString) throws MalformedURLException, IOException {
         try (BufferedReader reader = TracerUtils.openUrlStream (urlString)) {

@@ -11,10 +11,13 @@
     <property name="plugin.description" value="This is an testing version of the improved original Tracer plugin developed at https://github.com/mkyral/josm-tracer"/>
     <property name="plugin.icon" value="images/mapmode/tracer-sml.png"/>
     <property name="plugin.link" value="http://wiki.openstreetmap.org/wiki/JOSM/Plugins/Tracer"/>
-    <property name="plugin.requires" value="jts;geotools"/>
 
     <!-- ** include targets that all plugins have in common ** -->
     <import file="./build-common.xml.testing"/>
+
+    <property name="plugin.requires" value="jts;geotools"/>
+    <property name="jts" location="${plugin.dist.dir}/jts.jar"/>
+    <property name="geotools" location="${plugin.dist.dir}/geotools.jar"/>
 
     <target name="my-init-git-revision-xml" unless="skip-revision">
         <exec append="false" output="REVISION.XML" executable="git" failifexecutionfails="false" resultproperty="git.info.result">
