@@ -232,11 +232,11 @@ public final class LpisModule extends TracerModule  {
                     return null;
                 }
 
-                // TODO - allows update of Multipolygons tags
-                if (!retrace_object.isWay() || retrace_object.hasReferrers()) {
-                    postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
-                    return null;
-                }
+//                 // TODO - allows update of Multipolygons tags
+//                 if (!retrace_object.isWay() || retrace_object.hasReferrers()) {
+//                     postTraceNotifications().add(tr("Multipolygon retrace is not supported yet."));
+//                     return null;
+//                 }
 
                 // Tag object
                 if (!tagTracedObject(retrace_object))
