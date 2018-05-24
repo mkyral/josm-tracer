@@ -39,6 +39,7 @@ public class RetraceUpdater {
     public EdObject updateRetracedObjects(EdObject new_object, EdObject retrace_object) {
 
         boolean retrace_is_simple_way = retrace_object.isWay() && !retrace_object.hasReferrers();
+        boolean retrace_is_inner_way = retrace_object.isWay() && retrace_object.hasReferrers();
         boolean new_is_way = new_object.isWay();
         boolean new_is_multipolygon = new_object.isMultipolygon();
 
@@ -50,7 +51,7 @@ public class RetraceUpdater {
         }
 
         // Simple way -> Simple way
-        if (retrace_is_simple_way && new_is_way) {
+        if ((retrace_is_simple_way || retrace_is_inner_way ) && new_is_way) {
             EdWay outer_way = (EdWay) new_object;
             EdWay retrace_way = (EdWay) retrace_object;
             retrace_way.setNodes(outer_way.getNodes());
@@ -60,7 +61,7 @@ public class RetraceUpdater {
 
         // Simple way -> Multipolygon
         // Move all non-linear tags from way to multipolygon, use retraced way as outer way of the new multipolygon
-        if (retrace_is_simple_way && new_is_multipolygon) {
+        if ((retrace_is_simple_way || retrace_is_inner_way ) && new_is_multipolygon) {
             EdWay retrace_way = (EdWay) retrace_object;
             EdMultipolygon multipolygon = (EdMultipolygon)new_object;
             multipolygon.moveAllNonLinearTagsFrom(retrace_way);
