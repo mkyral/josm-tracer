@@ -71,7 +71,7 @@ public class ClipAreas {
         if (pred == null)
             return false;
         if (way.hasReferrers())
-            return false;        
+            return false;
         return pred.canSilentlyDiscard(way, cutoffs_percent);
     }
 
@@ -120,7 +120,8 @@ public class ClipAreas {
 
         // #### add support for multipolygons with non-closed ways
         if (subject_has_nonclosed_ways) {
-            addPostTraceNotification(tr("Ignoring multipolygon {0}, it contains non-closed ways.", subject_mp.getUniqueId()));
+            // addPostTraceNotification(tr("Ignoring multipolygon {0}, it contains non-closed ways.", subject_mp.getUniqueId()));
+            System.out.println("Ignoring multipolygon " + subject_mp.getUniqueId() + ", it contains non-closed ways.");
             return;
         }
 
