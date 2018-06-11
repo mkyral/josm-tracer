@@ -34,6 +34,8 @@ import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
+import org.openstreetmap.josm.data.osm.INode;
+import org.openstreetmap.josm.data.osm.IWay;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
@@ -202,7 +204,7 @@ public class WayEditor {
     Set<EdNode> findExistingNodesTouchingWaySegment(GeomDeviation tolerance, LatLonSize oversize, EdNode x, EdNode y, IEdNodePredicate filter) {
         Node nx = new Node(x.currentNodeUnsafe());
         Node ny = new Node(y.currentNodeUnsafe());
-        BBox bbox = new BBox (nx);
+        BBox bbox = new BBox ((INode) nx);
         bbox.addPrimitive (ny, 0);
         BBoxUtils.extendBBox(bbox, oversize);
 

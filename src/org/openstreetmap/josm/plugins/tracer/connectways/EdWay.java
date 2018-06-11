@@ -30,6 +30,8 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.osm.BBox;
+import org.openstreetmap.josm.data.osm.INode;
+import org.openstreetmap.josm.data.osm.IWay;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
@@ -241,7 +243,7 @@ public class EdWay extends EdObject {
         checkNotDeleted();
         if (isFinalized())
             return m_way.getBBox();
-        BBox bbox = new BBox(m_way);
+        BBox bbox = new BBox((IWay) m_way);
         for (EdNode n: m_nodes)
             bbox.add(n.getBBox());
         return bbox;
@@ -461,7 +463,7 @@ public class EdWay extends EdObject {
             final EdNode x = m_nodes.get(i);
             final EdNode y = m_nodes.get(i+1);
 
-            BBox seg_bbox = new BBox(x.currentNodeUnsafe());
+            BBox seg_bbox = new BBox((INode) x.currentNodeUnsafe());
             seg_bbox.add(y.getCoor());
             BBoxUtils.extendBBox(seg_bbox, oversize);
 
