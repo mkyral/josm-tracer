@@ -108,15 +108,18 @@ public class RetraceUpdater {
 
     private EdObject updateRetracedMultipolygons(EdMultipolygon new_multipolygon, EdMultipolygon retrace_multipolygon) {
 
-        // don't retrace non-standalone multipolygons
-        boolean retrace_is_standalone = !retrace_multipolygon.hasReferrers() && retrace_multipolygon.allWaysHaveSingleReferrer();
-        if (!retrace_is_standalone)
-            return null;
+//         // don't retrace non-standalone multipolygons
+//         boolean retrace_is_standalone = !retrace_multipolygon.hasReferrers() && retrace_multipolygon.allWaysHaveSingleReferrer();
+//         if (!retrace_is_standalone)
+//             return null;
 
         // don't retrace multipolygons with nonclosed ways
         boolean retrace_is_closed = !retrace_multipolygon.containsNonClosedWays();
-        if (!retrace_is_closed)
+        if (!retrace_is_closed) {
+            System.out.println("Multipolygon " + retrace_multipolygon.getUniqueId() + " contains non-closed ways.");
+            m_postTraceNotifications.add(tr("Multipolygon {0} contains non-closed ways.", retrace_multipolygon.getUniqueId()));
             return null;
+        }
 
         // try to convert old-style multipolygon to new-style
         if (m_convertOldStyleMultipolygons && retrace_multipolygon.containsTaggedWays() && Config.getPref().getBoolean("multipoly.movetags", true))
