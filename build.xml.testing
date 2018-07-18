@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Tracer-testing" default="dist" basedir=".">
     <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Tracer-testing - Replace depricated Preferences.* methods"/>
+    <property name="commit.message" value="Tracer-testing - adapt to changes introduced in r13927"/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
-    <property name="plugin.main.version" value="13910"/>
+    <property name="plugin.main.version" value="13927"/>
     <property name="plugin.canloadatruntime" value="true"/>
 
     <property name="plugin.author" value="Jan Bilak, Petr Dlouhý, Marián Kyral, Martin Švec"/>
