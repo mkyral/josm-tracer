@@ -21,6 +21,7 @@ package org.openstreetmap.josm.plugins.tracer;
 
 import java.util.concurrent.Future;
 import org.openstreetmap.josm.actions.downloadtasks.DownloadOsmTask;
+import org.openstreetmap.josm.actions.downloadtasks.DownloadParams;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.io.OsmServerReader;
@@ -28,13 +29,13 @@ import org.openstreetmap.josm.io.OsmServerReader;
 public final class DownloadOsmMissingAreaTask extends DownloadOsmTask {
 
     @Override
-    public Future<?> download(OsmServerReader reader, boolean newLayer, Bounds downloadArea, ProgressMonitor progressMonitor) {
-        return download(new DownloadMissingAreaTask(newLayer, reader, progressMonitor), downloadArea);
+    public Future<?> download(OsmServerReader reader, DownloadParams settings, Bounds downloadArea, ProgressMonitor progressMonitor) {
+        return download(new DownloadMissingAreaTask(settings, reader, progressMonitor), downloadArea);
     }
 
     protected class DownloadMissingAreaTask extends DownloadOsmTask.DownloadTask {
-        public DownloadMissingAreaTask(boolean newLayer, OsmServerReader reader, ProgressMonitor progressMonitor) {
-            super(newLayer, reader, progressMonitor, false); // do not center and scale to downloaded area
+        public DownloadMissingAreaTask(DownloadParams settings, OsmServerReader reader, ProgressMonitor progressMonitor) {
+            super(settings, reader, progressMonitor, false); // do not center and scale to downloaded area
         }
     }
 }

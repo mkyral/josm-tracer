@@ -27,6 +27,7 @@ import java.util.concurrent.Future;
 import javax.swing.JOptionPane;
 import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.downloadtasks.DownloadOsmTask;
+import org.openstreetmap.josm.actions.downloadtasks.DownloadParams;
 import org.openstreetmap.josm.command.Command;
 import org.openstreetmap.josm.command.SequenceCommand;
 import org.openstreetmap.josm.data.Bounds;
@@ -280,7 +281,7 @@ public abstract class TracerModule {
 
             // Schedule missing area download
             final DownloadOsmTask task = new DownloadOsmMissingAreaTask();
-            final Future<?> future = task.download(false, area, null);
+            final Future<?> future = task.download(new DownloadParams(), area, null);
             // Note: we don't start PostDownloadHandler after download because we're
             // not interested in download errors.
 
