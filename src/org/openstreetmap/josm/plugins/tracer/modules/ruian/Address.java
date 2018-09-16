@@ -18,7 +18,6 @@
 
 package org.openstreetmap.josm.plugins.tracer.modules.ruian;
 
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.tools.Utils;

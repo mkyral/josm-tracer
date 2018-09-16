@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
@@ -15,6 +14,7 @@ import org.openstreetmap.josm.data.osm.Tag;
 import org.openstreetmap.josm.data.osm.TagCollection;
 import org.openstreetmap.josm.gui.conflict.tags.CombinePrimitiveResolverDialog;
 import org.openstreetmap.josm.gui.conflict.tags.TagConflictResolutionUtil;
+import org.openstreetmap.josm.gui.MainApplication;
 
 import static org.openstreetmap.josm.tools.I18n.*;
 
@@ -86,7 +86,7 @@ public abstract class CombineTagsResolver {
         final Set<Relation> parentRelations = new HashSet<>();
 
         // Build conflict resolution dialog
-        final CombinePrimitiveResolverDialog dialog = new CombinePrimitiveResolverDialog (Main.parent);
+        final CombinePrimitiveResolverDialog dialog = new CombinePrimitiveResolverDialog (MainApplication.getMainFrame());
 
         dialog.getTagConflictResolverModel().populate(tagsToEdit, completeWayTags.getKeysWithMultipleValues());
         dialog.getRelationMemberConflictResolverModel().populate(parentRelations, primitives);

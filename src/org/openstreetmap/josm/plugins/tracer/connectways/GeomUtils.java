@@ -20,11 +20,11 @@
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import java.util.List;
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.projection.Ellipsoid;
+import org.openstreetmap.josm.data.projection.ProjectionRegistry;
 import org.openstreetmap.josm.spi.preferences.Config;
 import org.openstreetmap.josm.tools.Geometry;
 
@@ -121,7 +121,7 @@ public abstract class GeomUtils {
     public static double distanceToSegmentMeters(Node point, Node segp1, Node segp2) {
         EastNorth cp = Geometry.closestPointToSegment(
                 segp1.getEastNorth(), segp2.getEastNorth(), point.getEastNorth());
-        return point.getCoor().greatCircleDistance(Main.getProjection().eastNorth2latlon(cp));
+        return point.getCoor().greatCircleDistance(ProjectionRegistry.getProjection().eastNorth2latlon(cp));
     }
 
     /**
@@ -154,7 +154,7 @@ public abstract class GeomUtils {
         EastNorth ey = segp2.getEastNorth();
 
         EastNorth cp = Geometry.closestPointToSegment(ex, ey, ep);
-        double dev_distance_meters = point.getCoor().greatCircleDistance(Main.getProjection().eastNorth2latlon(cp));
+        double dev_distance_meters = point.getCoor().greatCircleDistance(ProjectionRegistry.getProjection().eastNorth2latlon(cp));
 
         double a1 = GeomUtils.unorientedAngleBetween(segp1, segp2, point);
         double a2 = GeomUtils.unorientedAngleBetween(segp2, segp1, point);

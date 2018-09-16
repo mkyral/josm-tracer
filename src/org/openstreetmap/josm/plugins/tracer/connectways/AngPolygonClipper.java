@@ -29,7 +29,7 @@ import java.util.Set;
 import org.openstreetmap.josm.data.Bounds;
 import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
-import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.projection.ProjectionRegistry;
 import org.openstreetmap.josm.plugins.tracer.clipper.ClipType;
 import org.openstreetmap.josm.plugins.tracer.clipper.Clipper;
 import org.openstreetmap.josm.plugins.tracer.clipper.ClipperException;
@@ -342,7 +342,7 @@ public class AngPolygonClipper {
         double x = ((double)pt.X) / fixedPointScale;
         double y = ((double)pt.Y) / fixedPointScale;
         EastNorth en = new EastNorth (x,y);
-        LatLon ll = Main.getProjection().eastNorth2latlon(en);
+        LatLon ll = ProjectionRegistry.getProjection().eastNorth2latlon(en);
 
         // lookup in LatLon map
         EdNode node = m_nodesMap.get(ll.getRoundedToOsmPrecision());

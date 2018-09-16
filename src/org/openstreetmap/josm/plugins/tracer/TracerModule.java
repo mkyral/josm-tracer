@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import javax.swing.JOptionPane;
-import org.openstreetmap.josm.Main;
 import org.openstreetmap.josm.actions.downloadtasks.DownloadOsmTask;
 import org.openstreetmap.josm.actions.downloadtasks.DownloadParams;
 import org.openstreetmap.josm.command.Command;
@@ -36,6 +35,7 @@ import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
+import org.openstreetmap.josm.data.UndoRedoHandler;
 import org.openstreetmap.josm.gui.ExtendedDialog;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
@@ -378,7 +378,7 @@ public abstract class TracerModule {
 
                     long start_time = System.nanoTime();
 
-                    MainApplication.undoRedo.add(new SequenceCommand(tr("Trace object"), commands));
+                    UndoRedoHandler.getInstance().add(new SequenceCommand(tr("Trace object"), commands));
 
                     OsmPrimitive sel = null;
 
@@ -430,7 +430,7 @@ public abstract class TracerModule {
 
         protected void wayIsOutsideDownloadedAreaDialog() {
             ExtendedDialog ed = new ExtendedDialog(
-                Main.parent, tr("Way is outside downloaded area"),
+                MainApplication.getMainFrame(), tr("Way is outside downloaded area"),
                 new String[] {tr("Ok")});
             ed.setButtonIcons(new String[] {"ok"});
             ed.setIcon(JOptionPane.ERROR_MESSAGE);

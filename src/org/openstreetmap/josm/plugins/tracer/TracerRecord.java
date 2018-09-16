@@ -33,7 +33,7 @@ import org.openstreetmap.josm.data.coor.EastNorth;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
-import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.projection.ProjectionRegistry;
 import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
 import org.openstreetmap.josm.plugins.tracer.connectways.BBoxUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdMultipolygon;
@@ -383,6 +383,6 @@ public abstract class TracerRecord implements IQuadCacheObject {
     }
 
     private EastNorth getEastNorth (LatLon latlon) {
-        return Main.getProjection().latlon2eastNorth(latlon);
+        return ProjectionRegistry.getProjection().latlon2eastNorth(latlon);
     }
 }
