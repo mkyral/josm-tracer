@@ -323,6 +323,16 @@ public abstract class BuildingTracerModule extends TracerModule {
                       )
                     )
                 new_keys.put("building", old_building_tag);
+            // replace residential if new tag is house
+            else if ("house".equals(new_building_tag) && "residential".equals(old_building_tag)) {
+                new_keys.put("building", old_building_tag);
+                // also replace building:ruian:type
+                if (old_keys.containsKey("building:ruian:type") &&
+                    new_keys.containsKey("building:ruian:type") &&
+                    (old_keys.get("building:ruian:type")).equals("3") &&
+                     new_keys.get("building:ruian:type").equals("7"))
+                    old_keys.put("building:ruian:type", new_keys.get("building:ruian:type"));
+                }
             // ... add other known conflicting building tags that should be resolved automatically
 
             // silently discard old source=cuzk:km or source=ruian or source=bing tags
