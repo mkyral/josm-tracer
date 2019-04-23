@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Tracer-testing" default="dist" basedir=".">
     <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Tracer-testing - Silently replace Residental by House"/>
+    <property name="commit.message" value="Tracer-testing - Replace deprecated functions"/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
-    <property name="plugin.main.version" value="14253"/>
+    <property name="plugin.main.version" value="14990"/>
     <property name="plugin.canloadatruntime" value="true"/>
 
     <property name="plugin.author" value="Jan Bilak, Petr Dlouhý, Marián Kyral, Martin Švec"/>

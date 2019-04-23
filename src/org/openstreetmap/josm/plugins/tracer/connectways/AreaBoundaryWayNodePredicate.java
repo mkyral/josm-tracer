@@ -19,12 +19,14 @@
 
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
+import java.util.ArrayList;
 import java.util.List;
-
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.data.osm.search.SearchCompiler.Match;
+import org.openstreetmap.josm.tools.Utils;
+
 
 public final class AreaBoundaryWayNodePredicate implements IEdNodePredicate {
 
@@ -52,7 +54,7 @@ public final class AreaBoundaryWayNodePredicate implements IEdNodePredicate {
 
     @Override
     public boolean evaluate(Node node) {
-        List<Way> ways = OsmPrimitive.getFilteredList(node.getReferrers(), Way.class);
+        List<Way> ways =  new ArrayList<>(Utils.filteredCollection(node.getReferrers(), Way.class));
         for (Way way: ways) {
             if (m_areaFilter.evaluate(way))
                 return true;

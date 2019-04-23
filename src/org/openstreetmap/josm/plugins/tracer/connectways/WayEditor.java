@@ -41,6 +41,7 @@ import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.tools.Geometry;
+import org.openstreetmap.josm.tools.Utils;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
 
@@ -624,7 +625,7 @@ public class WayEditor {
                 continue;
 
             // Ignore member of a multipolygon, see notes above
-            List<Relation> relations = OsmPrimitive.getFilteredList(w.getReferrers(), Relation.class);
+            List<Relation> relations = new ArrayList<>(Utils.filteredCollection(w.getReferrers(), Relation.class));
             boolean is_member_of_any_multipolygon = false;
             for (Relation rel: relations) {
                 if (rel.isMultipolygon()) {

@@ -19,12 +19,14 @@
 
 package org.openstreetmap.josm.plugins.tracer.connectways;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.openstreetmap.josm.data.osm.search.SearchCompiler.Match;
 import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.osm.Relation;
 import org.openstreetmap.josm.data.osm.RelationMember;
 import org.openstreetmap.josm.data.osm.Way;
+import org.openstreetmap.josm.tools.Utils;
 
 public class AreaPredicate implements IEdAreaPredicate {
 
@@ -66,7 +68,7 @@ public class AreaPredicate implements IEdAreaPredicate {
             return true;
 
         // boundary way of a matching multipolygon relation
-        List<Relation> relations = OsmPrimitive.getFilteredList(way.getReferrers(), Relation.class);
+        List<Relation> relations =  new ArrayList<>(Utils.filteredCollection(way.getReferrers(), Relation.class));
         for (Relation rel: relations) {
             if (this.evaluate(rel))
                 return true;
