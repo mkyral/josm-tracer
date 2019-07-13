@@ -34,7 +34,7 @@ import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.DataSet;
 import org.openstreetmap.josm.data.projection.ProjectionRegistry;
-import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
+import static org.openstreetmap.josm.tools.I18n.tr;
 import org.openstreetmap.josm.plugins.tracer.connectways.BBoxUtils;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdMultipolygon;
 import org.openstreetmap.josm.plugins.tracer.connectways.EdNode;
