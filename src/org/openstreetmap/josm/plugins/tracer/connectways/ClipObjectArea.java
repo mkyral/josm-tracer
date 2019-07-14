@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.openstreetmap.josm.data.coor.LatLon;
-import static org.openstreetmap.josm.gui.mappaint.mapcss.ExpressionFactory.Functions.tr;
 import org.openstreetmap.josm.plugins.tracer.PostTraceNotifications;
 import static org.openstreetmap.josm.tools.I18n.tr;
 
