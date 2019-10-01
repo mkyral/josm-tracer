@@ -27,7 +27,7 @@ import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.data.coor.LatLon;
 // import org.openstreetmap.josm.plugins.tracer.xyCoor;
 
-import com.vividsolutions.jts.geom.*;
+import org.locationtech.jts.geom.*;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
@@ -97,13 +97,13 @@ public class krovak {
     LatLon ll = new LatLon(0,0);
 
     try {
-      com.vividsolutions.jts.geom.GeometryFactory gf = new com.vividsolutions.jts.geom.GeometryFactory();
-      com.vividsolutions.jts.geom.Coordinate c = new com.vividsolutions.jts.geom.Coordinate(xy.x(), xy.y());
+      org.locationtech.jts.geom.GeometryFactory gf = new org.locationtech.jts.geom.GeometryFactory();
+      org.locationtech.jts.geom.Coordinate c = new org.locationtech.jts.geom.Coordinate(xy.x(), xy.y());
 
-      com.vividsolutions.jts.geom.Point p = gf.createPoint(c);
+      org.locationtech.jts.geom.Point p = gf.createPoint(c);
 
       MathTransform mathTransform = CRS.findMathTransform(krovakCRS, LatLonCRS, false);
-      com.vividsolutions.jts.geom.Point p1 = (com.vividsolutions.jts.geom.Point) JTS.transform(p, mathTransform);
+      org.locationtech.jts.geom.Point p1 = (org.locationtech.jts.geom.Point) JTS.transform(p, mathTransform);
 
 //       System.out.println(p1.getCoordinate());
       ll = new LatLon(LatLon.roundToOsmPrecision(p1.getY()),
@@ -120,13 +120,13 @@ public class krovak {
     xyCoor xy = new xyCoor();
 
     try {
-      com.vividsolutions.jts.geom.GeometryFactory gf = new com.vividsolutions.jts.geom.GeometryFactory();
-      com.vividsolutions.jts.geom.Coordinate c = new com.vividsolutions.jts.geom.Coordinate(ll.lon(), ll.lat());
+      org.locationtech.jts.geom.GeometryFactory gf = new org.locationtech.jts.geom.GeometryFactory();
+      org.locationtech.jts.geom.Coordinate c = new org.locationtech.jts.geom.Coordinate(ll.lon(), ll.lat());
 
-      com.vividsolutions.jts.geom.Point p = gf.createPoint(c);
+      org.locationtech.jts.geom.Point p = gf.createPoint(c);
 
       MathTransform mathTransform = CRS.findMathTransform(LatLonCRS, krovakCRS, false);
-      com.vividsolutions.jts.geom.Point p1 = (com.vividsolutions.jts.geom.Point) JTS.transform(p, mathTransform);
+      org.locationtech.jts.geom.Point p1 = (org.locationtech.jts.geom.Point) JTS.transform(p, mathTransform);
 
 //       System.out.println(p1.getCoordinate());
       xy = new xyCoor(p1.getX(), p1.getY());
