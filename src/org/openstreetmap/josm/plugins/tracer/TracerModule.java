@@ -417,10 +417,14 @@ public abstract class TracerModule {
             try {
                 List<Relation> list = new ArrayList<>();
                 for (Relation rel : ds.searchRelations(bbox)) {
-                    if (!rel.isMultipolygon())
+                    if (!rel.isMultipolygon() || (rel.isMultipolygon() && rel.hasKey("boundary"))) {
+                        System.out.println("[-] Skipping "+(rel.isMultipolygon() ? "boundary" : "non Multipolygon")+" relation "+rel.getId());
                         continue;
-                    if (rel.isIncomplete() || rel.hasIncompleteMembers())
+                    }
+                    if (rel.isIncomplete() || rel.hasIncompleteMembers()) {
+                        System.out.println("[+] Using relation "+rel.getId());
                         list.add(rel);
+                    }
                 }
                 return list;
             } finally {

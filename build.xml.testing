@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Tracer-testing" default="dist" basedir=".">
     <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Tracer-testing - Corect import path of jts library"/>
+    <property name="commit.message" value="Tracer-testing - Do not allow split lpis way to several pieces, exclude boundary relations from download, switch to https"/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
     <property name="plugin.main.version" value="15386"/>
     <property name="plugin.canloadatruntime" value="true"/>

@@ -25,6 +25,12 @@ import java.util.List;
 public class PostTraceNotifications {
     private final List<String> m_list = new ArrayList<> ();
 
+    public void clear() {
+        synchronized(m_list) {
+            m_list.clear();
+        }
+    }
+
     public void add(String s) {
         System.out.println("Notify: " + s);
         synchronized(m_list) {

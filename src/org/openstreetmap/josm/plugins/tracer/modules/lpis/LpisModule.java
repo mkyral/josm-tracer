@@ -29,12 +29,15 @@ import org.openstreetmap.josm.data.osm.BBox;
 import org.openstreetmap.josm.data.osm.search.SearchCompiler;
 import org.openstreetmap.josm.data.osm.search.SearchCompiler.Match;
 import org.openstreetmap.josm.data.osm.search.SearchParseError;
+import org.openstreetmap.josm.data.osm.visitor.BoundingXYVisitor;
+import org.openstreetmap.josm.gui.MainApplication;
+import org.openstreetmap.josm.gui.util.GuiHelper;
+import org.openstreetmap.josm.gui.util.HighlightHelper;
 import org.openstreetmap.josm.plugins.tracer.CombineTagsResolver;
 import org.openstreetmap.josm.plugins.tracer.TracerModule;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.connectways.*;
 import org.openstreetmap.josm.spi.preferences.Config;
-
 
 // import org.openstreetmap.josm.plugins.tracer.modules.lpis.LpisRecord;
 
@@ -46,6 +49,7 @@ public final class LpisModule extends TracerModule  {
 
     private boolean moduleEnabled;
     private static final ExecutorService m_downloadExecutor;
+    HighlightHelper highlightHelper = new HighlightHelper();
 
     static {
         int threads = Config.getPref().getInt("tracer.lpis.download_threads", 4);
@@ -72,7 +76,7 @@ public final class LpisModule extends TracerModule  {
     private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.25, Math.PI / 15);
     private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.25, Math.PI / 40);
 
-    private static final String lpisUrl = "http://eagri.cz/public/app/wms/plpis_wfs.fcgi";
+    private static final String lpisUrl = "https://eagri.cz/public/app/wms/plpis_wfs.fcgi";
     private static final String reuseExistingLanduseNodePattern =
         "((landuse=* -landuse=no -landuse=military) | natural=scrub | natural=wood | natural=grassland | natural=water | natural=wood | leisure=garden)";
     private static final String retraceAreaPattern =
@@ -210,6 +214,8 @@ public final class LpisModule extends TracerModule  {
             System.out.println("  LPIS ID: " + record().getLpisID());
             System.out.println("  LPIS usage: " + record().getUsage());
 
+            highlightHelper.clear();
+
             // Look for object to retrace
             EdObject retrace_object = null;
             if (m_performRetrace) {
@@ -292,7 +298,102 @@ public final class LpisModule extends TracerModule  {
                 BBoxUtils.extendBBox(remove_bbox, LatLonSize.get(remove_bbox, oversizeInDataBoundsMeters));
                 RemoveNeedlessNodes remover = new RemoveNeedlessNodes(remove_filter, m_removeNeedlesNodesTolerance, (Math.PI*2)/3, remove_bbox);
                 remover.removeNeedlessNodes(editor.getModifiedWays());
+
+                // Verify that clipping did not created more ways with equal ref
+
+                // First collect all refs and linked ways
+                HashMap<String, List<EdWay>> refsMap = new HashMap<String, List<EdWay>>();
+                for (EdWay w: editor.getModifiedWays()) {
+                    if (w.isTagged() && w.hasKey("ref")) { // Add simple ways
+//                         System.out.println("W(ref): "+w.get("ref")+" [id: "+Long.toString(w.getUniqueId())+"]");
+
+                        String kr = w.get("ref");
+                        if (refsMap.containsKey(kr)) {
+                            List<EdWay> arr = refsMap.get(kr);
+                            arr.add(w);
+                            refsMap.put(kr, arr);
+                        } else {
+                            List<EdWay> arr = new ArrayList<EdWay>();
+                            arr.add(w);
+                            refsMap.put(kr, arr);
+                        }
+
+                    } else { // Add ways that are outer in multipolygons
+                        List<EdMultipolygon> mps = w.getEditorReferrers(EdMultipolygon.class);
+                        if (mps.size() == 0)
+                            continue;
+                        else {
+                            for (EdMultipolygon mp: mps) {
+                                if (mp.isTagged() && mp.hasKey("ref") && mp.containsOuterWay(w)) {
+                                    String kr = mp.get("ref");
+                                    if (refsMap.containsKey(kr)) {
+                                        List<EdWay> arr = refsMap.get(kr);
+                                        arr.add(w);
+                                        refsMap.put(kr, arr);
+                                    } else {
+                                        List<EdWay> arr = new ArrayList<EdWay>();
+                                        arr.add(w);
+                                        refsMap.put(kr, arr);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Check the generated list, verify all refs with multiple ways
+                for (String i : refsMap.keySet()) {
+                    System.out.println("ref: " + i + " has " + refsMap.get(i).size() + " members.");
+                    if (refsMap.get(i).size() > 1) { // More than one way
+                        for (EdWay w : refsMap.get(i)) {
+                            if (w.getUniqueId() < 0) { // A new way
+                                postTraceNotifications().clear();
+                                postTraceNotifications().add(tr("Retrace will split a way to multiple ways with the same ref key [{0}].\nFix the issue first please.", i));
+                                // Highlight
+                                for (EdWay wo: editor.getModifiedWays()) {
+                                    if (w.isTagged()) { // Simple Way
+                                        if (wo.get("ref") == i && wo.hasOriginal()) {
+                                            editor.getDataSet().setSelected(wo.originalWay()); // Select way
+                                            if (highlightHelper.highlightOnly(wo.originalWay())) { // Highlight selection
+                                                MainApplication.getMap().mapView.repaint();
+                                                // Zoom to selection
+                                                GuiHelper.executeByMainWorkerInEDT(() -> {
+                                                    BoundingXYVisitor bbox1 = new BoundingXYVisitor();
+                                                    bbox1.visit(wo.originalWay());
+                                                    MainApplication.getMap().mapView.zoomTo(bbox1);
+                                                });
+                                            }
+                                        }
+                                    } else { // Outer way in Multipolygon
+                                        for (EdMultipolygon mp: w.getEditorReferrers(EdMultipolygon.class)) {
+                                            if (mp.isTagged() && mp.hasKey("ref") && mp.get("ref") == i && mp.containsOuterWay(w)) {
+                                                editor.getDataSet().setSelected(mp.originalMultipolygon()); // Select multipolygon
+                                                if (highlightHelper.highlightOnly(mp.originalMultipolygon())) { // Highlight selection
+                                                    MainApplication.getMap().mapView.repaint();
+                                                    // Zoom to selection
+                                                    GuiHelper.executeByMainWorkerInEDT(() -> {
+                                                        BoundingXYVisitor bbox1 = new BoundingXYVisitor();
+                                                        bbox1.visit(mp.originalMultipolygon());
+                                                        MainApplication.getMap().mapView.zoomTo(bbox1);
+                                                    });
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                return null;
+                            }
+                        }
+                    } else {
+                        System.out.println("Id of ref:"+i+" is "+Long.toString(refsMap.get(i).get(0).getUniqueId()));
+                        Double area = refsMap.get(i).get(0).getEastNorthArea();
+                        if (area != null)
+                            System.out.println("Area of "+i+" is "+Double.toString(area));
+                    }
+                }
+
             }
+
 
             // Merge duplicate ways
             // (Note that outer way can be merged to another way too, so we must watch it.

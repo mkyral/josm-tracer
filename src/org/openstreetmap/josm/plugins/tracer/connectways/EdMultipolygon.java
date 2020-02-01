@@ -328,6 +328,15 @@ public class EdMultipolygon extends EdObject {
         return false;
     }
 
+    public boolean containsOuterWay(EdWay way) {
+        checkEditable();
+        for (EdWay w: m_outerWays)
+            if (w == way)
+                return true;
+        return false;
+    }
+
+
     public boolean containsNonClosedWays() {
         checkEditable();
         for (EdWay w: m_outerWays)
