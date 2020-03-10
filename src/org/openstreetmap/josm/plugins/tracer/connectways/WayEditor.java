@@ -68,7 +68,7 @@ public class WayEditor {
 
     public WayEditor(DataSet dataset, double resurrect_dist) {
         m_dataSet = dataset;
-        m_idGuard = (new Node()).getUniqueId();
+        m_idGuard = (new Way()).getUniqueId();
         m_nodes = new HashSet<> ();
         m_ways = new HashSet<> ();
         m_multipolygons = new HashSet<> ();
