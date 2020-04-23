@@ -51,7 +51,7 @@ public class WayEditor {
 
     private final double m_duplicateNodesPrecision;
 
-    private final long m_idGuard;
+    private final long m_node_idGuard, m_way_idGuard, m_rel_idGuard;
     private final DataSet m_dataSet;
 
     private final Set<EdNode> m_nodes;
@@ -68,7 +68,9 @@ public class WayEditor {
 
     public WayEditor(DataSet dataset, double resurrect_dist) {
         m_dataSet = dataset;
-        m_idGuard = (new Way()).getUniqueId();
+        m_node_idGuard = (new Node()).getUniqueId();
+        m_way_idGuard = (new Way()).getUniqueId();
+        m_rel_idGuard = (new Relation()).getUniqueId();
         m_nodes = new HashSet<> ();
         m_ways = new HashSet<> ();
         m_multipolygons = new HashSet<> ();
@@ -103,7 +105,7 @@ public class WayEditor {
     public EdNode useNode(Node node) {
         if (node == null)
             throw new IllegalArgumentException();
-        if (node.getUniqueId() <= m_idGuard)
+        if (node.getUniqueId() <= m_node_idGuard)
             throw new IllegalArgumentException(tr("Non-original Node created outside WayEditor scope"));
         if (node.getDataSet() != this.getDataSet())
             throw new IllegalArgumentException(tr("Cannot use Node from with a different/null DataSet"));
@@ -126,7 +128,7 @@ public class WayEditor {
     public EdWay useWay(Way way) {
         if (way == null)
             throw new IllegalArgumentException();
-        if (way.getUniqueId() <= m_idGuard)
+        if (way.getUniqueId() <= m_way_idGuard)
             throw new IllegalArgumentException(tr("Non-original Way created outside WayEditor scope"));
         if (way.getDataSet() != this.getDataSet())
             throw new IllegalArgumentException(tr("Cannot use Way from with a different/null DataSet"));
@@ -149,7 +151,7 @@ public class WayEditor {
     public EdMultipolygon useMultipolygon(Relation rel) {
         if (rel == null)
             throw new IllegalArgumentException();
-        if (rel.getUniqueId() <= m_idGuard)
+        if (rel.getUniqueId() <= m_rel_idGuard)
             throw new IllegalArgumentException(tr("Non-original Relation created outside WayEditor scope"));
         if (rel.getDataSet() != this.getDataSet())
             throw new IllegalArgumentException(tr("Cannot use Relation from with a different/null DataSet"));
