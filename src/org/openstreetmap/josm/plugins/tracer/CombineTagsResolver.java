@@ -105,7 +105,7 @@ public abstract class CombineTagsResolver {
         Map<String, String> result = new HashMap<>(new_keys);
         TagCollection resolution = dialog.getTagConflictResolverModel().getAllResolutions();
         for (Tag tag: resolution) {
-            result.put(tag.getKey(), tag.getValue().replaceFirst("^(.*)    \\.\\. "+ m_osm +"$","$1").replaceFirst("^(.*)    \\.\\. " + m_traced + "$","$1"));
+            result.put(tag.getKey(), tag.getValue().replaceAll("    \\.\\. "+ m_osm,"").replaceAll("    \\.\\. " + m_traced,""));
         }
 
         return result;
