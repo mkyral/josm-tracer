@@ -174,7 +174,7 @@ public final class LpisRecord extends TracerRecord {
      * @throws javax.xml.xpath.XPathExpressionException Wrong XPath Expression
     *
     */
-    public void parseXML (String action, String xmlStr) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
+    public void parseXML (String xmlStr) throws ParserConfigurationException, SAXException, IOException, XPathExpressionException {
 
         System.out.println("");
         System.out.println("parseXML() - Start");
@@ -186,55 +186,50 @@ public final class LpisRecord extends TracerRecord {
         doc.getDocumentElement().normalize();
 
         XPath xPath =  XPathFactory.newInstance().newXPath();
-        if ("basic".equals(action)) {
-            init();
-            String expID = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX'][1]/*[name()='ms:id']";
-            String expOuter = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX'][1]//*[name()='gml:exterior']//*[name()='gml:posList']";
-            String expInner = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX'][1]//*[name()='gml:interior']//*[name()='gml:posList']";
+        init();
+        String expID = "//*[name()='ms:LPIS_DPB_UCINNE'][1]/*[name()='ms:id']";
+        String expOuter = "//*[name()='ms:LPIS_DPB_UCINNE'][1]//*[name()='gml:exterior']//*[name()='gml:posList']";
+        String expInner = "//*[name()='ms:LPIS_DPB_UCINNE'][1]//*[name()='gml:interior']//*[name()='gml:posList']";
+        String expUsage = "//*[name()='ms:LPIS_DPB_UCINNE'][1]/*[name()='ms:kultura']";
 
-            NodeList nodeList;
+        NodeList nodeList;
 
-            System.out.println("parseXML(basic) - expID: " + expID);
-            nodeList = (NodeList) xPath.compile(expID).evaluate(doc, XPathConstants.NODESET);
-            if (nodeList.getLength() > 0) {
-                m_lpis_id = Long.parseLong(nodeList.item(0).getFirstChild().getNodeValue());
-            } else {
-                return;
-            }
-
-            System.out.println("parseXML(basic) - m_lpis_id: " + m_lpis_id);
-
-            System.out.println("parseXML(basic) - expOuter: " + expOuter);
-            nodeList = (NodeList) xPath.compile(expOuter).evaluate(doc, XPathConstants.NODESET);
-            String outer = nodeList.item(0).getFirstChild().getNodeValue();
-            System.out.println("parseXML(basic) - outer: " + outer);
-            List<LatLon> way = parseGeometry(outer);
-            System.out.println("parseXML(basic) - outer list: " + way);
-            super.setOuter(way);
-
-            System.out.println("parseXML(basic) - expInner: " + expInner);
-            nodeList = (NodeList) xPath.compile(expInner).evaluate(doc, XPathConstants.NODESET);
-            for (int i = 0; i < nodeList.getLength(); i++) {
-                String inner = nodeList.item(i).getFirstChild().getNodeValue();
-                System.out.println("Inner("+i+": "+ inner);
-                super.addInner(parseGeometry(inner));
-            }
-            List<List<LatLon>> inner_ways = super.getInners();
-            for (int i = 0; i < inner_ways.size(); i++) {
-                System.out.println("parseXML(basic) - Inner("+i+"): " + inner_ways.get(i));
-            }
+        System.out.println("parseXML(basic) - expID: " + expID);
+        nodeList = (NodeList) xPath.compile(expID).evaluate(doc, XPathConstants.NODESET);
+        if (nodeList.getLength() > 0) {
+            m_lpis_id = Long.parseLong(nodeList.item(0).getFirstChild().getNodeValue());
         } else {
-            String expUsage = "//*[name()='ms:LPIS_DPB_UCINNE'][1]/*[name()='ms:kultura']";
-            NodeList nodeList;
-
-            System.out.println("parseXML(extra) - expUsage: " + expUsage);
-            nodeList = (NodeList) xPath.compile(expUsage).evaluate(doc, XPathConstants.NODESET);
-            if (nodeList != null && nodeList.getLength() > 0 && nodeList.item(0).hasChildNodes()) {
-                m_usage = nodeList.item(0).getFirstChild().getNodeValue();
-                mapToOsm();
-            }
-            System.out.println("parseXML(extra) - m_usage: " + m_usage);
+            return;
         }
+
+        System.out.println("parseXML(basic) - m_lpis_id: " + m_lpis_id);
+
+        System.out.println("parseXML(basic) - expOuter: " + expOuter);
+        nodeList = (NodeList) xPath.compile(expOuter).evaluate(doc, XPathConstants.NODESET);
+        String outer = nodeList.item(0).getFirstChild().getNodeValue();
+        System.out.println("parseXML(basic) - outer: " + outer);
+        List<LatLon> way = parseGeometry(outer);
+        System.out.println("parseXML(basic) - outer list: " + way);
+        super.setOuter(way);
+
+        System.out.println("parseXML(basic) - expInner: " + expInner);
+        nodeList = (NodeList) xPath.compile(expInner).evaluate(doc, XPathConstants.NODESET);
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            String inner = nodeList.item(i).getFirstChild().getNodeValue();
+            System.out.println("Inner("+i+": "+ inner);
+            super.addInner(parseGeometry(inner));
+        }
+        List<List<LatLon>> inner_ways = super.getInners();
+        for (int i = 0; i < inner_ways.size(); i++) {
+            System.out.println("parseXML(basic) - Inner("+i+"): " + inner_ways.get(i));
+        }
+
+        nodeList = (NodeList) xPath.compile(expUsage).evaluate(doc, XPathConstants.NODESET);
+        if (nodeList != null && nodeList.getLength() > 0 && nodeList.item(0).hasChildNodes()) {
+            m_usage = nodeList.item(0).getFirstChild().getNodeValue();
+            mapToOsm();
+        }
+        System.out.println("parseXML(extra) - m_usage: " + m_usage);
 
         System.out.println("parseXML() - End");
     }
@@ -280,7 +275,7 @@ public final class LpisRecord extends TracerRecord {
         doc.getDocumentElement().normalize();
 
         XPath xPath =  XPathFactory.newInstance().newXPath();
-        String expID = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX']/*[name()='ms:id']";
+        String expID = "//*[name()='ms:LPIS_DPB_UCINNE']/*[name()='ms:id']";
 
         System.out.println("parseXML(basic) - expID: " + expID);
         NodeList expids = (NodeList) xPath.compile(expID).evaluate(doc, XPathConstants.NODESET);
@@ -293,7 +288,7 @@ public final class LpisRecord extends TracerRecord {
             LpisRecord lpis = new LpisRecord (adjlat, adjlon);
             lpis.m_lpis_id = exp_id;
 
-            String expOuter = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX' and @*='LPIS_DPB_UCINNE_BBOX." + Long.toString(exp_id) + "']//*[name()='gml:exterior']//*[name()='gml:posList']";
+            String expOuter = "//*[name()='ms:LPIS_DPB_UCINNE' and @*='LPIS_DPB_UCINNE." + Long.toString(exp_id) + "']//*[name()='gml:exterior']//*[name()='gml:posList']";
             NodeList outernl = (NodeList) xPath.compile(expOuter).evaluate(doc, XPathConstants.NODESET);
             if (outernl.getLength() > 0) {
                 String outer = outernl.item(0).getFirstChild().getNodeValue();
@@ -303,12 +298,19 @@ public final class LpisRecord extends TracerRecord {
                 continue;
             }
 
-            String expInner = "//*[name()='ms:LPIS_DPB_UCINNE_BBOX' and @*='LPIS_DPB_UCINNE_BBOX." + Long.toString(exp_id) + "']//*[name()='gml:interior']//*[name()='gml:posList']";
+            String expInner = "//*[name()='ms:LPIS_DPB_UCINNE' and @*='LPIS_DPB_UCINNE." + Long.toString(exp_id) + "']//*[name()='gml:interior']//*[name()='gml:posList']";
             NodeList innersnl = (NodeList) xPath.compile(expInner).evaluate(doc, XPathConstants.NODESET);
 
             for (int j = 0; j < innersnl.getLength(); j++) {
                 String inner = innersnl.item(j).getFirstChild().getNodeValue();
                 lpis.addInner(lpis.parseGeometry(inner));
+            }
+
+            String expUsage = "//*[name()='ms:LPIS_DPB_UCINNE'] and @*='LPIS_DPB_UCINNE." + Long.toString(exp_id) + "']/*[name()='ms:kultura']";
+            NodeList usagenl = (NodeList) xPath.compile(expUsage).evaluate(doc, XPathConstants.NODESET);
+            if (usagenl != null && usagenl.getLength() > 0 && usagenl.item(0).hasChildNodes()) {
+                lpis.m_usage = usagenl.item(0).getFirstChild().getNodeValue();
+                lpis.mapToOsm();
             }
 
             list.add (lpis);

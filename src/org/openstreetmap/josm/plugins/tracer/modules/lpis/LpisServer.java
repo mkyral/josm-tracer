@@ -89,22 +89,13 @@ public class LpisServer {
         System.out.println ("LatLon: "+pos+" <-> XY: "+xy.x()+" "+xy.y());
         String bbox = xy.x()+","+xy.y()+","+xy.x()+","+xy.y();
 
-        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE_BBOX&bbox="+bbox+"&SRSNAME=EPSG:102067";
+        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE&bbox="+bbox+"&SRSNAME=EPSG:102067";
 
         System.out.println("Request: " + request);
         String content = callServer(request);
         System.out.println("Reply: " + content);
         LpisRecord lpis = new LpisRecord(adjustLat, adjustLon);
-        lpis.parseXML("basic", content);
-
-        // get additional information for given ID
-        if (lpis.getLpisID() > 0) {
-            request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE&&featureID=LPIS_DPB_UCINNE."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
-            System.out.println("Request: " + request);
-            content = callServer(request);
-            System.out.println("Reply: " + content);
-            lpis.parseXML("extra", content);
-        }
+        lpis.parseXML(content);
 
         // cache record
         if (lpis.hasData()) {
@@ -125,7 +116,7 @@ public class LpisServer {
 
         String wfsbox = axy.x()+","+axy.y()+","+bxy.x()+","+bxy.y();
 
-        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE_BBOX&bbox="+wfsbox+"&SRSNAME=EPSG:102067";
+        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE&bbox="+wfsbox+"&SRSNAME=EPSG:102067";
 
         System.out.println("Request: " + request);
         String content = callServer(request);
@@ -152,7 +143,7 @@ public class LpisServer {
             System.out.println("Request: " + request);
             content = callServer(request);
             System.out.println("Reply: " + content);
-            lpis.parseXML("extra", content);
+            lpis.parseXML(content);
 
             // cache record
             if (lpis.hasData()) {
