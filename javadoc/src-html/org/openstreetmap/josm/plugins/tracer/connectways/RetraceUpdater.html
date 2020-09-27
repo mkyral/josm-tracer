@@ -1,0 +1,260 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="cs">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/**<a name="line.1"></a>
+<span class="sourceLineNo">002</span> *  Tracer - plugin for JOSM<a name="line.2"></a>
+<span class="sourceLineNo">003</span> *  Jan Bilak, Marian Kyral, Martin Svec<a name="line.3"></a>
+<span class="sourceLineNo">004</span> *<a name="line.4"></a>
+<span class="sourceLineNo">005</span> *  This program is free software; you can redistribute it and/or modify<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *  it under the terms of the GNU General Public License as published by<a name="line.6"></a>
+<span class="sourceLineNo">007</span> *  the Free Software Foundation; either version 2 of the License, or<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *  (at your option) any later version.<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *  This program is distributed in the hope that it will be useful,<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *  but WITHOUT ANY WARRANTY; without even the implied warranty of<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *  GNU General Public License for more details.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> *<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *  You should have received a copy of the GNU General Public License along<a name="line.15"></a>
+<span class="sourceLineNo">016</span> *  with this program; if not, write to the Free Software Foundation, Inc.,<a name="line.16"></a>
+<span class="sourceLineNo">017</span> *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.<a name="line.17"></a>
+<span class="sourceLineNo">018</span> */<a name="line.18"></a>
+<span class="sourceLineNo">019</span><a name="line.19"></a>
+<span class="sourceLineNo">020</span>package org.openstreetmap.josm.plugins.tracer.connectways;<a name="line.20"></a>
+<span class="sourceLineNo">021</span><a name="line.21"></a>
+<span class="sourceLineNo">022</span>import java.util.List;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import java.util.Map;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import java.util.Set;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import org.openstreetmap.josm.plugins.tracer.PostTraceNotifications;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import org.openstreetmap.josm.spi.preferences.Config;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import static org.openstreetmap.josm.tools.I18n.tr;<a name="line.27"></a>
+<span class="sourceLineNo">028</span><a name="line.28"></a>
+<span class="sourceLineNo">029</span>public class RetraceUpdater {<a name="line.29"></a>
+<span class="sourceLineNo">030</span><a name="line.30"></a>
+<span class="sourceLineNo">031</span>    private final boolean m_convertOldStyleMultipolygons;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>    private final PostTraceNotifications m_postTraceNotifications;<a name="line.32"></a>
+<span class="sourceLineNo">033</span><a name="line.33"></a>
+<span class="sourceLineNo">034</span>    public RetraceUpdater(boolean convert_oldstyle_multipolygons, PostTraceNotifications posttrace_notifications) {<a name="line.34"></a>
+<span class="sourceLineNo">035</span>        m_convertOldStyleMultipolygons = convert_oldstyle_multipolygons;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>        m_postTraceNotifications = posttrace_notifications;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>    }<a name="line.37"></a>
+<span class="sourceLineNo">038</span><a name="line.38"></a>
+<span class="sourceLineNo">039</span>    public EdObject updateRetracedObjects(EdObject new_object, EdObject retrace_object) {<a name="line.39"></a>
+<span class="sourceLineNo">040</span><a name="line.40"></a>
+<span class="sourceLineNo">041</span>        boolean retrace_is_simple_way = retrace_object.isWay() &amp;&amp; !retrace_object.hasReferrers();<a name="line.41"></a>
+<span class="sourceLineNo">042</span>        boolean retrace_is_inner_way = retrace_object.isWay() &amp;&amp; retrace_object.hasReferrers();<a name="line.42"></a>
+<span class="sourceLineNo">043</span>        boolean new_is_way = new_object.isWay();<a name="line.43"></a>
+<span class="sourceLineNo">044</span>        boolean new_is_multipolygon = new_object.isMultipolygon();<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span>        // Disallow retrace if it disconnects an important single-referrer node and makes it an orphan<a name="line.46"></a>
+<span class="sourceLineNo">047</span>        EdNode dn = findAnyImportantNodeToBeOrphaned (new_object, retrace_object);<a name="line.47"></a>
+<span class="sourceLineNo">048</span>        if (dn != null) {<a name="line.48"></a>
+<span class="sourceLineNo">049</span>            m_postTraceNotifications.add(tr("Retrace would disconnect an important node {0}, this is not supported.", dn.getUniqueId()));<a name="line.49"></a>
+<span class="sourceLineNo">050</span>            return null;<a name="line.50"></a>
+<span class="sourceLineNo">051</span>        }<a name="line.51"></a>
+<span class="sourceLineNo">052</span><a name="line.52"></a>
+<span class="sourceLineNo">053</span>        // Simple way -&gt; Simple way<a name="line.53"></a>
+<span class="sourceLineNo">054</span>        if ((retrace_is_simple_way || retrace_is_inner_way ) &amp;&amp; new_is_way) {<a name="line.54"></a>
+<span class="sourceLineNo">055</span>            EdWay outer_way = (EdWay) new_object;<a name="line.55"></a>
+<span class="sourceLineNo">056</span>            EdWay retrace_way = (EdWay) retrace_object;<a name="line.56"></a>
+<span class="sourceLineNo">057</span>            retrace_way.setNodes(outer_way.getNodes());<a name="line.57"></a>
+<span class="sourceLineNo">058</span>            outer_way = retrace_way;<a name="line.58"></a>
+<span class="sourceLineNo">059</span>            return outer_way;<a name="line.59"></a>
+<span class="sourceLineNo">060</span>        }<a name="line.60"></a>
+<span class="sourceLineNo">061</span><a name="line.61"></a>
+<span class="sourceLineNo">062</span>        // Simple way -&gt; Multipolygon<a name="line.62"></a>
+<span class="sourceLineNo">063</span>        // Move all non-linear tags from way to multipolygon, use retraced way as outer way of the new multipolygon<a name="line.63"></a>
+<span class="sourceLineNo">064</span>        if ((retrace_is_simple_way || retrace_is_inner_way ) &amp;&amp; new_is_multipolygon) {<a name="line.64"></a>
+<span class="sourceLineNo">065</span>            EdWay retrace_way = (EdWay) retrace_object;<a name="line.65"></a>
+<span class="sourceLineNo">066</span>            EdMultipolygon multipolygon = (EdMultipolygon)new_object;<a name="line.66"></a>
+<span class="sourceLineNo">067</span>            multipolygon.moveAllNonLinearTagsFrom(retrace_way);<a name="line.67"></a>
+<span class="sourceLineNo">068</span>            EdWay outer_way = multipolygon.outerWays().get(0);<a name="line.68"></a>
+<span class="sourceLineNo">069</span>            multipolygon.removeOuterWay(outer_way);<a name="line.69"></a>
+<span class="sourceLineNo">070</span>            retrace_way.setNodes(outer_way.getNodes());<a name="line.70"></a>
+<span class="sourceLineNo">071</span>            outer_way = retrace_way;<a name="line.71"></a>
+<span class="sourceLineNo">072</span>            multipolygon.addOuterWay(outer_way);<a name="line.72"></a>
+<span class="sourceLineNo">073</span>            return multipolygon;<a name="line.73"></a>
+<span class="sourceLineNo">074</span>        }<a name="line.74"></a>
+<span class="sourceLineNo">075</span><a name="line.75"></a>
+<span class="sourceLineNo">076</span>        // Multipolygon -&gt; Multipolygon<a name="line.76"></a>
+<span class="sourceLineNo">077</span>        if (retrace_object.isMultipolygon() &amp;&amp; new_is_multipolygon) {<a name="line.77"></a>
+<span class="sourceLineNo">078</span>            EdMultipolygon retrace_multipolygon = (EdMultipolygon)retrace_object;<a name="line.78"></a>
+<span class="sourceLineNo">079</span>            EdMultipolygon new_multipolygon = (EdMultipolygon)new_object;<a name="line.79"></a>
+<span class="sourceLineNo">080</span>            EdObject res = updateRetracedMultipolygons(new_multipolygon, retrace_multipolygon);<a name="line.80"></a>
+<span class="sourceLineNo">081</span>            if (res != null)<a name="line.81"></a>
+<span class="sourceLineNo">082</span>                return res;<a name="line.82"></a>
+<span class="sourceLineNo">083</span>        }<a name="line.83"></a>
+<span class="sourceLineNo">084</span><a name="line.84"></a>
+<span class="sourceLineNo">085</span>        // Multipolygon -&gt; Simple way<a name="line.85"></a>
+<span class="sourceLineNo">086</span>        // - Move all non-linear tags from multipolygon to way<a name="line.86"></a>
+<span class="sourceLineNo">087</span>        // - Use retraced way instead of outer way<a name="line.87"></a>
+<span class="sourceLineNo">088</span>        // - Remove inner ways from existing multipolygon and delete untaged ways<a name="line.88"></a>
+<span class="sourceLineNo">089</span>        // - Remove existing multipolygon<a name="line.89"></a>
+<span class="sourceLineNo">090</span>        if (retrace_object.isMultipolygon() &amp;&amp; new_is_way) {<a name="line.90"></a>
+<span class="sourceLineNo">091</span>            EdMultipolygon retrace_multipolygon = (EdMultipolygon)retrace_object;<a name="line.91"></a>
+<span class="sourceLineNo">092</span>            EdWay way = (EdWay)new_object;<a name="line.92"></a>
+<span class="sourceLineNo">093</span>            EdWay outer_way = retrace_multipolygon.outerWays().get(0);<a name="line.93"></a>
+<span class="sourceLineNo">094</span>            outer_way.setNodes(way.getNodes());<a name="line.94"></a>
+<span class="sourceLineNo">095</span>            way=outer_way;<a name="line.95"></a>
+<span class="sourceLineNo">096</span>            Map&lt;String,String&gt; keys = retrace_multipolygon.getKeys();<a name="line.96"></a>
+<span class="sourceLineNo">097</span>            keys.remove("type");<a name="line.97"></a>
+<span class="sourceLineNo">098</span>            way.setKeys(keys);<a name="line.98"></a>
+<span class="sourceLineNo">099</span>            retrace_multipolygon.removeAllWays();<a name="line.99"></a>
+<span class="sourceLineNo">100</span>            retrace_multipolygon.deleteShallow();<a name="line.100"></a>
+<span class="sourceLineNo">101</span><a name="line.101"></a>
+<span class="sourceLineNo">102</span>            return way;<a name="line.102"></a>
+<span class="sourceLineNo">103</span>        }<a name="line.103"></a>
+<span class="sourceLineNo">104</span><a name="line.104"></a>
+<span class="sourceLineNo">105</span>        m_postTraceNotifications.add(tr("This kind of multipolygon retrace is not supported."));<a name="line.105"></a>
+<span class="sourceLineNo">106</span>        return null;<a name="line.106"></a>
+<span class="sourceLineNo">107</span>    }<a name="line.107"></a>
+<span class="sourceLineNo">108</span><a name="line.108"></a>
+<span class="sourceLineNo">109</span>    private EdObject updateRetracedMultipolygons(EdMultipolygon new_multipolygon, EdMultipolygon retrace_multipolygon) {<a name="line.109"></a>
+<span class="sourceLineNo">110</span><a name="line.110"></a>
+<span class="sourceLineNo">111</span>//         // don't retrace non-standalone multipolygons<a name="line.111"></a>
+<span class="sourceLineNo">112</span>//         boolean retrace_is_standalone = !retrace_multipolygon.hasReferrers() &amp;&amp; retrace_multipolygon.allWaysHaveSingleReferrer();<a name="line.112"></a>
+<span class="sourceLineNo">113</span>//         if (!retrace_is_standalone)<a name="line.113"></a>
+<span class="sourceLineNo">114</span>//             return null;<a name="line.114"></a>
+<span class="sourceLineNo">115</span><a name="line.115"></a>
+<span class="sourceLineNo">116</span>        // don't retrace multipolygons with nonclosed ways<a name="line.116"></a>
+<span class="sourceLineNo">117</span>        boolean retrace_is_closed = !retrace_multipolygon.containsNonClosedWays();<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        if (!retrace_is_closed) {<a name="line.118"></a>
+<span class="sourceLineNo">119</span>            System.out.println("Multipolygon " + retrace_multipolygon.getUniqueId() + " contains non-closed ways.");<a name="line.119"></a>
+<span class="sourceLineNo">120</span>            m_postTraceNotifications.add(tr("Multipolygon {0} contains non-closed ways.", retrace_multipolygon.getUniqueId()));<a name="line.120"></a>
+<span class="sourceLineNo">121</span>            return null;<a name="line.121"></a>
+<span class="sourceLineNo">122</span>        }<a name="line.122"></a>
+<span class="sourceLineNo">123</span><a name="line.123"></a>
+<span class="sourceLineNo">124</span>        // try to convert old-style multipolygon to new-style<a name="line.124"></a>
+<span class="sourceLineNo">125</span>        if (m_convertOldStyleMultipolygons &amp;&amp; retrace_multipolygon.containsTaggedWays() &amp;&amp; Config.getPref().getBoolean("multipoly.movetags", true))<a name="line.125"></a>
+<span class="sourceLineNo">126</span>            retrace_multipolygon.removeTagsFromWaysIfNeeded();<a name="line.126"></a>
+<span class="sourceLineNo">127</span><a name="line.127"></a>
+<span class="sourceLineNo">128</span>        // agressive retrace of multipolygon with untagged ways<a name="line.128"></a>
+<span class="sourceLineNo">129</span>        if (!retrace_multipolygon.containsTaggedWays()) {<a name="line.129"></a>
+<span class="sourceLineNo">130</span>            updateRetracedMultipolygonWaysAgressive(retrace_multipolygon, new_multipolygon, true);<a name="line.130"></a>
+<span class="sourceLineNo">131</span>            updateRetracedMultipolygonWaysAgressive(retrace_multipolygon, new_multipolygon, false);<a name="line.131"></a>
+<span class="sourceLineNo">132</span>            new_multipolygon.deleteShallow();<a name="line.132"></a>
+<span class="sourceLineNo">133</span>            return retrace_multipolygon;<a name="line.133"></a>
+<span class="sourceLineNo">134</span>        }<a name="line.134"></a>
+<span class="sourceLineNo">135</span><a name="line.135"></a>
+<span class="sourceLineNo">136</span>        // other possibilites not supported yet<a name="line.136"></a>
+<span class="sourceLineNo">137</span>        return null;<a name="line.137"></a>
+<span class="sourceLineNo">138</span>    }<a name="line.138"></a>
+<span class="sourceLineNo">139</span><a name="line.139"></a>
+<span class="sourceLineNo">140</span>    private void updateRetracedMultipolygonWaysAgressive(EdMultipolygon retrace_multipolygon, EdMultipolygon new_multipolygon, boolean out) {<a name="line.140"></a>
+<span class="sourceLineNo">141</span>        // #### use pairing based on way area intersection?<a name="line.141"></a>
+<span class="sourceLineNo">142</span><a name="line.142"></a>
+<span class="sourceLineNo">143</span>        List&lt;EdWay&gt; retraces = out ? retrace_multipolygon.outerWays() : retrace_multipolygon.innerWays();<a name="line.143"></a>
+<span class="sourceLineNo">144</span>        List&lt;EdWay&gt; news = out ? new_multipolygon.outerWays() : new_multipolygon.innerWays();<a name="line.144"></a>
+<span class="sourceLineNo">145</span>        int ridx = 0;<a name="line.145"></a>
+<span class="sourceLineNo">146</span><a name="line.146"></a>
+<span class="sourceLineNo">147</span>        for (EdWay new_way : news) {<a name="line.147"></a>
+<span class="sourceLineNo">148</span>            // update geometry of existing way<a name="line.148"></a>
+<span class="sourceLineNo">149</span>            if (ridx &lt; retraces.size()) {<a name="line.149"></a>
+<span class="sourceLineNo">150</span>                EdWay retrace_way = retraces.get(ridx++);<a name="line.150"></a>
+<span class="sourceLineNo">151</span>                retrace_way.setNodes(new_way.getNodes());<a name="line.151"></a>
+<span class="sourceLineNo">152</span>            }<a name="line.152"></a>
+<span class="sourceLineNo">153</span>            // no more existing ways available, add new way<a name="line.153"></a>
+<span class="sourceLineNo">154</span>            else if (out)<a name="line.154"></a>
+<span class="sourceLineNo">155</span>                retrace_multipolygon.addOuterWay(new_way);<a name="line.155"></a>
+<span class="sourceLineNo">156</span>            else<a name="line.156"></a>
+<span class="sourceLineNo">157</span>                retrace_multipolygon.addInnerWay(new_way);<a name="line.157"></a>
+<span class="sourceLineNo">158</span>        }<a name="line.158"></a>
+<span class="sourceLineNo">159</span><a name="line.159"></a>
+<span class="sourceLineNo">160</span>        // remove unused old ways if the new multipolygon has less ways than the old one<a name="line.160"></a>
+<span class="sourceLineNo">161</span>        for (int i = ridx; i &lt; retraces.size(); i++) {<a name="line.161"></a>
+<span class="sourceLineNo">162</span>            if (out)<a name="line.162"></a>
+<span class="sourceLineNo">163</span>                retrace_multipolygon.removeOuterWay(retraces.get(i));<a name="line.163"></a>
+<span class="sourceLineNo">164</span>            else<a name="line.164"></a>
+<span class="sourceLineNo">165</span>                retrace_multipolygon.removeInnerWay(retraces.get(i));<a name="line.165"></a>
+<span class="sourceLineNo">166</span>        }<a name="line.166"></a>
+<span class="sourceLineNo">167</span>    }<a name="line.167"></a>
+<span class="sourceLineNo">168</span><a name="line.168"></a>
+<span class="sourceLineNo">169</span>    private EdNode findAnyImportantNodeToBeOrphaned(EdObject new_object, EdObject retrace_object) {<a name="line.169"></a>
+<span class="sourceLineNo">170</span>        Set&lt;EdNode&gt; old_nodes = retrace_object.getAllNodes();<a name="line.170"></a>
+<span class="sourceLineNo">171</span>        Set&lt;EdNode&gt; new_nodes = null;<a name="line.171"></a>
+<span class="sourceLineNo">172</span>        for (EdNode node: old_nodes) {<a name="line.172"></a>
+<span class="sourceLineNo">173</span>            // untagged nodes aren't important<a name="line.173"></a>
+<span class="sourceLineNo">174</span>            if (!node.isTagged())<a name="line.174"></a>
+<span class="sourceLineNo">175</span>                continue;<a name="line.175"></a>
+<span class="sourceLineNo">176</span>            if (new_nodes == null)<a name="line.176"></a>
+<span class="sourceLineNo">177</span>                new_nodes = new_object.getAllNodes();<a name="line.177"></a>
+<span class="sourceLineNo">178</span>            // node is included in new geometry too, fine<a name="line.178"></a>
+<span class="sourceLineNo">179</span>            if (new_nodes.contains(node))<a name="line.179"></a>
+<span class="sourceLineNo">180</span>                continue;<a name="line.180"></a>
+<span class="sourceLineNo">181</span>            // node has more than one referrer, it won't be orphaned<a name="line.181"></a>
+<span class="sourceLineNo">182</span>            if (!node.hasSingleReferrer())<a name="line.182"></a>
+<span class="sourceLineNo">183</span>                continue;<a name="line.183"></a>
+<span class="sourceLineNo">184</span>            return node;<a name="line.184"></a>
+<span class="sourceLineNo">185</span>        }<a name="line.185"></a>
+<span class="sourceLineNo">186</span>        return null;<a name="line.186"></a>
+<span class="sourceLineNo">187</span>    }<a name="line.187"></a>
+<span class="sourceLineNo">188</span>}<a name="line.188"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

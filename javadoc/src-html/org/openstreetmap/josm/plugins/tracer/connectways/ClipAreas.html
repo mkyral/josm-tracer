@@ -1,0 +1,555 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="cs">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/**<a name="line.1"></a>
+<span class="sourceLineNo">002</span> *  Tracer - plugin for JOSM<a name="line.2"></a>
+<span class="sourceLineNo">003</span> *  Jan Bilak, Marian Kyral, Martin Svec<a name="line.3"></a>
+<span class="sourceLineNo">004</span> *<a name="line.4"></a>
+<span class="sourceLineNo">005</span> *  This program is free software; you can redistribute it and/or modify<a name="line.5"></a>
+<span class="sourceLineNo">006</span> *  it under the terms of the GNU General Public License as published by<a name="line.6"></a>
+<span class="sourceLineNo">007</span> *  the Free Software Foundation; either version 2 of the License, or<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *  (at your option) any later version.<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *  This program is distributed in the hope that it will be useful,<a name="line.10"></a>
+<span class="sourceLineNo">011</span> *  but WITHOUT ANY WARRANTY; without even the implied warranty of<a name="line.11"></a>
+<span class="sourceLineNo">012</span> *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the<a name="line.12"></a>
+<span class="sourceLineNo">013</span> *  GNU General Public License for more details.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> *<a name="line.14"></a>
+<span class="sourceLineNo">015</span> *  You should have received a copy of the GNU General Public License along<a name="line.15"></a>
+<span class="sourceLineNo">016</span> *  with this program; if not, write to the Free Software Foundation, Inc.,<a name="line.16"></a>
+<span class="sourceLineNo">017</span> *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.<a name="line.17"></a>
+<span class="sourceLineNo">018</span> */<a name="line.18"></a>
+<span class="sourceLineNo">019</span><a name="line.19"></a>
+<span class="sourceLineNo">020</span><a name="line.20"></a>
+<span class="sourceLineNo">021</span>package org.openstreetmap.josm.plugins.tracer.connectways;<a name="line.21"></a>
+<span class="sourceLineNo">022</span><a name="line.22"></a>
+<span class="sourceLineNo">023</span>import java.util.ArrayList;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import java.util.HashMap;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import java.util.HashSet;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import java.util.List;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import java.util.Map;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import java.util.PriorityQueue;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import java.util.Set;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import org.openstreetmap.josm.plugins.tracer.PostTraceNotifications;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>import static org.openstreetmap.josm.tools.I18n.tr;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>import org.openstreetmap.josm.tools.Pair;<a name="line.32"></a>
+<span class="sourceLineNo">033</span><a name="line.33"></a>
+<span class="sourceLineNo">034</span>public class ClipAreas {<a name="line.34"></a>
+<span class="sourceLineNo">035</span><a name="line.35"></a>
+<span class="sourceLineNo">036</span>    private final WayEditor m_editor;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>    private final ClipAreasSettings m_settings;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>    private final PostTraceNotifications m_postTraceNotifications;<a name="line.38"></a>
+<span class="sourceLineNo">039</span><a name="line.39"></a>
+<span class="sourceLineNo">040</span>    public ClipAreas (WayEditor editor, ClipAreasSettings settings, PostTraceNotifications notifications) {<a name="line.40"></a>
+<span class="sourceLineNo">041</span>        m_editor = editor;<a name="line.41"></a>
+<span class="sourceLineNo">042</span>        m_settings = settings;<a name="line.42"></a>
+<span class="sourceLineNo">043</span>        m_postTraceNotifications = notifications;<a name="line.43"></a>
+<span class="sourceLineNo">044</span>    }<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span>    public void clipAreas(EdWay clip_way, AreaPredicate filter) {<a name="line.46"></a>
+<span class="sourceLineNo">047</span><a name="line.47"></a>
+<span class="sourceLineNo">048</span>        Set&lt;EdObject&gt; areas = m_editor.useAllAreasInBBox(clip_way.getBBox(), filter);<a name="line.48"></a>
+<span class="sourceLineNo">049</span>        for (EdObject obj : areas) {<a name="line.49"></a>
+<span class="sourceLineNo">050</span>            if (obj.isMultipolygon()) {<a name="line.50"></a>
+<span class="sourceLineNo">051</span>                EdMultipolygon subject_mp = (EdMultipolygon) obj;<a name="line.51"></a>
+<span class="sourceLineNo">052</span>                if (subject_mp.containsWay(clip_way)) {<a name="line.52"></a>
+<span class="sourceLineNo">053</span>                    continue;<a name="line.53"></a>
+<span class="sourceLineNo">054</span>                }<a name="line.54"></a>
+<span class="sourceLineNo">055</span><a name="line.55"></a>
+<span class="sourceLineNo">056</span>                clipSimpleMulti(clip_way, subject_mp);<a name="line.56"></a>
+<span class="sourceLineNo">057</span><a name="line.57"></a>
+<span class="sourceLineNo">058</span>            } else if (obj.isWay()) {<a name="line.58"></a>
+<span class="sourceLineNo">059</span>                EdWay subject_way = (EdWay) obj;<a name="line.59"></a>
+<span class="sourceLineNo">060</span>                if (subject_way == clip_way) {<a name="line.60"></a>
+<span class="sourceLineNo">061</span>                    continue;<a name="line.61"></a>
+<span class="sourceLineNo">062</span>                }<a name="line.62"></a>
+<span class="sourceLineNo">063</span><a name="line.63"></a>
+<span class="sourceLineNo">064</span>                clipSimpleSimple(clip_way, subject_way);<a name="line.64"></a>
+<span class="sourceLineNo">065</span>            }<a name="line.65"></a>
+<span class="sourceLineNo">066</span>        }<a name="line.66"></a>
+<span class="sourceLineNo">067</span>    }<a name="line.67"></a>
+<span class="sourceLineNo">068</span><a name="line.68"></a>
+<span class="sourceLineNo">069</span>    private boolean canSilentlyDiscard(EdWay way, double cutoffs_percent) {<a name="line.69"></a>
+<span class="sourceLineNo">070</span>        IDiscardableCutoffPredicate pred = m_settings.discardablePredicate();<a name="line.70"></a>
+<span class="sourceLineNo">071</span>        if (pred == null)<a name="line.71"></a>
+<span class="sourceLineNo">072</span>            return false;<a name="line.72"></a>
+<span class="sourceLineNo">073</span>        if (way.hasReferrers())<a name="line.73"></a>
+<span class="sourceLineNo">074</span>            return false;<a name="line.74"></a>
+<span class="sourceLineNo">075</span>        return pred.canSilentlyDiscard(way, cutoffs_percent);<a name="line.75"></a>
+<span class="sourceLineNo">076</span>    }<a name="line.76"></a>
+<span class="sourceLineNo">077</span><a name="line.77"></a>
+<span class="sourceLineNo">078</span>    private void clipSimpleSimple(EdWay clip_way, EdWay subject_way) {<a name="line.78"></a>
+<span class="sourceLineNo">079</span>        // First, connect touching nodes of subject_way to clip_way. This is necessary because<a name="line.79"></a>
+<span class="sourceLineNo">080</span>        // LPIS polygons series contain very small gaps that need to be elliminated before<a name="line.80"></a>
+<span class="sourceLineNo">081</span>        // clipping is performed. Also, there are false joint points on LPIS polygons' edges<a name="line.81"></a>
+<span class="sourceLineNo">082</span>        // where nodes must be added too.<a name="line.82"></a>
+<span class="sourceLineNo">083</span>        subject_way.connectNonIncludedTouchingNodes(m_settings.connectSubjectToClipTolerance(), clip_way);<a name="line.83"></a>
+<span class="sourceLineNo">084</span><a name="line.84"></a>
+<span class="sourceLineNo">085</span>        System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_way=" + Long.toString(subject_way.getUniqueId()));<a name="line.85"></a>
+<span class="sourceLineNo">086</span><a name="line.86"></a>
+<span class="sourceLineNo">087</span>        AngPolygonClipper clipper = new AngPolygonClipper(m_editor, m_settings.clipperWayCleanupsTolerance(), m_settings.discardCutoffsPercent());<a name="line.87"></a>
+<span class="sourceLineNo">088</span>        clipper.polygonDifference(clip_way, subject_way);<a name="line.88"></a>
+<span class="sourceLineNo">089</span>        if (clipper.changesOutsideDataBounds()) {<a name="line.89"></a>
+<span class="sourceLineNo">090</span>            addPostTraceNotification(tr("Simple way {0} would be modified outside downloaded area, ignoring.", subject_way.getUniqueId()));<a name="line.90"></a>
+<span class="sourceLineNo">091</span>            return;<a name="line.91"></a>
+<span class="sourceLineNo">092</span>        }<a name="line.92"></a>
+<span class="sourceLineNo">093</span><a name="line.93"></a>
+<span class="sourceLineNo">094</span>        List&lt;List&lt;EdNode&gt;&gt; outers = clipper.outerPolygons();<a name="line.94"></a>
+<span class="sourceLineNo">095</span>        List&lt;List&lt;EdNode&gt;&gt; inners = clipper.innerPolygons();<a name="line.95"></a>
+<span class="sourceLineNo">096</span><a name="line.96"></a>
+<span class="sourceLineNo">097</span>        System.out.println("- result: outers=" + Long.toString(outers.size()) + ", inners=" + Long.toString(inners.size()));<a name="line.97"></a>
+<span class="sourceLineNo">098</span><a name="line.98"></a>
+<span class="sourceLineNo">099</span>        if (outers.isEmpty() &amp;&amp; inners.isEmpty()) {<a name="line.99"></a>
+<span class="sourceLineNo">100</span>            if (canSilentlyDiscard(subject_way, clipper.discardedPercent())) {<a name="line.100"></a>
+<span class="sourceLineNo">101</span>                // #### fix EdObjects deletion support, instead of this hack<a name="line.101"></a>
+<span class="sourceLineNo">102</span>                subject_way.setKeys(new HashMap&lt;String, String&gt;());<a name="line.102"></a>
+<span class="sourceLineNo">103</span>                subject_way.setNodes(new ArrayList&lt;EdNode&gt;());<a name="line.103"></a>
+<span class="sourceLineNo">104</span>            }<a name="line.104"></a>
+<span class="sourceLineNo">105</span>            else {<a name="line.105"></a>
+<span class="sourceLineNo">106</span>                addPostTraceNotification(tr("Simple way {0} would be completely removed, ignoring, please check.", subject_way.getUniqueId()));<a name="line.106"></a>
+<span class="sourceLineNo">107</span>            }<a name="line.107"></a>
+<span class="sourceLineNo">108</span>        } else if (outers.size() == 1 &amp;&amp; inners.isEmpty()) {<a name="line.108"></a>
+<span class="sourceLineNo">109</span>            handleSimpleSimpleSimple(clip_way, subject_way, outers.get(0));<a name="line.109"></a>
+<span class="sourceLineNo">110</span>        } else if ((outers.size() + inners.size()) &gt; 1) {<a name="line.110"></a>
+<span class="sourceLineNo">111</span>            handleSimpleSimpleMulti(clip_way, subject_way, outers, inners);<a name="line.111"></a>
+<span class="sourceLineNo">112</span>        } else {<a name="line.112"></a>
+<span class="sourceLineNo">113</span>            throw new AssertionError(tr("PolygonClipper.polygonDifference returned nonsense!"));<a name="line.113"></a>
+<span class="sourceLineNo">114</span>        }<a name="line.114"></a>
+<span class="sourceLineNo">115</span>    }<a name="line.115"></a>
+<span class="sourceLineNo">116</span><a name="line.116"></a>
+<span class="sourceLineNo">117</span>    private void clipSimpleMulti(EdWay clip_way, EdMultipolygon subject_mp) {<a name="line.117"></a>
+<span class="sourceLineNo">118</span><a name="line.118"></a>
+<span class="sourceLineNo">119</span>        boolean subject_has_nonclosed_ways = subject_mp.containsNonClosedWays();<a name="line.119"></a>
+<span class="sourceLineNo">120</span><a name="line.120"></a>
+<span class="sourceLineNo">121</span>        // #### add support for multipolygons with non-closed ways<a name="line.121"></a>
+<span class="sourceLineNo">122</span>        if (subject_has_nonclosed_ways) {<a name="line.122"></a>
+<span class="sourceLineNo">123</span>            // addPostTraceNotification(tr("Ignoring multipolygon {0}, it contains non-closed ways.", subject_mp.getUniqueId()));<a name="line.123"></a>
+<span class="sourceLineNo">124</span>            System.out.println("Ignoring multipolygon " + subject_mp.getUniqueId() + ", it contains non-closed ways.");<a name="line.124"></a>
+<span class="sourceLineNo">125</span>            return;<a name="line.125"></a>
+<span class="sourceLineNo">126</span>        }<a name="line.126"></a>
+<span class="sourceLineNo">127</span><a name="line.127"></a>
+<span class="sourceLineNo">128</span>        // First, connect all touching nodes of all subject ways to clip_way. This is necessary because<a name="line.128"></a>
+<span class="sourceLineNo">129</span>        // LPIS polygons series contain very small gaps that need to be elliminated before<a name="line.129"></a>
+<span class="sourceLineNo">130</span>        // clipping is performed. Also, there are false joint points on LPIS polygons' edges<a name="line.130"></a>
+<span class="sourceLineNo">131</span>        // where nodes must be added too.<a name="line.131"></a>
+<span class="sourceLineNo">132</span>        for (EdWay way : subject_mp.allWays()) {<a name="line.132"></a>
+<span class="sourceLineNo">133</span>            way.connectNonIncludedTouchingNodes(m_settings.connectSubjectToClipTolerance(), clip_way);<a name="line.133"></a>
+<span class="sourceLineNo">134</span>        }<a name="line.134"></a>
+<span class="sourceLineNo">135</span><a name="line.135"></a>
+<span class="sourceLineNo">136</span>        System.out.println("Computing difference: clip_way=" + Long.toString(clip_way.getUniqueId()) + ", subject_relation=" + Long.toString(subject_mp.getUniqueId()));<a name="line.136"></a>
+<span class="sourceLineNo">137</span><a name="line.137"></a>
+<span class="sourceLineNo">138</span>        AngPolygonClipper clipper = new AngPolygonClipper(m_editor, m_settings.clipperWayCleanupsTolerance(), m_settings.discardCutoffsPercent());<a name="line.138"></a>
+<span class="sourceLineNo">139</span>        clipper.polygonDifference(clip_way, subject_mp);<a name="line.139"></a>
+<span class="sourceLineNo">140</span>        if (clipper.changesOutsideDataBounds()) {<a name="line.140"></a>
+<span class="sourceLineNo">141</span>            addPostTraceNotification(tr("Multipolygon {0} would be modified outside downloaded area, ignoring.", subject_mp.getUniqueId()));<a name="line.141"></a>
+<span class="sourceLineNo">142</span>            return;<a name="line.142"></a>
+<span class="sourceLineNo">143</span>        }<a name="line.143"></a>
+<span class="sourceLineNo">144</span><a name="line.144"></a>
+<span class="sourceLineNo">145</span>        List&lt;List&lt;EdNode&gt;&gt; unmapped_new_outers = new ArrayList&lt;&gt;(clipper.outerPolygons());<a name="line.145"></a>
+<span class="sourceLineNo">146</span>        List&lt;List&lt;EdNode&gt;&gt; unmapped_new_inners = new ArrayList&lt;&gt;(clipper.innerPolygons());<a name="line.146"></a>
+<span class="sourceLineNo">147</span><a name="line.147"></a>
+<span class="sourceLineNo">148</span>        System.out.println("- result: outers=" + Long.toString(unmapped_new_outers.size()) + ", inners=" + Long.toString(unmapped_new_inners.size()));<a name="line.148"></a>
+<span class="sourceLineNo">149</span><a name="line.149"></a>
+<span class="sourceLineNo">150</span>        // Whole multipolygon disappeared<a name="line.150"></a>
+<span class="sourceLineNo">151</span>        if (unmapped_new_outers.isEmpty() &amp;&amp; unmapped_new_inners.isEmpty()) {<a name="line.151"></a>
+<span class="sourceLineNo">152</span>            // #### add handling of discarded cutoffs, but be careful<a name="line.152"></a>
+<span class="sourceLineNo">153</span>            addPostTraceNotification(tr("Multipolygon {0} would be completely removed, ignoring, please check.", subject_mp.getUniqueId()));<a name="line.153"></a>
+<span class="sourceLineNo">154</span>            return;<a name="line.154"></a>
+<span class="sourceLineNo">155</span>        }<a name="line.155"></a>
+<span class="sourceLineNo">156</span><a name="line.156"></a>
+<span class="sourceLineNo">157</span>        // Create bi-directional mapping of identical geometries<a name="line.157"></a>
+<span class="sourceLineNo">158</span>        List&lt;EdWay&gt; unmapped_old_outers = new ArrayList&lt;&gt;(subject_mp.outerWays());<a name="line.158"></a>
+<span class="sourceLineNo">159</span>        List&lt;EdWay&gt; unmapped_old_inners = new ArrayList&lt;&gt;(subject_mp.innerWays());<a name="line.159"></a>
+<span class="sourceLineNo">160</span>        mapIdenticalWays(unmapped_old_outers, unmapped_new_outers);<a name="line.160"></a>
+<span class="sourceLineNo">161</span>        mapIdenticalWays(unmapped_old_inners, unmapped_new_inners);<a name="line.161"></a>
+<span class="sourceLineNo">162</span><a name="line.162"></a>
+<span class="sourceLineNo">163</span>        // All new ways were successfully mapped to old ways?<a name="line.163"></a>
+<span class="sourceLineNo">164</span>        if (unmapped_old_outers.isEmpty() &amp;&amp; unmapped_old_inners.isEmpty() &amp;&amp; unmapped_new_outers.isEmpty() &amp;&amp; unmapped_new_inners.isEmpty()) {<a name="line.164"></a>
+<span class="sourceLineNo">165</span>            System.out.println(" o subject unchanged");<a name="line.165"></a>
+<span class="sourceLineNo">166</span>            return;<a name="line.166"></a>
+<span class="sourceLineNo">167</span>        }<a name="line.167"></a>
+<span class="sourceLineNo">168</span><a name="line.168"></a>
+<span class="sourceLineNo">169</span>        System.out.println("- unmapped_outers: old=" + Long.toString(unmapped_old_outers.size()) + ", new=" + Long.toString(unmapped_new_outers.size()));<a name="line.169"></a>
+<span class="sourceLineNo">170</span>        System.out.println("- unmapped_inners: old=" + Long.toString(unmapped_old_inners.size()) + ", new=" + Long.toString(unmapped_new_inners.size()));<a name="line.170"></a>
+<span class="sourceLineNo">171</span><a name="line.171"></a>
+<span class="sourceLineNo">172</span>        // Handle the easiest and most common case, only one outer way of a multipolygon was clipped<a name="line.172"></a>
+<span class="sourceLineNo">173</span>        // (Maybe, I should test that the old and new outer ways have non-empty intersection. Otherwise,<a name="line.173"></a>
+<span class="sourceLineNo">174</span>        // it means that one brand new outer way was created and one old outer way was completely deleted.<a name="line.174"></a>
+<span class="sourceLineNo">175</span>        // But as long as clip is a simple way, it should never happen, because new way can be created only<a name="line.175"></a>
+<span class="sourceLineNo">176</span>        // by clipping another existing way.)<a name="line.176"></a>
+<span class="sourceLineNo">177</span>        if (!subject_has_nonclosed_ways &amp;&amp; unmapped_old_outers.size() == 1 &amp;&amp; unmapped_new_outers.size() == 1<a name="line.177"></a>
+<span class="sourceLineNo">178</span>                &amp;&amp; unmapped_old_inners.isEmpty() &amp;&amp; unmapped_new_inners.isEmpty()) {<a name="line.178"></a>
+<span class="sourceLineNo">179</span>            EdWay old_outer_way = unmapped_old_outers.get(0);<a name="line.179"></a>
+<span class="sourceLineNo">180</span>            List&lt;EdNode&gt; new_outer_way = unmapped_new_outers.get(0);<a name="line.180"></a>
+<span class="sourceLineNo">181</span>            handleSimpleMultiOneOuterModified(clip_way, subject_mp, old_outer_way, new_outer_way);<a name="line.181"></a>
+<span class="sourceLineNo">182</span>            return;<a name="line.182"></a>
+<span class="sourceLineNo">183</span>        }<a name="line.183"></a>
+<span class="sourceLineNo">184</span><a name="line.184"></a>
+<span class="sourceLineNo">185</span>        // If modified ways have no (interesting) tags and no other referrers, we can<a name="line.185"></a>
+<span class="sourceLineNo">186</span>        // replace multipolygon's geometry quite agressively.<a name="line.186"></a>
+<span class="sourceLineNo">187</span>        if (!subject_has_nonclosed_ways<a name="line.187"></a>
+<span class="sourceLineNo">188</span>                &amp;&amp; untaggedSingleReferrerWays(unmapped_old_outers, subject_mp)<a name="line.188"></a>
+<span class="sourceLineNo">189</span>                &amp;&amp; untaggedSingleReferrerWays(unmapped_old_inners, subject_mp)) {<a name="line.189"></a>
+<span class="sourceLineNo">190</span>            handleSimpleMultiAgressiveUpdate(clip_way, subject_mp,<a name="line.190"></a>
+<span class="sourceLineNo">191</span>                    unmapped_old_outers, unmapped_old_inners, unmapped_new_outers, unmapped_new_inners);<a name="line.191"></a>
+<span class="sourceLineNo">192</span>            return;<a name="line.192"></a>
+<span class="sourceLineNo">193</span>        }<a name="line.193"></a>
+<span class="sourceLineNo">194</span><a name="line.194"></a>
+<span class="sourceLineNo">195</span>        addPostTraceNotification(tr("Multipolygon clipping result of {0} is too complex.", subject_mp.getUniqueId()));<a name="line.195"></a>
+<span class="sourceLineNo">196</span>    }<a name="line.196"></a>
+<span class="sourceLineNo">197</span><a name="line.197"></a>
+<span class="sourceLineNo">198</span>    /**<a name="line.198"></a>
+<span class="sourceLineNo">199</span>     * Returns true if all ways in the list have no (interesting) tag,<a name="line.199"></a>
+<span class="sourceLineNo">200</span>     * have the given multipolygon referrer and no other referrers.<a name="line.200"></a>
+<span class="sourceLineNo">201</span>     * @param list list of ways to check<a name="line.201"></a>
+<span class="sourceLineNo">202</span>     * @param referrer expected single referrer<a name="line.202"></a>
+<span class="sourceLineNo">203</span>     * @return true if all ways satisfy the requirements<a name="line.203"></a>
+<span class="sourceLineNo">204</span>     */<a name="line.204"></a>
+<span class="sourceLineNo">205</span>    private static boolean untaggedSingleReferrerWays(List&lt;EdWay&gt; list, EdMultipolygon referrer) {<a name="line.205"></a>
+<span class="sourceLineNo">206</span>        for (EdWay way: list) {<a name="line.206"></a>
+<span class="sourceLineNo">207</span>            if (way.isTagged())<a name="line.207"></a>
+<span class="sourceLineNo">208</span>                return false;<a name="line.208"></a>
+<span class="sourceLineNo">209</span>            if (!way.hasSingleReferrer(referrer))<a name="line.209"></a>
+<span class="sourceLineNo">210</span>                return false;<a name="line.210"></a>
+<span class="sourceLineNo">211</span>        }<a name="line.211"></a>
+<span class="sourceLineNo">212</span>        return true;<a name="line.212"></a>
+<span class="sourceLineNo">213</span>    }<a name="line.213"></a>
+<span class="sourceLineNo">214</span><a name="line.214"></a>
+<span class="sourceLineNo">215</span>    private static void mapIdenticalWays(List&lt;EdWay&gt; unmapped_old, List&lt;List&lt;EdNode&gt;&gt; unmapped_new) {<a name="line.215"></a>
+<span class="sourceLineNo">216</span>        int iold = 0;<a name="line.216"></a>
+<span class="sourceLineNo">217</span>        while (iold &lt; unmapped_old.size()) {<a name="line.217"></a>
+<span class="sourceLineNo">218</span>            EdWay old_way = unmapped_old.get(iold);<a name="line.218"></a>
+<span class="sourceLineNo">219</span>            List&lt;EdNode&gt; new_way = null;<a name="line.219"></a>
+<span class="sourceLineNo">220</span>            int inew = 0;<a name="line.220"></a>
+<span class="sourceLineNo">221</span>            for (; inew &lt; unmapped_new.size(); inew++) {<a name="line.221"></a>
+<span class="sourceLineNo">222</span>                List&lt;EdNode&gt; test_way = unmapped_new.get(inew);<a name="line.222"></a>
+<span class="sourceLineNo">223</span>                if (old_way.hasIdenticalEdNodeGeometry(test_way, true)) {<a name="line.223"></a>
+<span class="sourceLineNo">224</span>                    new_way = test_way;<a name="line.224"></a>
+<span class="sourceLineNo">225</span>                    break;<a name="line.225"></a>
+<span class="sourceLineNo">226</span>                }<a name="line.226"></a>
+<span class="sourceLineNo">227</span>            }<a name="line.227"></a>
+<span class="sourceLineNo">228</span>            if (new_way != null) {<a name="line.228"></a>
+<span class="sourceLineNo">229</span>                //mapped_old_new.put(old_way, new_way);<a name="line.229"></a>
+<span class="sourceLineNo">230</span>                //mapped_new_old.put(new_way, old_way);<a name="line.230"></a>
+<span class="sourceLineNo">231</span>                unmapped_old.remove(iold);<a name="line.231"></a>
+<span class="sourceLineNo">232</span>                unmapped_new.remove(inew);<a name="line.232"></a>
+<span class="sourceLineNo">233</span>            }<a name="line.233"></a>
+<span class="sourceLineNo">234</span>            else {<a name="line.234"></a>
+<span class="sourceLineNo">235</span>                iold++;<a name="line.235"></a>
+<span class="sourceLineNo">236</span>            }<a name="line.236"></a>
+<span class="sourceLineNo">237</span>        }<a name="line.237"></a>
+<span class="sourceLineNo">238</span>    }<a name="line.238"></a>
+<span class="sourceLineNo">239</span><a name="line.239"></a>
+<span class="sourceLineNo">240</span>    class SimilarWaysPair implements Comparable&lt;SimilarWaysPair&gt; {<a name="line.240"></a>
+<span class="sourceLineNo">241</span>        public final EdWay src;<a name="line.241"></a>
+<span class="sourceLineNo">242</span>        public final List&lt;EdNode&gt; dst;<a name="line.242"></a>
+<span class="sourceLineNo">243</span>        public final double similarity;<a name="line.243"></a>
+<span class="sourceLineNo">244</span><a name="line.244"></a>
+<span class="sourceLineNo">245</span>        public SimilarWaysPair(EdWay s, List&lt;EdNode&gt; d, double sim) {<a name="line.245"></a>
+<span class="sourceLineNo">246</span>            src = s;<a name="line.246"></a>
+<span class="sourceLineNo">247</span>            dst = d;<a name="line.247"></a>
+<span class="sourceLineNo">248</span>            similarity = sim;<a name="line.248"></a>
+<span class="sourceLineNo">249</span>        }<a name="line.249"></a>
+<span class="sourceLineNo">250</span><a name="line.250"></a>
+<span class="sourceLineNo">251</span>        @Override<a name="line.251"></a>
+<span class="sourceLineNo">252</span>        public int compareTo(SimilarWaysPair t) {<a name="line.252"></a>
+<span class="sourceLineNo">253</span>            int x = -Double.compare(this.similarity, t.similarity);<a name="line.253"></a>
+<span class="sourceLineNo">254</span>            if (x != 0)<a name="line.254"></a>
+<span class="sourceLineNo">255</span>                return x;<a name="line.255"></a>
+<span class="sourceLineNo">256</span>            return -Integer.compare(this.src.getNodesCount(), t.src.getNodesCount());<a name="line.256"></a>
+<span class="sourceLineNo">257</span>        }<a name="line.257"></a>
+<span class="sourceLineNo">258</span>    }<a name="line.258"></a>
+<span class="sourceLineNo">259</span><a name="line.259"></a>
+<span class="sourceLineNo">260</span>    /**<a name="line.260"></a>
+<span class="sourceLineNo">261</span>     * For every source EdWay, it tries to find the most similar dest way;<a name="line.261"></a>
+<span class="sourceLineNo">262</span>     * for every dest way, it tries to find the most similar source EdWay.<a name="line.262"></a>
+<span class="sourceLineNo">263</span>     * Ways with no suitable similar ways are excluded from the results.<a name="line.263"></a>
+<span class="sourceLineNo">264</span>     * Forward mapping is guaranteed to be a bijection (suitable for<a name="line.264"></a>
+<span class="sourceLineNo">265</span>     * way updates), reverse mapping can contain duplicate values (surjection).<a name="line.265"></a>
+<span class="sourceLineNo">266</span>     *<a name="line.266"></a>
+<span class="sourceLineNo">267</span>     * @param srcs list of source EdWays<a name="line.267"></a>
+<span class="sourceLineNo">268</span>     * @param dsts list of dest ways<a name="line.268"></a>
+<span class="sourceLineNo">269</span>     * @return a pair, first element is a map of source EdWays to most similar<a name="line.269"></a>
+<span class="sourceLineNo">270</span>     * dest ways, second element is a map of dest ways to most similar source EdWay<a name="line.270"></a>
+<span class="sourceLineNo">271</span>     */<a name="line.271"></a>
+<span class="sourceLineNo">272</span>    private Pair&lt;Map&lt;EdWay, List&lt;EdNode&gt;&gt;, Map&lt;List&lt;EdNode&gt;, EdWay&gt;&gt; pairSimilarWays (List&lt;EdWay&gt; srcs, List&lt;List&lt;EdNode&gt;&gt; dsts) {<a name="line.272"></a>
+<span class="sourceLineNo">273</span>        // Create Cartesian product of ways and sort pairs according to their similarity<a name="line.273"></a>
+<span class="sourceLineNo">274</span>        // (For simplicity, we estimate similarity from percentage of shared nodes.<a name="line.274"></a>
+<span class="sourceLineNo">275</span>        // It would be better to base the similarity on areas of polygon intersections.)<a name="line.275"></a>
+<span class="sourceLineNo">276</span>        PriorityQueue&lt;SimilarWaysPair&gt; queue = new PriorityQueue&lt;&gt;();<a name="line.276"></a>
+<span class="sourceLineNo">277</span>        for(EdWay w: srcs) {<a name="line.277"></a>
+<span class="sourceLineNo">278</span>            for (List&lt;EdNode&gt; nw: dsts) {<a name="line.278"></a>
+<span class="sourceLineNo">279</span>                int shared_nodes = w.getSharedNodesCount(nw);<a name="line.279"></a>
+<span class="sourceLineNo">280</span>                if (shared_nodes &gt; 0) {<a name="line.280"></a>
+<span class="sourceLineNo">281</span>                    double similarity = (double)shared_nodes / w.getNodesCount();<a name="line.281"></a>
+<span class="sourceLineNo">282</span>                    queue.add(new SimilarWaysPair(w, nw, similarity));<a name="line.282"></a>
+<span class="sourceLineNo">283</span>                }<a name="line.283"></a>
+<span class="sourceLineNo">284</span>            }<a name="line.284"></a>
+<span class="sourceLineNo">285</span>        }<a name="line.285"></a>
+<span class="sourceLineNo">286</span><a name="line.286"></a>
+<span class="sourceLineNo">287</span>        // Map ways...<a name="line.287"></a>
+<span class="sourceLineNo">288</span>        Map&lt;EdWay, List&lt;EdNode&gt;&gt; res1 = new HashMap&lt;&gt;();<a name="line.288"></a>
+<span class="sourceLineNo">289</span>        Map&lt;List&lt;EdNode&gt;, EdWay&gt; res2 = new HashMap&lt;&gt;();<a name="line.289"></a>
+<span class="sourceLineNo">290</span>        Set&lt;List&lt;EdNode&gt;&gt; res1used = new HashSet&lt;&gt;();<a name="line.290"></a>
+<span class="sourceLineNo">291</span>        SimilarWaysPair swp;<a name="line.291"></a>
+<span class="sourceLineNo">292</span>        while ((swp = queue.poll()) != null) {<a name="line.292"></a>
+<span class="sourceLineNo">293</span><a name="line.293"></a>
+<span class="sourceLineNo">294</span>            // forward mapping<a name="line.294"></a>
+<span class="sourceLineNo">295</span>            if (!res1.containsKey(swp.src) &amp;&amp; !res1used.contains(swp.dst)) {<a name="line.295"></a>
+<span class="sourceLineNo">296</span>                res1.put(swp.src, swp.dst);<a name="line.296"></a>
+<span class="sourceLineNo">297</span>                res1used.add(swp.dst);<a name="line.297"></a>
+<span class="sourceLineNo">298</span>            }<a name="line.298"></a>
+<span class="sourceLineNo">299</span><a name="line.299"></a>
+<span class="sourceLineNo">300</span>            // reverse mapping<a name="line.300"></a>
+<span class="sourceLineNo">301</span>            if (!res2.containsKey(swp.dst)) {<a name="line.301"></a>
+<span class="sourceLineNo">302</span>                res2.put(swp.dst, swp.src);<a name="line.302"></a>
+<span class="sourceLineNo">303</span>            }<a name="line.303"></a>
+<span class="sourceLineNo">304</span>        }<a name="line.304"></a>
+<span class="sourceLineNo">305</span><a name="line.305"></a>
+<span class="sourceLineNo">306</span>        return new Pair&lt;&gt;(res1, res2);<a name="line.306"></a>
+<span class="sourceLineNo">307</span>    }<a name="line.307"></a>
+<span class="sourceLineNo">308</span><a name="line.308"></a>
+<span class="sourceLineNo">309</span>    private void handleSimpleSimpleSimple(EdWay clip_way, EdWay subject_way, List&lt;EdNode&gt; result) {<a name="line.309"></a>
+<span class="sourceLineNo">310</span>        // ** Easiest case - simple way clipped by a simple way produced a single polygon **<a name="line.310"></a>
+<span class="sourceLineNo">311</span><a name="line.311"></a>
+<span class="sourceLineNo">312</span>        System.out.println("Clip result: simple");<a name="line.312"></a>
+<span class="sourceLineNo">313</span><a name="line.313"></a>
+<span class="sourceLineNo">314</span>        // Subject way unchanged?<a name="line.314"></a>
+<span class="sourceLineNo">315</span>        if (subject_way.hasIdenticalEdNodeGeometry(result, true)) {<a name="line.315"></a>
+<span class="sourceLineNo">316</span>            System.out.println(" o subject unchanged");<a name="line.316"></a>
+<span class="sourceLineNo">317</span>            return;<a name="line.317"></a>
+<span class="sourceLineNo">318</span>        }<a name="line.318"></a>
+<span class="sourceLineNo">319</span><a name="line.319"></a>
+<span class="sourceLineNo">320</span>        System.out.println(" ! CLIPPING subject " + Long.toString(subject_way.getUniqueId()));<a name="line.320"></a>
+<span class="sourceLineNo">321</span><a name="line.321"></a>
+<span class="sourceLineNo">322</span>        // Subject way changed, change its geometry<a name="line.322"></a>
+<span class="sourceLineNo">323</span>        subject_way.setNodes(result);<a name="line.323"></a>
+<span class="sourceLineNo">324</span><a name="line.324"></a>
+<span class="sourceLineNo">325</span>        // Connect clip_way to subject_way, this step guarantees that all newly created<a name="line.325"></a>
+<span class="sourceLineNo">326</span>        // intersection nodes will be included in both ways.<a name="line.326"></a>
+<span class="sourceLineNo">327</span>        clip_way.connectNonIncludedTouchingNodes(m_settings.reconnectIntersectionNodesTolerance(), subject_way);<a name="line.327"></a>
+<span class="sourceLineNo">328</span>    }<a name="line.328"></a>
+<span class="sourceLineNo">329</span><a name="line.329"></a>
+<span class="sourceLineNo">330</span>    private void handleSimpleMultiOneOuterModified (EdWay clip_way, EdMultipolygon subject_mp, EdWay old_outer_way, List&lt;EdNode&gt; result) {<a name="line.330"></a>
+<span class="sourceLineNo">331</span>        // ** Easy case - clip of a multipolygon modified exactly one outer way and nothing else **<a name="line.331"></a>
+<span class="sourceLineNo">332</span><a name="line.332"></a>
+<span class="sourceLineNo">333</span>        System.out.println(" ! CLIPPING subject " + Long.toString(subject_mp.getUniqueId()) + ", outer way modified: " + Long.toString(old_outer_way.getUniqueId()));<a name="line.333"></a>
+<span class="sourceLineNo">334</span><a name="line.334"></a>
+<span class="sourceLineNo">335</span>        // Change geometry of the changed outer way<a name="line.335"></a>
+<span class="sourceLineNo">336</span>        old_outer_way.setNodes(result);<a name="line.336"></a>
+<span class="sourceLineNo">337</span><a name="line.337"></a>
+<span class="sourceLineNo">338</span>        // Connect clip_way to subject_way, this step guarantees that all newly created<a name="line.338"></a>
+<span class="sourceLineNo">339</span>        // intersection nodes will be included in both ways.<a name="line.339"></a>
+<span class="sourceLineNo">340</span>        clip_way.connectNonIncludedTouchingNodes(m_settings.reconnectIntersectionNodesTolerance(), old_outer_way);<a name="line.340"></a>
+<span class="sourceLineNo">341</span>    }<a name="line.341"></a>
+<span class="sourceLineNo">342</span><a name="line.342"></a>
+<span class="sourceLineNo">343</span>    private void handleSimpleSimpleMulti(EdWay clip_way, EdWay subject_way, List&lt;List&lt;EdNode&gt;&gt; outers, List&lt;List&lt;EdNode&gt;&gt; inners) {<a name="line.343"></a>
+<span class="sourceLineNo">344</span>        // ** Simple way clipped by a simple way produced multiple polygons **<a name="line.344"></a>
+<span class="sourceLineNo">345</span><a name="line.345"></a>
+<span class="sourceLineNo">346</span>        if (inners.isEmpty()) {<a name="line.346"></a>
+<span class="sourceLineNo">347</span>            System.out.println("Clip result: multi outers");<a name="line.347"></a>
+<span class="sourceLineNo">348</span>            handleSimpleSimpleMultiOuters(clip_way, subject_way, outers);<a name="line.348"></a>
+<span class="sourceLineNo">349</span>        }<a name="line.349"></a>
+<span class="sourceLineNo">350</span>        else {<a name="line.350"></a>
+<span class="sourceLineNo">351</span>            System.out.println("Clip result: multi mixed");<a name="line.351"></a>
+<span class="sourceLineNo">352</span>            // #### not completed<a name="line.352"></a>
+<span class="sourceLineNo">353</span>            addPostTraceNotification(tr("Clipping changes simple way {0} to multipolygon, not supported yet.", subject_way.getUniqueId()));<a name="line.353"></a>
+<span class="sourceLineNo">354</span>        }<a name="line.354"></a>
+<span class="sourceLineNo">355</span>    }<a name="line.355"></a>
+<span class="sourceLineNo">356</span><a name="line.356"></a>
+<span class="sourceLineNo">357</span>    private void handleSimpleSimpleMultiOuters(EdWay clip_way, EdWay subject_way, List&lt;List&lt;EdNode&gt;&gt; outers) {<a name="line.357"></a>
+<span class="sourceLineNo">358</span>        // ** Simple subject clipped by a simple way produced multiple simple (outer) polygons **<a name="line.358"></a>
+<span class="sourceLineNo">359</span><a name="line.359"></a>
+<span class="sourceLineNo">360</span>        // Don't clip subject which is a member of a (non-multipolygon) relation.<a name="line.360"></a>
+<span class="sourceLineNo">361</span>        // It's questionable if all pieces should be added to the relation, or only some of them, etc...<a name="line.361"></a>
+<span class="sourceLineNo">362</span>        if (subject_way.hasEditorReferrers() || subject_way.hasExternalReferrers()) {<a name="line.362"></a>
+<span class="sourceLineNo">363</span>            addPostTraceNotification(tr("Clipped way {0} is a member of non-multipolygon relation, not supported yet.", subject_way.getUniqueId()));<a name="line.363"></a>
+<span class="sourceLineNo">364</span>            return;<a name="line.364"></a>
+<span class="sourceLineNo">365</span>        }<a name="line.365"></a>
+<span class="sourceLineNo">366</span><a name="line.366"></a>
+<span class="sourceLineNo">367</span>        System.out.println(" ! CLIPPING subject " + Long.toString(subject_way.getUniqueId()) + " to multiple simple ways");<a name="line.367"></a>
+<span class="sourceLineNo">368</span><a name="line.368"></a>
+<span class="sourceLineNo">369</span>        // #### Generally, it's better to create multiple simple ways than combine them to a new multipolygon.<a name="line.369"></a>
+<span class="sourceLineNo">370</span>        // But in some cases, maybe it would make sense to create a multipolygon... E.g. named landuse areas??<a name="line.370"></a>
+<span class="sourceLineNo">371</span><a name="line.371"></a>
+<span class="sourceLineNo">372</span>        // find the largest polygon, which will be used to update subject_way's geometry<a name="line.372"></a>
+<span class="sourceLineNo">373</span>        List&lt;EdNode&gt; maxnodes = null;<a name="line.373"></a>
+<span class="sourceLineNo">374</span>        double maxarea = Double.NEGATIVE_INFINITY;<a name="line.374"></a>
+<span class="sourceLineNo">375</span>        for (List&lt;EdNode&gt; nodes: outers) {<a name="line.375"></a>
+<span class="sourceLineNo">376</span>            double area = GeomUtils.getEastNorthArea(nodes);<a name="line.376"></a>
+<span class="sourceLineNo">377</span>            if (area &lt; maxarea)<a name="line.377"></a>
+<span class="sourceLineNo">378</span>                continue;<a name="line.378"></a>
+<span class="sourceLineNo">379</span>            maxnodes = nodes;<a name="line.379"></a>
+<span class="sourceLineNo">380</span>            maxarea = area;<a name="line.380"></a>
+<span class="sourceLineNo">381</span>        }<a name="line.381"></a>
+<span class="sourceLineNo">382</span><a name="line.382"></a>
+<span class="sourceLineNo">383</span>        // update subject_way geometry and create new ways for the other pieces<a name="line.383"></a>
+<span class="sourceLineNo">384</span>        for (List&lt;EdNode&gt; nodes: outers) {<a name="line.384"></a>
+<span class="sourceLineNo">385</span>            if (nodes == maxnodes) {<a name="line.385"></a>
+<span class="sourceLineNo">386</span>                subject_way.setNodes(nodes);<a name="line.386"></a>
+<span class="sourceLineNo">387</span>                clip_way.connectNonIncludedTouchingNodes(m_settings.reconnectIntersectionNodesTolerance(), subject_way);<a name="line.387"></a>
+<span class="sourceLineNo">388</span>            }<a name="line.388"></a>
+<span class="sourceLineNo">389</span>            else {<a name="line.389"></a>
+<span class="sourceLineNo">390</span>                EdWay new_way = m_editor.newWay(nodes);<a name="line.390"></a>
+<span class="sourceLineNo">391</span>                new_way.setKeys(subject_way.getKeys());<a name="line.391"></a>
+<span class="sourceLineNo">392</span>                clip_way.connectNonIncludedTouchingNodes(m_settings.reconnectIntersectionNodesTolerance(), new_way);<a name="line.392"></a>
+<span class="sourceLineNo">393</span>            }<a name="line.393"></a>
+<span class="sourceLineNo">394</span>        }<a name="line.394"></a>
+<span class="sourceLineNo">395</span>    }<a name="line.395"></a>
+<span class="sourceLineNo">396</span><a name="line.396"></a>
+<span class="sourceLineNo">397</span>    private void handleSimpleMultiAgressiveUpdate(EdWay clip_way, EdMultipolygon subject_mp, List&lt;EdWay&gt; unmapped_old_outers, List&lt;EdWay&gt; unmapped_old_inners, List&lt;List&lt;EdNode&gt;&gt; unmapped_new_outers, List&lt;List&lt;EdNode&gt;&gt; unmapped_new_inners) {<a name="line.397"></a>
+<span class="sourceLineNo">398</span>        // ** Agressive update of a multipolygon clipped by a simple way<a name="line.398"></a>
+<span class="sourceLineNo">399</span><a name="line.399"></a>
+<span class="sourceLineNo">400</span>        if (!unmapped_old_outers.isEmpty() || !unmapped_new_outers.isEmpty()) {<a name="line.400"></a>
+<span class="sourceLineNo">401</span><a name="line.401"></a>
+<span class="sourceLineNo">402</span>            // Update geometry of outer ways that can be paired together as similar ones<a name="line.402"></a>
+<span class="sourceLineNo">403</span>            Pair&lt;Map&lt;EdWay, List&lt;EdNode&gt;&gt;, Map&lt;List&lt;EdNode&gt;, EdWay&gt;&gt; outer_pair_maps = pairSimilarWays (unmapped_old_outers, unmapped_new_outers);<a name="line.403"></a>
+<span class="sourceLineNo">404</span>            Map&lt;EdWay, List&lt;EdNode&gt;&gt; outer_pairs = outer_pair_maps.a;<a name="line.404"></a>
+<span class="sourceLineNo">405</span>            Map&lt;List&lt;EdNode&gt;, EdWay&gt; outer_revs = outer_pair_maps.b;<a name="line.405"></a>
+<span class="sourceLineNo">406</span>            for (Map.Entry&lt;EdWay, List&lt;EdNode&gt;&gt; pair: outer_pairs.entrySet()) {<a name="line.406"></a>
+<span class="sourceLineNo">407</span>                EdWay old_way = pair.getKey();<a name="line.407"></a>
+<span class="sourceLineNo">408</span>                List&lt;EdNode&gt; new_nodes = pair.getValue();<a name="line.408"></a>
+<span class="sourceLineNo">409</span>                old_way.setNodes(new_nodes);<a name="line.409"></a>
+<span class="sourceLineNo">410</span>                clip_way.connectNonIncludedTouchingNodes(m_settings.reconnectIntersectionNodesTolerance(), old_way);<a name="line.410"></a>
+<span class="sourceLineNo">411</span>                unmapped_old_outers.remove(old_way);<a name="line.411"></a>
+<span class="sourceLineNo">412</span>                unmapped_new_outers.remove(new_nodes);<a name="line.412"></a>
+<span class="sourceLineNo">413</span>                System.out.println("Changing outer geometry " + Long.toString(old_way.getUniqueId()));<a name="line.413"></a>
+<span class="sourceLineNo">414</span>            }<a name="line.414"></a>
+<span class="sourceLineNo">415</span><a name="line.415"></a>
+<span class="sourceLineNo">416</span>            // Create new outer ways with tagging based on reverse similarity mapping<a name="line.416"></a>
+<span class="sourceLineNo">417</span>            // (If no reverse mapping is available, leave way untagged)<a name="line.417"></a>
+<span class="sourceLineNo">418</span>            for (List&lt;EdNode&gt; new_nodes: unmapped_new_outers) {<a name="line.418"></a>
+<span class="sourceLineNo">419</span>                EdWay new_way = m_editor.newWay(new_nodes);<a name="line.419"></a>
+<span class="sourceLineNo">420</span>                EdWay old_way = outer_revs.get(new_nodes);<a name="line.420"></a>
+<span class="sourceLineNo">421</span>                if (old_way != null)<a name="line.421"></a>
+<span class="sourceLineNo">422</span>                    new_way.setKeys(old_way.getKeys());<a name="line.422"></a>
+<span class="sourceLineNo">423</span>                clip_way.connectNonIncludedTouchingNodes(m_settings.reconnectIntersectionNodesTolerance(), new_way);<a name="line.423"></a>
+<span class="sourceLineNo">424</span>                subject_mp.addOuterWay(new_way);<a name="line.424"></a>
+<span class="sourceLineNo">425</span>                System.out.println("Adding outer way " + Long.toString(new_way.getUniqueId()));<a name="line.425"></a>
+<span class="sourceLineNo">426</span>            }<a name="line.426"></a>
+<span class="sourceLineNo">427</span><a name="line.427"></a>
+<span class="sourceLineNo">428</span>            // Remove old outer ways that weren't mapped to new ways<a name="line.428"></a>
+<span class="sourceLineNo">429</span>            // (We assume that the ways have no interesting tags and referrers,<a name="line.429"></a>
+<span class="sourceLineNo">430</span>            // and will be automatically deleted by WayEditor.)<a name="line.430"></a>
+<span class="sourceLineNo">431</span>            for (EdWay old_way: unmapped_old_outers) {<a name="line.431"></a>
+<span class="sourceLineNo">432</span>                subject_mp.removeOuterWay(old_way);<a name="line.432"></a>
+<span class="sourceLineNo">433</span>                System.out.println("Removing outer way " + Long.toString(old_way.getUniqueId()));<a name="line.433"></a>
+<span class="sourceLineNo">434</span>            }<a name="line.434"></a>
+<span class="sourceLineNo">435</span>        }<a name="line.435"></a>
+<span class="sourceLineNo">436</span><a name="line.436"></a>
+<span class="sourceLineNo">437</span>        if (!unmapped_old_inners.isEmpty() || !unmapped_new_inners.isEmpty()) {<a name="line.437"></a>
+<span class="sourceLineNo">438</span><a name="line.438"></a>
+<span class="sourceLineNo">439</span>            // Update geometry of inner ways that can be paired together as similar ones<a name="line.439"></a>
+<span class="sourceLineNo">440</span>            Pair&lt;Map&lt;EdWay, List&lt;EdNode&gt;&gt;, Map&lt;List&lt;EdNode&gt;, EdWay&gt;&gt; inner_pair_maps = pairSimilarWays (unmapped_old_inners, unmapped_new_inners);<a name="line.440"></a>
+<span class="sourceLineNo">441</span>            Map&lt;EdWay, List&lt;EdNode&gt;&gt; inner_pairs = inner_pair_maps.a;<a name="line.441"></a>
+<span class="sourceLineNo">442</span>            Map&lt;List&lt;EdNode&gt;, EdWay&gt; inner_revs = inner_pair_maps.b;<a name="line.442"></a>
+<span class="sourceLineNo">443</span>            for (Map.Entry&lt;EdWay, List&lt;EdNode&gt;&gt; pair: inner_pairs.entrySet()) {<a name="line.443"></a>
+<span class="sourceLineNo">444</span>                EdWay old_way = pair.getKey();<a name="line.444"></a>
+<span class="sourceLineNo">445</span>                List&lt;EdNode&gt; new_nodes = pair.getValue();<a name="line.445"></a>
+<span class="sourceLineNo">446</span>                old_way.setNodes(new_nodes);<a name="line.446"></a>
+<span class="sourceLineNo">447</span>                clip_way.connectNonIncludedTouchingNodes(m_settings.reconnectIntersectionNodesTolerance(), old_way);<a name="line.447"></a>
+<span class="sourceLineNo">448</span>                unmapped_old_inners.remove(old_way);<a name="line.448"></a>
+<span class="sourceLineNo">449</span>                unmapped_new_inners.remove(new_nodes);<a name="line.449"></a>
+<span class="sourceLineNo">450</span>                System.out.println("Changing inner geometry " + Long.toString(old_way.getUniqueId()));<a name="line.450"></a>
+<span class="sourceLineNo">451</span>            }<a name="line.451"></a>
+<span class="sourceLineNo">452</span><a name="line.452"></a>
+<span class="sourceLineNo">453</span>            // Create new inner ways<a name="line.453"></a>
+<span class="sourceLineNo">454</span>            for (List&lt;EdNode&gt; new_nodes: unmapped_new_inners) {<a name="line.454"></a>
+<span class="sourceLineNo">455</span>                // use tagging of the most similar reverse mapped way, if any<a name="line.455"></a>
+<span class="sourceLineNo">456</span>                EdWay new_way = m_editor.newWay(new_nodes);<a name="line.456"></a>
+<span class="sourceLineNo">457</span>                EdWay old_way = inner_revs.get(new_nodes);<a name="line.457"></a>
+<span class="sourceLineNo">458</span>                if (old_way != null)<a name="line.458"></a>
+<span class="sourceLineNo">459</span>                    new_way.setKeys(old_way.getKeys());<a name="line.459"></a>
+<span class="sourceLineNo">460</span>                clip_way.connectNonIncludedTouchingNodes(m_settings.reconnectIntersectionNodesTolerance(), new_way);<a name="line.460"></a>
+<span class="sourceLineNo">461</span>                subject_mp.addInnerWay(new_way);<a name="line.461"></a>
+<span class="sourceLineNo">462</span>                System.out.println("Adding inner way " + Long.toString(new_way.getUniqueId()));<a name="line.462"></a>
+<span class="sourceLineNo">463</span>            }<a name="line.463"></a>
+<span class="sourceLineNo">464</span><a name="line.464"></a>
+<span class="sourceLineNo">465</span>            // Remove old inner ways that weren't mapped to new ways<a name="line.465"></a>
+<span class="sourceLineNo">466</span>            // (We assume that the ways have no interesting tags and referrers,<a name="line.466"></a>
+<span class="sourceLineNo">467</span>            // and will be automatically deleted by WayEditor.)<a name="line.467"></a>
+<span class="sourceLineNo">468</span>            for (EdWay old_way: unmapped_old_inners) {<a name="line.468"></a>
+<span class="sourceLineNo">469</span>                subject_mp.removeInnerWay(old_way);<a name="line.469"></a>
+<span class="sourceLineNo">470</span>                System.out.println("Removing inner way " + Long.toString(old_way.getUniqueId()));<a name="line.470"></a>
+<span class="sourceLineNo">471</span>            }<a name="line.471"></a>
+<span class="sourceLineNo">472</span>        }<a name="line.472"></a>
+<span class="sourceLineNo">473</span>    }<a name="line.473"></a>
+<span class="sourceLineNo">474</span><a name="line.474"></a>
+<span class="sourceLineNo">475</span>    private void addPostTraceNotification(String msg) {<a name="line.475"></a>
+<span class="sourceLineNo">476</span>        if (m_postTraceNotifications == null)<a name="line.476"></a>
+<span class="sourceLineNo">477</span>            return;<a name="line.477"></a>
+<span class="sourceLineNo">478</span>        m_postTraceNotifications.add(msg);<a name="line.478"></a>
+<span class="sourceLineNo">479</span>    }<a name="line.479"></a>
+<span class="sourceLineNo">480</span><a name="line.480"></a>
+<span class="sourceLineNo">481</span>}<a name="line.481"></a>
+<span class="sourceLineNo">482</span><a name="line.482"></a>
+<span class="sourceLineNo">483</span><a name="line.483"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>

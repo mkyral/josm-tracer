@@ -1,0 +1,8 @@
+org.openstreetmap.josm.plugins.tracer
+org.openstreetmap.josm.plugins.tracer.clipper
+org.openstreetmap.josm.plugins.tracer.connectways
+org.openstreetmap.josm.plugins.tracer.modules.building
+org.openstreetmap.josm.plugins.tracer.modules.classic
+org.openstreetmap.josm.plugins.tracer.modules.lpis
+org.openstreetmap.josm.plugins.tracer.modules.ruian
+org.openstreetmap.josm.plugins.tracer.modules.ruianLands
