@@ -1,4 +1,4 @@
-#josm-tracer
+# josm-tracer
 
 This is an updated version of the original [JOSM Tracer plugin](http://wiki.openstreetmap.org/wiki/JOSM/Plugins/Tracer) originally written by Jan Bilak, Petr Dlouhý (and based on Lakewalker from Rodney Kinney and Brent Easton).
 
@@ -11,7 +11,7 @@ Currently, there is a new source [RUIAN](http://wiki.openstreetmap.org/wiki/RUIA
 **Disadvantage:** Does not cover whole Czech Republic (but cadastral map has not full coverage as well).
 
 
-##Changes description
+## Changes description
 Tracer plugin was modularized, connecting to existing polygons was improved (thanks [Martin Švec](https://github.com/Maatts) for his big help).
 
 Currently, following modules are available:
@@ -54,13 +54,13 @@ Cursor|Mode description
 
 
 
-##TODO:
+## TODO:
 - [ ] Allows retracing of multipolygons (mainly for Lpis) module
 - [ ] Update documentation on JOSM wiki
 - [ ] Replace original Tracer plugin in josm svn repository
 
 
-##Screenshots
+## Screenshots
 **Trace mode enabled**
 
 ![](http://www.kyralovi.cz/tmp/josm/RUIANtracer.png)
