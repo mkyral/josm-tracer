@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Tracer-testing" default="dist" basedir=".">
     <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Tracer-testing - Adapt to LPIS API change - LPIS_DPB_UCINNE_BBOX replaced by simple LPIS_DPB_UCINNE."/>
+    <property name="commit.message" value="Tracer-testing - Fix Krovak - WGS84 coordinates transformation issue with latest geotools"/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
     <property name="plugin.main.version" value="15386"/>
     <property name="plugin.canloadatruntime" value="true"/>
@@ -15,8 +15,10 @@
     <!-- ** include targets that all plugins have in common ** -->
     <import file="./build-common.xml.testing"/>
 
-    <property name="plugin.requires" value="jts;geotools"/>
+    <property name="plugin.requires" value="jts;geotools;ejml;jaxb"/>
     <property name="jts" location="${plugin.dist.dir}/jts.jar"/>
+    <property name="ejml" location="${plugin.dist.dir}/ejml.jar"/>
+    <property name="jaxb" location="${plugin.dist.dir}/jaxb.jar"/>
     <property name="geotools" location="${plugin.dist.dir}/geotools.jar"/>
 
     <target name="my-init-git-revision-xml" unless="skip-revision">
@@ -43,9 +45,6 @@
       <xmlproperty file="REVISION.XML" prefix="version" keepRoot="false" collapseAttributes="true"/>
 <!--       <delete file="REVISION.XML"/> -->
     </target>
-
-    <property name="jts" location="${plugin.dist.dir}/jts.jar"/>
-    <property name="geotools" location="${plugin.dist.dir}/geotools.jar"/>
 
     <!--
     **********************************************************
