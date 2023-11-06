@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Tracer-testing" default="dist" basedir=".">
     <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Tracer-testing - Fix Krovak - WGS84 coordinates transformation issue with latest geotools"/>
+    <property name="commit.message" value="Tracer-testing - adapt to API changes in geotools 30"/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
     <property name="plugin.main.version" value="15386"/>
     <property name="plugin.canloadatruntime" value="true"/>

@@ -19,22 +19,12 @@
 
 package org.openstreetmap.josm.plugins.tracer.modules.lpis;
 
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import javax.swing.JOptionPane;
-
-import org.openstreetmap.josm.gui.Notification;
-import org.openstreetmap.josm.data.coor.LatLon;
-// import org.openstreetmap.josm.plugins.tracer.xyCoor;
-
-import org.locationtech.jts.geom.*;
+import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
+import org.geotools.api.referencing.operation.MathTransform;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
-import org.opengis.referencing.operation.MathTransform;
-import org.opengis.referencing.operation.TransformException;
+import org.openstreetmap.josm.data.coor.LatLon;
 
 public class krovak {
 
