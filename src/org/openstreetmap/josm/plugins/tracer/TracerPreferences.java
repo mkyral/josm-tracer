@@ -177,8 +177,8 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
         TracerUrlValueField.setText(m_customTracerUrlText);
 
         TracerAdjustCheckBox.setSelected(m_tracerAdjustPosition);
-        TracerAdjustLatSpinner.setValue(new Integer(m_tracerAdjustPositionLatVal));
-        TracerAdjustLonSpinner.setValue(new Integer(m_tracerAdjustPositionLonVal));
+        TracerAdjustLatSpinner.setValue(Integer.valueOf(m_tracerAdjustPositionLatVal));
+        TracerAdjustLonSpinner.setValue(Integer.valueOf(m_tracerAdjustPositionLonVal));
         TracerLatSignComboBox.setSelectedIndex(m_tracerAdjustPositionLatSign);
         TracerLonSignComboBox.setSelectedIndex(m_tracerAdjustPositionLonSign);
 
@@ -186,8 +186,8 @@ public class TracerPreferences extends DefaultTabPreferenceSetting {
         RuianUrlValueField.setText(m_customRuianUrlText);
 
         RuianAdjustCheckBox.setSelected(m_ruianAdjustPosition);
-        RuianAdjustLatSpinner.setValue(new Integer(m_ruianAdjustPositionLatVal));
-        RuianAdjustLonSpinner.setValue(new Integer(m_ruianAdjustPositionLonVal));
+        RuianAdjustLatSpinner.setValue(Integer.valueOf(m_ruianAdjustPositionLatVal));
+        RuianAdjustLonSpinner.setValue(Integer.valueOf(m_ruianAdjustPositionLonVal));
         RuianLatSignComboBox.setSelectedIndex(m_ruianAdjustPositionLatSign);
         RuianLonSignComboBox.setSelectedIndex(m_ruianAdjustPositionLonSign);
     }
