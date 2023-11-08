@@ -12,6 +12,7 @@
     <property name="plugin.icon" value="images/mapmode/tracer-sml.png"/>
     <property name="plugin.link" value="https://wiki.openstreetmap.org/wiki/JOSM/Plugins/Tracer"/>
     <property name="plugin.requires" value="jts;geotools"/>
+    <property name="plugin.minimum.java.version" value="11"/>
 
     <!-- ** include targets that all plugins have in common ** -->
     <import file="../build-common.xml"/>
