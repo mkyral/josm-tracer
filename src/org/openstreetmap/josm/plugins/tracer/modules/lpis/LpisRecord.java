@@ -83,8 +83,8 @@ public final class LpisRecord extends TracerRecord {
                 m_usageOsm.put("landuse", "vineyard");
                 break;
             case "plocha s lanýži":
-                m_usageOsm.put("landuse", "farmland");
-                m_usageOsm.put("crop", "truffle");
+                m_usageOsm.put("landuse", "orchard");
+                m_usageOsm.put("produce", "truffle");
                 return;
             case "ovocný sad":
                 m_usageOsm.put("landuse", "orchard");
