@@ -72,7 +72,6 @@ public final class LpisRecord extends TracerRecord {
 
     private void mapToOsm () {
         switch (m_usage) {
-            case "orná půda":
             case "standardní orná půda":
                 m_usageOsm.put("landuse", "farmland");
                 break;
@@ -83,16 +82,18 @@ public final class LpisRecord extends TracerRecord {
             case "vinice":
                 m_usageOsm.put("landuse", "vineyard");
                 break;
+            case "plocha s lanýži":
+                m_usageOsm.put("landuse", "farmland");
+                m_usageOsm.put("crop", "truffle");
+                return;
             case "ovocný sad":
                 m_usageOsm.put("landuse", "orchard");
                 break;
-            case "travní porost":
             case "trvalý travní porost":
                 m_usageOsm.put("landuse", "meadow");
                 m_usageOsm.put("meadow", "agricultural");
                 break;
-            case "porost RRD":
-            case "RRD":
+            case "rychle rostoucí dřeviny":
                 m_usageOsm.put("landuse", "forest");
                 m_usageOsm.put("crop", "fast_growing_wood");
                 break;
@@ -121,19 +122,19 @@ public final class LpisRecord extends TracerRecord {
                 m_usageOsm.put("landuse", "farmland");
                 m_usageOsm.put("crop", "vegetables");
                 break;
-            case "tráva na orné":
             case "travní porost (na orné půdě)":
                 m_usageOsm.put("landuse", "farmland");
                 m_usageOsm.put("crop", "grass");
                 break;
             case "úhor":
+            case "plocha s kontejnery":
                 m_usageOsm.put("landuse", "farmland");
                 m_usageOsm.put("crop", "no");
                 break;
             case "jiná trvalá kultura":
-                m_usageOsm.put("landuse", "farmland");
-                break;
+            case "plocha s víceletými produkčními plodinami":
             case "mimoprodukční kultura":
+            case "mimoprodukční plocha":
                 m_usageOsm.put("landuse", "farmland");
                 break;
             default:
