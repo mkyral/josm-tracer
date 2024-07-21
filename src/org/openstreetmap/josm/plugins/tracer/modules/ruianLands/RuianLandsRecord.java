@@ -21,10 +21,10 @@ package org.openstreetmap.josm.plugins.tracer.modules.ruianLands;
 import java.io.ByteArrayInputStream;
 
 import java.util.*;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
+import jakarta.json.Json;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 
