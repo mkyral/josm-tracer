@@ -1,0 +1,55 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.openstreetmap.josm.plugins</groupId>
+        <artifactId>plugin-root</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>tracer</artifactId>
+
+    <url>${plugin.link}</url>
+    <developers>
+        <developer>
+            <name>Jan Bilak</name>
+        </developer>
+        <developer>
+            <name>Petr Dlouhý</name>
+        </developer>
+        <developer>
+            <name>Marián Kyral</name>
+        </developer>
+        <developer>
+            <name>Martin Švec</name>
+        </developer>
+    </developers>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <plugin.src.dir>src</plugin.src.dir>
+        <plugin.main.version>18464</plugin.main.version>
+        <plugin.canloadatruntime>true</plugin.canloadatruntime>
+
+        <plugin.author>Jan Bilak, Petr Dlouhý, Marián Kyral, Martin Švec</plugin.author>
+        <plugin.class>org.openstreetmap.josm.plugins.tracer.TracerPlugin</plugin.class>
+        <plugin.description>This is an testing version of the improved original Tracer plugin developed at https://github.com/mkyral/josm-tracer</plugin.description>
+        <plugin.icon>images/mapmode/tracer-sml.png</plugin.icon>
+        <plugin.link>https://wiki.openstreetmap.org/wiki/JOSM/Plugins/Tracer</plugin.link>
+    </properties>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Plugin-Link>${plugin.link}</Plugin-Link>
+                            <Plugin-Icon>${plugin.icon}</Plugin-Icon>
+                            <Plugin-Canloadatruntime>${plugin.canloadatruntime}</Plugin-Canloadatruntime>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
