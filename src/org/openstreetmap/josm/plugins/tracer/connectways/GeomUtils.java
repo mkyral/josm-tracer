@@ -21,6 +21,7 @@ package org.openstreetmap.josm.plugins.tracer.connectways;
 
 import java.util.List;
 import org.openstreetmap.josm.data.coor.EastNorth;
+import org.openstreetmap.josm.data.coor.ILatLon;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.projection.Ellipsoid;
@@ -84,8 +85,8 @@ public abstract class GeomUtils {
      * @return Angle in radians
      */
     public static double unorientedAngleBetween(Node p0, Node p1, Node p2) {
-        double a1 = p1.getCoor().bearing(p0.getCoor());
-        double a2 = p1.getCoor().bearing(p2.getCoor());
+        double a1 = p1.bearing(p0.getCoor());
+        double a2 = p1.bearing(p2.getCoor());
         double angle = Math.abs(a2 - a1) % (2 * Math.PI);
         if (angle < 0)
             angle += 2 * Math.PI;
@@ -121,7 +122,7 @@ public abstract class GeomUtils {
     public static double distanceToSegmentMeters(Node point, Node segp1, Node segp2) {
         EastNorth cp = Geometry.closestPointToSegment(
                 segp1.getEastNorth(), segp2.getEastNorth(), point.getEastNorth());
-        return point.getCoor().greatCircleDistance(ProjectionRegistry.getProjection().eastNorth2latlon(cp));
+        return point.greatCircleDistance(ProjectionRegistry.getProjection().eastNorth2latlon(cp));
     }
 
     /**
@@ -154,7 +155,7 @@ public abstract class GeomUtils {
         EastNorth ey = segp2.getEastNorth();
 
         EastNorth cp = Geometry.closestPointToSegment(ex, ey, ep);
-        double dev_distance_meters = point.getCoor().greatCircleDistance(ProjectionRegistry.getProjection().eastNorth2latlon(cp));
+        double dev_distance_meters = point.greatCircleDistance(ProjectionRegistry.getProjection().eastNorth2latlon(cp));
 
         double a1 = GeomUtils.unorientedAngleBetween(segp1, segp2, point);
         double a2 = GeomUtils.unorientedAngleBetween(segp2, segp1, point);
@@ -164,7 +165,8 @@ public abstract class GeomUtils {
     }
 
     public static double distanceOfNodesMeters(EdNode x, EdNode y) {
-        return x.getCoor().greatCircleDistance(y.getCoor());
+        ILatLon latLonI = x.getCoor();
+        return latLonI.greatCircleDistance(y.getCoor());
     }
 
     private static LatLon roundCoor(LatLon coor, double precision) {

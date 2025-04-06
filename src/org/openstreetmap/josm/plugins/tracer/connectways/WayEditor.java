@@ -676,7 +676,7 @@ public class WayEditor {
                 continue;
 
             for (EdNode an: add_nodes) {
-                double dist = dnorig.getCoor().greatCircleDistance(an.getCoor());
+                double dist = dnorig.greatCircleDistance(an.getCoor());
                 if (dist > resurrect_dist)
                     continue;
                 queue.add(new ResurrectableNodesPair (an, dn, dist));

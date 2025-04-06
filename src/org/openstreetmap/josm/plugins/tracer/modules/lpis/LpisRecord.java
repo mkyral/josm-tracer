@@ -28,6 +28,8 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+
+import org.openstreetmap.josm.data.coor.ILatLon;
 import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.plugins.tracer.TracerRecord;
 import org.openstreetmap.josm.plugins.tracer.TracerUtils;
@@ -157,7 +159,7 @@ public final class LpisRecord extends TracerRecord {
 
             // Sometimes, after rouding, two nodes could have the same LatLon coordinates
             // Skip duplicated coordinate
-            if (prevCoor == null || !ll.equalsEpsilon(prevCoor)) {
+            if (prevCoor == null || !ll.equalsEpsilon(prevCoor, ILatLon.MAX_SERVER_PRECISION)) {
                 arrList.add(ll);
                 prevCoor = ll;
             }
