@@ -76,7 +76,8 @@ public final class LpisModule extends TracerModule  {
     private static final GeomDeviation m_connectTolerance = new GeomDeviation(0.25, Math.PI / 15);
     private static final GeomDeviation m_removeNeedlesNodesTolerance = new GeomDeviation (0.25, Math.PI / 40);
 
-    private static final String lpisUrl = "https://eagri.cz/public/app/wms/plpis_wfs.fcgi";
+    //private static final String lpisUrl = "https://eagri.cz/public/app/wms/plpis_wfs.fcgi";
+    private static final String lpisUrl = "https://mze.gov.cz/public/app/wms/plpis_wfs.fcgi";
     private static final String reuseExistingLanduseNodePattern =
         "((landuse=* -landuse=no -landuse=military) | natural=scrub | natural=wood | natural=grassland | natural=water | natural=wood | leisure=garden)";
     private static final String retraceAreaPattern =
