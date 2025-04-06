@@ -24,7 +24,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
 import java.net.URLConnection;
 import javax.swing.JOptionPane;
 import org.openstreetmap.josm.gui.Notification;
@@ -105,7 +105,7 @@ public abstract class TracerUtils {
         URLConnection conn = null;
         boolean succeeded = false;
         try {
-             conn = new URL(url).openConnection();
+             conn = URI.create(url).toURL().openConnection();
 
              // set timeouts
              conn.setConnectTimeout(timeout);
