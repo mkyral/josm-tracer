@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Tracer-testing" default="dist" basedir=".">
     <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Tracer-testing - replace javax.json with jakarta.json"/>
+    <property name="commit.message" value="Tracer-testing - replace deprecated functions, change LPIS url to gov.cz"/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
-    <property name="plugin.main.version" value="15386"/>
+    <property name="plugin.main.version" value="18494"/>
     <property name="plugin.canloadatruntime" value="true"/>
 
     <property name="plugin.author" value="Jan Bilak, Petr Dlouhý, Marián Kyral, Martin Švec"/>
