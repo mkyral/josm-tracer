@@ -194,10 +194,14 @@ public final class LpisRecord extends TracerRecord {
         XPath xPath =  XPathFactory.newInstance().newXPath();
         init();
 //        String expID = "//*[name()='ms:LPIS_DPB_UCINNE'][1]/*[name()='ms:id']";
-        String expID = "//*[name()='ms:LPIS_DPB_UCINNE'][1]/*[name()='ms:IdDiluPudnihoBloku']";
-        String expOuter = "//*[name()='ms:LPIS_DPB_UCINNE'][1]//*[name()='gml:exterior']//*[name()='gml:posList']";
-        String expInner = "//*[name()='ms:LPIS_DPB_UCINNE'][1]//*[name()='gml:interior']//*[name()='gml:posList']";
-        String expUsage = "//*[name()='ms:LPIS_DPB_UCINNE'][1]/*[name()='ms:kultura']";
+//        String expID = "//*[name()='ms:LPIS_DPB_UCINNE'][1]/*[name()='ms:IdDiluPudnihoBloku']";
+//        String expOuter = "//*[name()='ms:LPIS_DPB_UCINNE'][1]//*[name()='gml:exterior']//*[name()='gml:posList']";
+//        String expInner = "//*[name()='ms:LPIS_DPB_UCINNE'][1]//*[name()='gml:interior']//*[name()='gml:posList']";
+//        String expUsage = "//*[name()='ms:LPIS_DPB_UCINNE'][1]/*[name()='ms:kultura']";
+        String expID = "//*[name()='gml:featureMember'][1]//*[name()='ms:IdDiluPudnihoBloku']";
+        String expOuter = "//*[name()='gml:featureMember'][1]//*[name()='gml:exterior']//*[name()='gml:posList']";
+        String expInner = "//*[name()='gml:featureMember'][1]//*[name()='gml:interior']//*[name()='gml:posList']";
+        String expUsage = "//*[name()='gml:featureMember'][1]//*[name()='ms:kultura']";
 
         NodeList nodeList;
 
@@ -213,11 +217,15 @@ public final class LpisRecord extends TracerRecord {
 
         System.out.println("parseXML(basic) - expOuter: " + expOuter);
         nodeList = (NodeList) xPath.compile(expOuter).evaluate(doc, XPathConstants.NODESET);
-        String outer = nodeList.item(0).getFirstChild().getNodeValue();
-        System.out.println("parseXML(basic) - outer: " + outer);
-        List<LatLon> way = parseGeometry(outer);
-        System.out.println("parseXML(basic) - outer list: " + way);
-        super.setOuter(way);
+        if (nodeList.getLength() > 0) {
+            String outer = nodeList.item(0).getFirstChild().getNodeValue();
+            System.out.println("parseXML(basic) - outer: " + outer);
+            List<LatLon> way = parseGeometry(outer);
+            System.out.println("parseXML(basic) - outer list: " + way);
+            super.setOuter(way);
+        } else {
+            return;
+        }
 
         System.out.println("parseXML(basic) - expInner: " + expInner);
         nodeList = (NodeList) xPath.compile(expInner).evaluate(doc, XPathConstants.NODESET);
