@@ -152,10 +152,10 @@ public final class LpisRecord extends TracerRecord {
 
         String[] coorVal = geometry.split(" ");
         for (int i = 0; i < coorVal.length; i = i + 2) {
-            String x = coorVal[i];
-            String y = coorVal[i+1];
-            krovak k = new krovak();
-            LatLon ll = k.krovak2LatLon(x, y);
+            String lat = coorVal[i];
+            String lon = coorVal[i+1];
+            LatLon ll = new LatLon(LatLon.roundToOsmPrecision(Double.parseDouble(lat)),
+                                   LatLon.roundToOsmPrecision(Double.parseDouble(lon)));
 
             // Sometimes, after rouding, two nodes could have the same LatLon coordinates
             // Skip duplicated coordinate

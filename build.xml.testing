@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project name="Tracer-testing" default="dist" basedir=".">
     <!-- enter the SVN commit message -->
-    <property name="commit.message" value="Tracer-testing - properly handle duplicities in LPIS XML files"/>
+    <property name="commit.message" value="Tracer-testing - LPIS: Replace EPSG:102067 (krovak) by EPSG:4326 (WGS84), get rid of conversion"/>
     <!-- enter the *lowest* JOSM version this plugin is currently compatible with -->
     <property name="plugin.main.version" value="18494"/>
     <property name="plugin.canloadatruntime" value="true"/>

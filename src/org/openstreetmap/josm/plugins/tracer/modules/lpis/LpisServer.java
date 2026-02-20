@@ -83,13 +83,9 @@ public class LpisServer {
         if (rec != null)
             return rec;
 
-        krovak k = new krovak();
-        xyCoor xy = k.LatLon2krovak(pos);
+        String bbox = pos.lon()+","+pos.lat()+","+pos.lon()+","+pos.lat();
 
-        System.out.println ("LatLon: "+pos+" <-> XY: "+xy.x()+" "+xy.y());
-        String bbox = xy.x()+","+xy.y()+","+xy.x()+","+xy.y();
-
-        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE&bbox="+bbox+"&SRSNAME=EPSG:102067";
+        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE&bbox="+bbox+"&SRSNAME=EPSG:4326";
 
         System.out.println("Request: " + request);
         String content = callServer(request);
@@ -106,17 +102,13 @@ public class LpisServer {
     }
 
     void prefetchRecords (BBox bbox) throws UnsupportedEncodingException, IOException, ParserConfigurationException, SAXException, XPathExpressionException {
-        krovak k = new krovak();
 
         LatLon a = bbox.getTopLeft();
         LatLon b = bbox.getBottomRight();
 
-        xyCoor axy = k.LatLon2krovak(a);
-        xyCoor bxy = k.LatLon2krovak(b);
+        String wfsbox = a.lon()+","+a.lat()+","+b.lon()+","+b.lat();
 
-        String wfsbox = axy.x()+","+axy.y()+","+bxy.x()+","+bxy.y();
-
-        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE&bbox="+wfsbox+"&SRSNAME=EPSG:102067";
+        String request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE&bbox="+wfsbox+"&SRSNAME=EPSG:4326";
 
         System.out.println("Request: " + request);
         String content = callServer(request);
@@ -139,7 +131,7 @@ public class LpisServer {
                 continue;
             }
 
-            request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE&&featureID=LPIS_DPB_UCINNE."+lpis.getLpisID()+"&SRSNAME=EPSG:102067";
+            request = m_url + "?VERSION=1.1.0&SERVICE=WFS&REQUEST=GetFeature&TYPENAME=LPIS_DPB_UCINNE&&featureID=LPIS_DPB_UCINNE."+lpis.getLpisID()+"&SRSNAME=EPSG:4326";
             System.out.println("Request: " + request);
             content = callServer(request);
             System.out.println("Reply: " + content);
