@@ -24,6 +24,8 @@ import org.openstreetmap.josm.plugins.tracer.modules.classic.*;
 import org.openstreetmap.josm.plugins.tracer.modules.lpis.*;
 import org.openstreetmap.josm.plugins.tracer.modules.ruian.*;
 import org.openstreetmap.josm.plugins.tracer.modules.ruianLands.*;
+import org.openstreetmap.josm.plugins.tracer.modules.ruianCuzk.*;
+import org.openstreetmap.josm.plugins.tracer.modules.ruianLandsCuzk.*;
 
 /**
  * Private class to store modules
@@ -46,6 +48,8 @@ public class Modules {
       m_modules.put("ruian", new RuianModule(true));
       m_modules.put("ruian-lands", new RuianLandsModule(false));
       m_modules.put("lpis", new LpisModule(false));
+      m_modules.put("ruian-cuzk", new RuianCuzkModule(false));
+      m_modules.put("ruian-lands-cuzk", new RuianLandsCuzkModule(false));
 
       List<String> m_modules_array = new LinkedList<String>();
       Map.Entry<String, TracerModule> m_current_module;
