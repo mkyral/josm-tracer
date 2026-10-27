@@ -44,7 +44,7 @@ public final class RuianCuzkModule extends BuildingTracerModule {
 
     @Override
     public Cursor getCursor() {
-        return ImageProvider.getCursor("crosshair", "tracer-ruian-sml");
+        return ImageProvider.getCursor("crosshair", "tracer-ruian-cuzk-sml");
     }
 
     @Override
@@ -55,7 +55,7 @@ public final class RuianCuzkModule extends BuildingTracerModule {
         if (shift){
             return ImageProvider.getCursor("crosshair", "tracer-ruian-tags-sml");
         }
-        return ImageProvider.getCursor("crosshair", "tracer-ruian-sml");
+        return ImageProvider.getCursor("crosshair", "tracer-ruian-cuzk-sml");
     }
 
     @Override

@@ -116,7 +116,7 @@ public final class RuianLandsCuzkModule extends TracerModule {
 
     @Override
     public Cursor getCursor() {
-        return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-sml");
+        return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-cuzk-sml");
     }
 
 
@@ -129,7 +129,7 @@ public final class RuianLandsCuzkModule extends TracerModule {
         if (shift){
             return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-tags-sml");
         }
-        return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-sml");
+        return ImageProvider.getCursor("crosshair", "tracer-ruian-lands-cuzk-sml");
     }
 
     @Override
